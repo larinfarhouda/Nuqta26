@@ -10,6 +10,14 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-primary: #2CA58D;
+  /* Teal from logo */
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #E0F2F1;
+  /* Lightest teal bg */
+  --color-secondary-foreground: #2CA58D;
+  --color-accent: #264653;
+  /* Dark slate for strong accents */
 }
 
 @media (prefers-color-scheme: dark) {
