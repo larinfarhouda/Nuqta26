@@ -88,8 +88,55 @@ export async function getSegmentationData() {
         { name: 'Loyal', value: loyal }
     ];
 
+    // 3. Demographics (Age & Gender)
+    const userIds = Array.from(new Set(bookings.map((b: any) => b.user_id).filter(Boolean)));
+
+    let genderDistribution: { name: string, value: number }[] = [];
+    let ageDistribution: { name: string, value: number }[] = [];
+
+    if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('gender, age')
+            .in('id', userIds);
+
+        if (profiles) {
+            // Gender
+            const genderCount: Record<string, number> = { Male: 0, Female: 0, Other: 0 };
+            profiles.forEach(p => {
+                if (p.gender === 'Male') genderCount.Male++;
+                else if (p.gender === 'Female') genderCount.Female++;
+                else genderCount.Other++;
+            });
+            genderDistribution = Object.entries(genderCount)
+                .filter(([_, val]) => val > 0)
+                .map(([name, value]) => ({ name, value }));
+
+            // Age
+            const ageRanges: Record<string, number> = {
+                '<18': 0, '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55+': 0
+            };
+
+            profiles.forEach(p => {
+                if (!p.age) return;
+                const age = p.age;
+                if (age < 18) ageRanges['<18']++;
+                else if (age <= 24) ageRanges['18-24']++;
+                else if (age <= 34) ageRanges['25-34']++;
+                else if (age <= 44) ageRanges['35-44']++;
+                else if (age <= 54) ageRanges['45-54']++;
+                else ageRanges['55+']++;
+            });
+
+            ageDistribution = Object.entries(ageRanges)
+                .map(([name, value]) => ({ name, value }));
+        }
+    }
+
     return {
         typeDistribution,
-        customerLoyalty
+        customerLoyalty,
+        genderDistribution,
+        ageDistribution
     };
 }

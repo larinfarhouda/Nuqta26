@@ -5,6 +5,7 @@ import Hero from '@/components/home/Hero';
 import EventSearch from '@/components/events/EventSearch';
 import EventCard from '@/components/events/EventCard';
 import Categories from '@/components/home/Categories';
+
 import Features from '@/components/home/Features';
 import CTA from '@/components/home/CTA';
 import Footer from '@/components/layout/Footer';
@@ -14,8 +15,10 @@ import { createClient } from '@/utils/supabase/server';
 import BackgroundShapes from '@/components/home/BackgroundShapes';
 import { Search } from 'lucide-react';
 import { Link } from '@/navigation';
+import { Suspense } from 'react';
 
-export default async function HomePage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function HomePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+    const searchParams = await props.searchParams;
     const t = await getTranslations('Index');
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -24,13 +27,29 @@ export default async function HomePage({ searchParams }: { searchParams: { [key:
     const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
     const location = typeof searchParams.location === 'string' ? searchParams.location : undefined;
     const date = typeof searchParams.date === 'string' ? searchParams.date : undefined;
+    const category = typeof searchParams.category === 'string' ? searchParams.category : undefined;
+    const minPrice = typeof searchParams.minPrice === 'string' ? Number(searchParams.minPrice) : undefined;
+    const maxPrice = typeof searchParams.maxPrice === 'string' ? Number(searchParams.maxPrice) : undefined;
+    const lat = typeof searchParams.lat === 'string' ? Number(searchParams.lat) : undefined;
+    const lng = typeof searchParams.lng === 'string' ? Number(searchParams.lng) : undefined;
+    const radius = typeof searchParams.radius === 'string' ? Number(searchParams.radius) : undefined;
 
-    const events = await getPublicEvents({ search, location, date });
+    const events = await getPublicEvents({
+        search,
+        location,
+        date,
+        category,
+        minPrice,
+        maxPrice,
+        lat,
+        lng,
+        radius
+    });
     const favoriteIds = await getUserFavoriteIds();
     const favoritesSet = new Set(favoriteIds);
 
     return (
-        <div className="min-h-screen bg-white flex flex-col relative overflow-hidden selection:bg-primary selection:text-white pb-16 md:pb-0">
+        <div className="min-h-screen bg-white flex flex-col relative overflow-hidden selection:bg-primary selection:text-white pb-24 md:pb-0">
             <BackgroundShapes />
 
             <Navbar user={user} />
@@ -40,11 +59,13 @@ export default async function HomePage({ searchParams }: { searchParams: { [key:
             {/* Event Search & Listing Section */}
             <div className="relative z-20 pb-16">
                 {/* Search Bar - Sticky on mobile? Integrated for now */}
-                <EventSearch />
+                <Suspense fallback={<div className="h-20" />}>
+                    <EventSearch />
+                </Suspense>
 
                 <div className="container mx-auto px-4 md:px-6 pt-12 md:pt-24">
 
-                    {/* Categories */}
+                    {/* Categories - Outside Search */}
                     <Categories />
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">

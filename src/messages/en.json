@@ -1,6 +1,6 @@
 {
     "Index": {
-        "title": "Discover Arab Events & Culture in Istanbul",
+        "title": "Discover Arab Events & Culture in <highlight>Istanbul</highlight>",
         "description": "Workshops, galleries, bazaars, and community gatherings. Nuqta connects you to the vibrant pulse of the Arab community.",
         "discoverServices": "Browse Events",
         "joinVendor": "Register as Organizer",
@@ -15,11 +15,11 @@
         },
         "categories": {
             "title": "Browse by Category",
-            "workshops": "Workshops",
-            "bazaars": "Bazaars",
-            "music": "Music",
-            "art": "Art Exhibitions",
-            "food": "Food"
+            "workshop": "Workshops",
+            "bazaar": "Bazaars",
+            "concert": "Music & Concerts",
+            "exhibition": "Art & Exhibitions",
+            "other": "Food & Other"
         },
         "cta": {
             "title": "Be Part of the Story",
@@ -36,7 +36,9 @@
         },
         "upcomingEvents": "Upcoming Events",
         "searchResults": "Search Results",
-        "eventsFound": "Events Found"
+        "eventsFound": "Events Found",
+        "joinNow": "Join Now",
+        "login": "Login"
     },
     "Navigation": {
         "home": "Home",
@@ -49,6 +51,8 @@
     },
     "Auth": {
         "profile": "Profile",
+        "register": "Register",
+        "login": "Login",
         "loginUser": "Visitor Login",
         "loginVendor": "Organizer Login",
         "businessName": "Organization Name",

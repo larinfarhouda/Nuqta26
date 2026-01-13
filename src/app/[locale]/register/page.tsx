@@ -7,15 +7,23 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Building2, User, Mail, Lock, CheckCircle, ArrowRight, Sparkles, Facebook } from 'lucide-react';
+import { Loader2, Building2, User, Mail, Lock, CheckCircle, ArrowRight, Sparkles, Facebook, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import LocationPicker from '@/components/ui/LocationPicker';
+import { Calendar, UserCircle, MapPin } from 'lucide-react';
 
 // Schemas
 const userSchema = z.object({
     fullName: z.string().min(2, "Full name is required"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
+    age: z.string().optional(), // We'll parse to int on submit or use number input
+    gender: z.enum(['Male', 'Female']).optional(),
+    country: z.string().optional(),
+    city: z.string().optional(),
+    district: z.string().optional(),
+    phone: z.string().optional(),
 });
 
 const vendorSchema = z.object({
@@ -41,7 +49,7 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<UserFormData & VendorFormData>({
+    const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<UserFormData & VendorFormData>({
         resolver: zodResolver(role === 'user' ? userSchema : vendorSchema) as any,
     });
 
@@ -66,6 +74,14 @@ export default function RegisterPage() {
                     data: {
                         role: role,
                         full_name: fullName,
+                        ...(role === 'user' && {
+                            age: data.age ? parseInt(data.age) : null,
+                            gender: data.gender,
+                            country: data.country,
+                            city: data.city,
+                            district: data.district,
+                            phone: data.phone,
+                        })
                     },
                 },
             });
@@ -285,6 +301,66 @@ export default function RegisterPage() {
                                         </span>
                                     )}
                                 </div>
+
+                                {role === 'user' && (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                    <Calendar className="w-3.5 h-3.5" />
+                                                    Age
+                                                </label>
+                                                <input
+                                                    {...register('age')}
+                                                    type="number"
+                                                    min="13"
+                                                    max="100"
+                                                    className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
+                                                    placeholder="18"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                    <UserCircle className="w-3.5 h-3.5" />
+                                                    Gender
+                                                </label>
+                                                <select
+                                                    {...register('gender')}
+                                                    className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                <Phone className="w-3.5 h-3.5" />
+                                                Phone Number
+                                            </label>
+                                            <input
+                                                {...register('phone')}
+                                                type="tel"
+                                                className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
+                                                placeholder="+90 555 123 45 67"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                <MapPin className="w-3.5 h-3.5" />
+                                                Location
+                                            </label>
+                                            <LocationPicker setValue={setValue} className="h-[200px]" />
+                                            {/* Hidden inputs to ensure data is passed if not validating strictly via schema requirement yet, 
+                                                but we marked them optional in schema so it's fine. 
+                                                If we want validation, we should make them required in schema and use `setValue` with `shouldValidate`.
+                                            */}
+                                        </div>
+                                    </>
+                                )}
 
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">

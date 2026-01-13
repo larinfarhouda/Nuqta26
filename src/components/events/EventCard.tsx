@@ -122,7 +122,14 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                                 <div className="flex flex-col">
                                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none mb-1">Starting from</span>
                                     <span className="font-black text-xl text-primary">
-                                        {event.price > 0 ? `${event.price} ₺` : 'FREE'}
+                                        {(() => {
+                                            let displayPrice = event.price;
+                                            if (event.tickets && event.tickets.length > 0) {
+                                                const prices = event.tickets.map((t: any) => t.price);
+                                                displayPrice = Math.min(...prices);
+                                            }
+                                            return displayPrice > 0 ? `${displayPrice} ₺` : 'FREE';
+                                        })()}
                                     </span>
                                 </div>
                                 <div className="h-10 px-4 rounded-xl bg-gray-900 group-hover:bg-primary text-white flex items-center justify-center transition-colors">

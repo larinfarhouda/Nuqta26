@@ -22,62 +22,77 @@ export type EventFilter = {
     category?: string;
     date?: string; // 'today', 'tomorrow', 'weekend', 'week'
     location?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    lat?: number;
+    lng?: number;
+    radius?: number; // km
 };
 
 export async function getPublicEvents(filters?: EventFilter) {
     const supabase = await createClient();
-    let query = supabase
-        .from('events')
-        .select('*, vendors(business_name, company_logo)')
-        .eq('status', 'published')
-        .order('date', { ascending: true });
 
-    if (filters?.search) {
-        query = query.ilike('title', `%${filters.search}%`);
-    }
-
-    // if (filters?.category) {
-    //     // distinct category or filter by vendor category? Assume vendors.category or events.category if it existed.
-    //     // Schema says `vendors` has category. Events doesn't seem to have a category column in the schema I read earlier?
-    //     // Let me double check schema. events table: title, description, date, location, image_url, price.
-    //     // vendors table: category.
-    //     // So we filter by vendor category.
-    //      query = query.filter('vendors.category', 'eq', filters.category);
-    // } 
-    // Note: Filtering by joined table column in Supabase requires inner join and specific syntax or embedded resource filtering.
-    // 'vendors!inner(category)' allows filtering.
-
-    if (filters?.location) {
-        // Search across address fields
-        query = query.or(`location_name.ilike.%${filters.location}%, city.ilike.%${filters.location}%, district.ilike.%${filters.location}%`);
-    }
+    let dateStart: string | null = null;
+    let dateEnd: string | null = null;
 
     if (filters?.date) {
         const today = new Date();
         const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
 
         if (filters.date === 'today') {
-            const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
-            query = query.gte('date', startOfDay).lte('date', endOfDay);
+            dateStart = startOfDay;
+            dateEnd = new Date(today.setHours(23, 59, 59, 999)).toISOString();
         } else if (filters.date === 'tomorrow') {
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
-            const startOfTomorrow = new Date(tomorrow.setHours(0, 0, 0, 0)).toISOString();
-            const endOfTomorrow = new Date(tomorrow.setHours(23, 59, 59, 999)).toISOString();
-            query = query.gte('date', startOfTomorrow).lte('date', endOfTomorrow);
+            dateStart = new Date(tomorrow.setHours(0, 0, 0, 0)).toISOString();
+            dateEnd = new Date(tomorrow.setHours(23, 59, 59, 999)).toISOString();
         } else if (filters.date === 'week') {
+            dateStart = startOfDay;
             const nextWeek = new Date(today);
             nextWeek.setDate(today.getDate() + 7);
-            query = query.gte('date', startOfDay).lte('date', nextWeek.toISOString());
+            dateEnd = nextWeek.toISOString();
+        } else if (filters.date === 'weekend') {
+            const friday = new Date(today);
+            const day = friday.getDay();
+            const diff = 5 - day; // 5 is Friday
+            friday.setDate(friday.getDate() + (diff >= 0 ? diff : diff + 7));
+            friday.setHours(0, 0, 0, 0);
+
+            const sunday = new Date(friday);
+            sunday.setDate(sunday.getDate() + 2);
+            sunday.setHours(23, 59, 59, 999);
+
+            dateStart = friday.toISOString();
+            dateEnd = sunday.toISOString();
         }
     }
 
-    const { data, error } = await query;
+    const { data, error } = await supabase.rpc('get_events_pro', {
+        p_search: filters?.search || null,
+        p_category: filters?.category || null,
+        p_min_price: filters?.minPrice || null,
+        p_max_price: filters?.maxPrice || null,
+        p_lat: filters?.lat || null,
+        p_long: filters?.lng || null,
+        p_radius_km: filters?.radius || null,
+        p_date_start: dateStart,
+        p_date_end: dateEnd,
+        p_limit: 50,
+        p_offset: 0
+    });
+
     if (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error fetching events:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+        });
         return [];
     }
-    return data;
+
+    return data || [];
 }
 
 

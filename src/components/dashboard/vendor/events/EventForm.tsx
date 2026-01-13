@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createEvent } from '@/actions/vendor/events';
+import { createEvent, updateEvent } from '@/actions/vendor/events';
 import { Loader2, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { createClient } from '@/utils/supabase/client';
 
 // Sub-components
 import ImageUploader from './components/ImageUploader';
@@ -26,8 +27,8 @@ const schema = z.object({
 
     // Location
     location_name: z.string().optional(),
-    location_lat: z.any(),
-    location_long: z.any(),
+    location_lat: z.coerce.number().refine(val => val !== 0, "يرجى تحديد الموقع على الخريطة"),
+    location_long: z.coerce.number().refine(val => val !== 0, "يرجى تحديد الموقع على الخريطة"),
     district: z.string().optional(),
     city: z.string().optional(),
     country: z.string().optional(),
@@ -35,6 +36,7 @@ const schema = z.object({
     // Capacity & Tickets
     capacity: z.coerce.number().min(1, "السعة يجب أن تكون شخص واحد على الأقل"),
     tickets: z.array(z.object({
+        id: z.string().optional(), // Add optional ID for updates
         name: z.string().min(2, "اسم التذكرة مطلوب"),
         price: z.coerce.number().min(0, "السعر لا يمكن أن يكون سالباً"),
         quantity: z.coerce.number().min(1, "الكمية يجب أن تكون 1 على الأقل")
@@ -42,9 +44,9 @@ const schema = z.object({
 
     // Recurrence
     is_recurring: z.boolean().optional(),
-    recurrence_type: z.string().optional(),
+    recurrence_type: z.string().nullable().optional(),
     recurrence_days: z.any().optional(),
-    recurrence_end_date: z.string().optional(),
+    recurrence_end_date: z.string().nullable().optional(),
 })
     .refine(data => {
         if (data.is_recurring && !data.recurrence_type) return false;
@@ -77,18 +79,39 @@ interface Props {
 
 export default function EventForm({ event, vendorData, onClose, onSuccess }: Props) {
     const [submitting, setSubmitting] = useState(false);
+    const [categories, setCategories] = useState<any[]>([]);
 
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(event?.image_url || null);
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const supabase = createClient();
+            const { data } = await supabase.from('categories').select('*');
+            if (data) setCategories(data);
+        };
+        fetchCategories();
+    }, []);
+
+    const formatDateForInput = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const offset = date.getTimezoneOffset() * 60000;
+        const localDate = new Date(date.getTime() - offset);
+        return localDate.toISOString().slice(0, 16);
+    };
+
     const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         defaultValues: event ? {
             ...event,
+            event_type: event.category_id || event.event_type, // Use category_id if available, fallback to event_type
+            date: formatDateForInput(event.date),
+            end_date: formatDateForInput(event.end_date),
             is_recurring: event.is_recurring,
             recurrence_days: event.recurrence_days || [],
-            tickets: event.tickets || [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
+            tickets: (event.tickets && event.tickets.length > 0) ? event.tickets : [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
         } : {
             is_recurring: false,
             recurrence_days: [],
@@ -96,6 +119,11 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             district: '',
             city: '',
             country: '',
+            location_lat: 0,
+            location_long: 0,
+            capacity: 0,
+            date: '',
+            event_type: '',
             tickets: [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
         }
     });
@@ -133,7 +161,13 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             formData.append('image', imageFile);
         }
 
-        const res = await createEvent(formData);
+        let res;
+        if (event && event.id) {
+            res = await updateEvent(event.id, formData);
+        } else {
+            res = await createEvent(formData);
+        }
+
         console.log(res); // Debug
 
         setSubmitting(false);
@@ -171,7 +205,10 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-5 sm:p-6 space-y-8 pb-24 sm:pb-6">
+                <form onSubmit={handleSubmit(onSubmit, (errors) => {
+                    console.error("Form Validation Errors:", errors);
+                    alert("يوجد حقول غير مكتملة أو غير صحيحة: " + Object.keys(errors).join(", "));
+                })} className="p-5 sm:p-6 space-y-8 pb-24 sm:pb-6">
 
                     {/* Image Upload Component */}
                     <ImageUploader previewUrl={previewUrl} onImageChange={handleImageChange} />
@@ -189,10 +226,11 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                                 <div className="relative">
                                     <select {...register('event_type')} className={`input-field appearance-none ${errors.event_type ? 'border-red-500' : ''}`}>
                                         <option value="">اختر النوع</option>
-                                        <option value="workshop">ورشة عمل</option>
-                                        <option value="course">دورة تدريبية</option>
-                                        <option value="meetup">لقاء مجتمعي</option>
-                                        <option value="other">آخر</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.id} value={cat.id}>
+                                                {cat.name_ar || cat.name_en}
+                                            </option>
+                                        ))}
                                     </select>
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -276,7 +314,15 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                     </div>
 
                     {/* Google Map Component */}
-                    <EventMap setValue={setValue} watch={watch} vendorData={vendorData} event={event} />
+                    <div className="space-y-2">
+                        <EventMap setValue={setValue} watch={watch} vendorData={vendorData} event={event} />
+                        {(errors.location_lat || errors.location_long) && (
+                            <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 animate-in fade-in slide-in-from-top-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                <span className="text-sm font-bold">يرجى تحديد مكان الفعالية على الخريطة بدقة</span>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Hidden inputs for location fields used by schema validation */}
                     <input type="hidden" {...register('location_lat')} />

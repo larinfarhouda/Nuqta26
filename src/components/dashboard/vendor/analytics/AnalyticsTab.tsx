@@ -102,6 +102,54 @@ export default function AnalyticsTab() {
                         ركز على العملاء "المتكررين" وقدم لهم عروضاً خاصة لتحويلهم إلى عملاء "VIP" لزيادة المبيعات طويلة الأمد.
                     </div>
                 </div>
+
+                {/* Gender Distribution */}
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Users className="w-5 h-5 text-gray-400" />
+                        <h4 className="font-bold text-gray-900">توزيع الجنس</h4>
+                    </div>
+                    <div className="space-y-4">
+                        {segmentation?.genderDistribution.map((item: any) => (
+                            <div key={item.name} className="flex items-center gap-4">
+                                <div className="w-20 text-xs font-bold text-gray-500">
+                                    {item.name === 'Male' ? 'ذكر' : item.name === 'Female' ? 'أنثى' : 'غير محدد'}
+                                </div>
+                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full ${item.name === 'Male' ? 'bg-blue-500' : 'bg-pink-500'}`}
+                                        style={{ width: `${(item.value / (segmentation.genderDistribution.reduce((a: any, b: any) => a + b.value, 0) || 1)) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
+                            </div>
+                        ))}
+                        {(!segmentation?.genderDistribution || segmentation.genderDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">لا توجد بيانات كافية</p>}
+                    </div>
+                </div>
+
+                {/* Age Distribution */}
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Users className="w-5 h-5 text-gray-400" />
+                        <h4 className="font-bold text-gray-900">الفئات العمرية</h4>
+                    </div>
+                    <div className="space-y-4">
+                        {segmentation?.ageDistribution.map((item: any) => (
+                            <div key={item.name} className="flex items-center gap-4">
+                                <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
+                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-emerald-500 rounded-full"
+                                        style={{ width: `${(item.value / (Math.max(...segmentation.ageDistribution.map((i: any) => i.value)) || 1)) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
+                            </div>
+                        ))}
+                        {(!segmentation?.ageDistribution || segmentation.ageDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">لا توجد بيانات كافية</p>}
+                    </div>
+                </div>
             </div>
         </div>
     );

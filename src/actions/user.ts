@@ -99,15 +99,32 @@ export async function isEventFavorite(eventId: string) {
     return !!data;
 }
 
-export async function updateUserProfile(data: { full_name: string }) {
+export async function updateUserProfile(data: {
+    full_name: string | null, // Allow null if form allows it, but form requires it. Keeping strict string if required.
+    age?: number | null,
+    gender?: string | null,
+    country?: string | null,
+    city?: string | null,
+    district?: string | null,
+    phone?: string | null
+}) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return { error: 'Unauthorized' };
 
+    // Filter out undefined values
+    const updates: any = { full_name: data.full_name };
+    if (data.age !== undefined) updates.age = data.age;
+    if (data.gender !== undefined) updates.gender = data.gender;
+    if (data.country !== undefined) updates.country = data.country;
+    if (data.city !== undefined) updates.city = data.city;
+    if (data.district !== undefined) updates.district = data.district;
+    if (data.phone !== undefined) updates.phone = data.phone;
+
     const { error } = await supabase
         .from('profiles')
-        .update({ full_name: data.full_name })
+        .update(updates)
         .eq('id', user.id);
 
     if (error) return { error: error.message };

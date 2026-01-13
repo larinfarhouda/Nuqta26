@@ -86,6 +86,101 @@ export async function createEvent(formData: FormData) {
     return { success: true, eventId: event.id };
 }
 
+export async function updateEvent(eventId: string, formData: FormData) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: 'Unauthorized' };
+
+    // Update Basic Info
+    const rawData = {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        event_type: formData.get('event_type') as string,
+        date: formData.get('date') as string,
+        end_date: formData.get('end_date') as string,
+        location_lat: parseFloat(formData.get('location_lat') as string),
+        location_long: parseFloat(formData.get('location_long') as string),
+        location_name: formData.get('location_name') as string,
+        district: formData.get('district') as string,
+        city: formData.get('city') as string,
+        country: formData.get('country') as string,
+        capacity: parseInt(formData.get('capacity') as string),
+        is_recurring: formData.get('is_recurring') === 'true',
+        recurrence_type: formData.get('recurrence_type') as string,
+        recurrence_days: formData.get('recurrence_days') ? JSON.parse(formData.get('recurrence_days') as string) : [],
+        recurrence_end_date: formData.get('recurrence_end_date') as string,
+    };
+
+    // Handle Image Upload (only if new image provided)
+    let image_url = undefined;
+    const imageFile = formData.get('image') as File;
+    if (imageFile && imageFile.size > 0) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('vendor-public').upload(fileName, imageFile);
+
+        if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('vendor-public').getPublicUrl(fileName);
+            image_url = publicUrl;
+        }
+    }
+
+    const updateData: any = { ...rawData };
+    if (image_url) updateData.image_url = image_url;
+
+    const { data: updatedEvent, error: eventError } = await supabase
+        .from('events')
+        .update(updateData)
+        .eq('id', eventId)
+        .eq('vendor_id', user.id)
+        .select('id');
+
+    if (eventError) {
+        console.error("Update Event Error:", eventError);
+        return { error: eventError.message };
+    }
+
+    if (!updatedEvent || updatedEvent.length === 0) {
+        console.error("Update Event: No rows updated. ID mismatch or permission issue.", { eventId, vendorId: user.id });
+        return { error: 'Event not found or permission denied' };
+    }
+
+    // Handle Tickets (Upsert: Update existing, Insert new)
+    // Note: Deleting tickets is risky if they have sales, so we'll skip deletion for now or handle it carefully in future.
+    const ticketsJson = formData.get('tickets') as string;
+    if (ticketsJson) {
+        try {
+            const tickets = JSON.parse(ticketsJson);
+            if (Array.isArray(tickets)) {
+                for (const t of tickets) {
+                    if (t.id) {
+                        // Update existing ticket
+                        await supabase.from('tickets').update({
+                            name: t.name,
+                            price: parseFloat(t.price),
+                            quantity: parseInt(t.quantity)
+                        }).eq('id', t.id).eq('event_id', eventId);
+                    } else {
+                        // Insert new ticket
+                        await supabase.from('tickets').insert({
+                            event_id: eventId,
+                            name: t.name,
+                            price: parseFloat(t.price),
+                            quantity: parseInt(t.quantity)
+                        });
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing tickets for update", e);
+        }
+    }
+
+    revalidatePath('/dashboard/vendor');
+    return { success: true };
+}
+
 export async function getVendorEvents() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -98,6 +193,7 @@ export async function getVendorEvents() {
             *,
             tickets (
                 id,
+                name,
                 price,
                 sold,
                 quantity

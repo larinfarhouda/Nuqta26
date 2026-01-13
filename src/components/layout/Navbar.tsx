@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -8,6 +8,7 @@ import LogoutButton from '../auth/LogoutButton';
 
 export default function Navbar({ user }: { user?: any }) {
     const tAuth = useTranslations('Auth');
+    const locale = useLocale();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
@@ -36,18 +37,35 @@ export default function Navbar({ user }: { user?: any }) {
                         </div>
                     ) : (
                         <>
-                            <Link href="/login" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">{tAuth('loginVendor')}</Link>
-                            <Link href="/login" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-gray-900 text-white rounded-2xl shadow-xl shadow-gray-200 hover:bg-primary transition-all active:scale-95">
-                                {tAuth('loginUser')}
+                            <Link href="/login" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">{tAuth('login')}</Link>
+                            <div className="h-4 w-px bg-gray-200" />
+                            <Link href="/register" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-primary text-white rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
+                                {tAuth('register') || 'تسجيل جديد'}
                             </Link>
                         </>
                     )}
                 </div>
 
                 {/* Language Switch */}
-                <div className="hidden md:flex items-center bg-gray-50 p-1 rounded-2xl border border-gray-100 shadow-inner">
-                    <Link href="/en" className="text-[10px] font-black hover:text-primary px-3 py-1.5 rounded-xl hover:bg-white transition-all">EN</Link>
-                    <Link href="/ar" className="text-[10px] font-black hover:text-primary px-3 py-1.5 rounded-xl hover:bg-white transition-all">AR</Link>
+                <div className="hidden md:flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-inner">
+                    <Link
+                        href="/en"
+                        className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all ${locale === 'en'
+                                ? 'bg-white text-primary shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                            }`}
+                    >
+                        EN
+                    </Link>
+                    <Link
+                        href="/ar"
+                        className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all ${locale === 'ar'
+                                ? 'bg-white text-primary shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                            }`}
+                    >
+                        AR
+                    </Link>
                 </div>
 
                 {/* Mobile Menu Toggle */}

@@ -4,16 +4,17 @@ import { useTranslations } from 'next-intl';
 import { MapPin, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { Link } from '@/navigation';
 
 export default function Hero() {
     const t = useTranslations('Index');
 
     return (
-        <div className="relative pt-20 pb-12 px-4 container mx-auto z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
+        <div className="relative pt-28 md:pt-32 pb-8 md:pb-12 px-4 container mx-auto z-10">
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
 
                 {/* Text Content */}
-                <div className="flex-1 text-center lg:text-left space-y-8 max-w-2xl">
+                <div className="flex-1 text-center lg:text-start space-y-8 max-w-2xl">
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -27,7 +28,7 @@ export default function Hero() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl sm:text-5xl md:text-7xl font-black text-gray-900 leading-[1.1] tracking-tight"
+                        className="text-3xl sm:text-5xl md:text-7xl font-black text-gray-900 leading-[1.1] tracking-tight"
                     >
                         {t.rich('title', {
                             br: () => <br className="hidden md:block" />,
@@ -55,7 +56,7 @@ export default function Hero() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3, duration: 0.8 }}
-                    className="flex-1 relative w-full max-w-[500px] aspect-square"
+                    className="flex-1 relative w-full max-w-[320px] md:max-w-[500px] aspect-[4/3] md:aspect-square mx-auto"
                 >
                     <div className="absolute inset-0 bg-primary/5 rounded-3xl -rotate-3 transition-transform group-hover:rotate-0" />
                     <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
@@ -68,7 +69,7 @@ export default function Hero() {
                         />
                     </div>
                     {/* Floating decoration */}
-                    <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-gray-100 animate-bounce-slow">
+                    <div className="hidden sm:flex absolute -bottom-6 left-0 lg:-left-6 bg-white p-4 rounded-2xl shadow-xl items-center gap-3 border border-gray-100 animate-bounce-slow">
                         <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
                             <MapPin className="text-primary w-5 h-5" />
                         </div>

@@ -4,16 +4,16 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete';
 import { Search, MapPin } from 'lucide-react';
-import { UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { UseFormSetValue } from 'react-hook-form';
 
 const libraries: ("places" | "marker")[] = ["places", "marker"];
 const mapContainerStyle = { width: '100%', height: '100%' };
 
-interface EventMapProps {
+interface LocationPickerProps {
     setValue: UseFormSetValue<any>;
-    watch: UseFormWatch<any>;
-    vendorData?: any;
-    event?: any;
+    initialLat?: number;
+    initialLng?: number;
+    className?: string;
 }
 
 // Custom component to handle AdvancedMarkerElement
@@ -65,9 +65,8 @@ const AdvancedMarker = ({ map, position, onDragEnd }: { map: google.maps.Map | n
             if (listener) google.maps.event.removeListener(listener);
             markerRef.current = null;
         };
-    }, [map]); // Init on map available
+    }, [map]);
 
-    // Update position when prop changes (unless dragging)
     useEffect(() => {
         if (markerRef.current) {
             markerRef.current.position = position;
@@ -77,9 +76,7 @@ const AdvancedMarker = ({ map, position, onDragEnd }: { map: google.maps.Map | n
     return null;
 };
 
-// ... PlacesAutocomplete component (kept same) ...
-
-const PlacesAutocomplete = ({ onSelect }: { onSelect: (lat: number, lng: number, address: string, placeDetails: any) => void }) => {
+const PlacesAutocomplete = ({ onSelect, handleCurrentLocation }: { onSelect: (lat: number, lng: number, address: string, placeDetails: any) => void, handleCurrentLocation: () => void }) => {
     const {
         ready,
         value,
@@ -87,12 +84,17 @@ const PlacesAutocomplete = ({ onSelect }: { onSelect: (lat: number, lng: number,
         setValue,
         clearSuggestions,
     } = usePlacesAutocomplete({
-        requestOptions: {
-            /* Define search scope here if needed */
-        },
+        requestOptions: {},
         debounce: 300,
         initOnMount: true,
     });
+
+    // We can expose setValue to let parent set address if reverse geocoded
+    // But for now, just input handling. 
+    // Wait, if map click reverse geocodes, we might want to update this input?
+    // The previous implementation didn't strictly bind input to map click address, 
+    // it just showed a separate label.
+    // Let's keep it simple: this is for searching.
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(e.target.value);
@@ -111,26 +113,17 @@ const PlacesAutocomplete = ({ onSelect }: { onSelect: (lat: number, lng: number,
         }
     };
 
-    // Need to trigger init manually when script is loaded if initOnMount is false? 
-    // Actually if google maps is loaded globally, it should pick it up. 
-    // Let's rely on parent loading it.
-    useEffect(() => {
-        if (typeof window !== "undefined" && window.google) {
-            // Re-render or force update? usage of hook mainly depends on window.google
-        }
-    }, []);
-
     return (
-        <div className="absolute top-4 left-4 right-4 z-10 shadow-xl">
-            <div className="relative">
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="absolute top-4 left-4 right-4 z-10 flex gap-2">
+            <div className="relative shadow-lg rounded-xl flex-1">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                     value={value}
                     onChange={handleInput}
                     disabled={!ready}
                     type="text"
-                    placeholder="ابحث عن مكان..."
-                    className="w-full h-12 pr-12 pl-4 bg-white rounded-xl text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-900"
+                    placeholder="Search specific location..."
+                    className="w-full h-10 pr-10 pl-4 bg-white rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-900"
                     onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 />
                 {status === "OK" && (
@@ -139,7 +132,7 @@ const PlacesAutocomplete = ({ onSelect }: { onSelect: (lat: number, lng: number,
                             <li
                                 key={place_id}
                                 onClick={() => handleSelect(description)}
-                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm font-medium border-b border-gray-50 last:border-none text-gray-900"
+                                className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-50 last:border-none text-gray-900"
                             >
                                 {description}
                             </li>
@@ -147,11 +140,19 @@ const PlacesAutocomplete = ({ onSelect }: { onSelect: (lat: number, lng: number,
                     </ul>
                 )}
             </div>
+            <button
+                type="button"
+                onClick={handleCurrentLocation}
+                className="bg-white p-2 rounded-xl shadow-lg border border-gray-100 text-gray-600 hover:text-primary hover:bg-gray-50 transition-colors"
+                title="Use Current Location"
+            >
+                <MapPin className="w-5 h-5" />
+            </button>
         </div>
     );
 };
 
-export default function EventMap({ setValue, watch, vendorData, event }: EventMapProps) {
+export default function LocationPicker({ setValue, initialLat, initialLng, className = "h-[300px]" }: LocationPickerProps) {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
         libraries,
@@ -159,37 +160,26 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
 
     const defaultCenter = { lat: 41.0082, lng: 28.9784 }; // Istanbul
     const [mapCenter, setMapCenter] = useState(defaultCenter);
-    const [markerPos, setMarkerPos] = useState(defaultCenter);
+    const [markerPos, setMarkerPos] = useState<google.maps.LatLngLiteral | null>(null);
+    const [addressLabel, setAddressLabel] = useState<string>('');
 
     const mapRef = useRef<google.maps.Map | null>(null);
     const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
-    const watchedDistrict = watch('district');
-    const watchedCity = watch('city');
-
-    // ... (UseEffect and extractAddressComponents and handleGeocoding kept same) ...
-
-    // Initialize Map
     useEffect(() => {
-        if (!event && vendorData?.location_lat && vendorData?.location_long) {
-            const pos = { lat: vendorData.location_lat, lng: vendorData.location_long };
-            setMapCenter(pos);
-            setMarkerPos(pos);
-            setValue('location_lat', pos.lat);
-            setValue('location_long', pos.lng);
-        } else if (event?.location_lat) {
-            const pos = { lat: event.location_lat, lng: event.location_long };
+        if (initialLat && initialLng) {
+            const pos = { lat: initialLat, lng: initialLng };
             setMapCenter(pos);
             setMarkerPos(pos);
         }
-    }, [vendorData, event, setValue]);
+    }, [initialLat, initialLng]);
 
     const extractAddressComponents = (results: google.maps.GeocoderResult[]) => {
         if (!results[0]) return;
         const addressComponents = results[0].address_components;
         const formattedAddress = results[0].formatted_address;
 
-        setValue('location_name', formattedAddress, { shouldValidate: true });
+        setAddressLabel(formattedAddress);
 
         let district = '';
         let city = '';
@@ -235,60 +225,74 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
             setMarkerPos({ lat, lng });
-            setValue('location_lat', lat, { shouldValidate: true });
-            setValue('location_long', lng, { shouldValidate: true });
             handleGeocoding(lat, lng);
         }
     }, [setValue]);
 
+    const handleCurrentLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const pos = { lat, lng };
+
+                    setMapCenter(pos);
+                    setMarkerPos(pos);
+                    handleGeocoding(lat, lng);
+                },
+                () => {
+                    alert("Error: The Geolocation service failed.");
+                }
+            );
+        } else {
+            alert("Error: Your browser doesn't support geolocation.");
+        }
+    };
+
     const onPlaceSelect = (lat: number, lng: number, address: string, placeDetails: any) => {
         setMapCenter({ lat, lng });
         setMarkerPos({ lat, lng });
-        setValue('location_lat', lat, { shouldValidate: true });
-        setValue('location_long', lng, { shouldValidate: true });
-        setValue('location_name', address, { shouldValidate: true });
+        setAddressLabel(address);
+
+        // usePlacesAutocomplete's placeDetails is compatible with extractAddressComponents if passed as array
         extractAddressComponents([placeDetails]);
     };
 
     const onMarkerDragEnd = (lat: number, lng: number) => {
         setMarkerPos({ lat, lng });
-        setValue('location_lat', lat, { shouldValidate: true });
-        setValue('location_long', lng, { shouldValidate: true });
         handleGeocoding(lat, lng);
     };
 
-    if (loadError) return <div>Error loading maps</div>;
+    if (loadError) return <div>خطأ في تحميل الخرائط</div>;
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-gray-700">الموقع الجغرافي</label>
-                {(watchedDistrict || watchedCity) && (
-                    <div className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {watchedDistrict && `${watchedDistrict}، `}{watchedCity && watchedCity}
-                    </div>
-                )}
-            </div>
+            {addressLabel && (
+                <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <MapPin className="w-4 h-4 text-primary shrink-0" />
+                    <span className="truncate font-medium">{addressLabel}</span>
+                </div>
+            )}
 
             {!isLoaded ? (
-                <div className="h-[250px] sm:h-[300px] w-full bg-gray-100 animate-pulse rounded-3xl flex items-center justify-center text-gray-400 font-bold">
-                    {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? <span className="text-red-500 text-center px-4">تنبيه: مفتاح Google Maps API غير موجود.</span> : "جاري تحميل الخريطة..."}
+                <div className={`${className} w-full bg-gray-100 animate-pulse rounded-2xl flex items-center justify-center text-gray-400 font-bold`}>
+                    {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? <span className="text-red-500 text-center px-4">API Key Missing</span> : "جاري تحميل الخريطة..."}
                 </div>
             ) : (
-                <div className="relative group">
-                    <PlacesAutocomplete onSelect={onPlaceSelect} />
-                    <div className="rounded-3xl overflow-hidden border-2 border-gray-100 shadow-sm h-[250px] sm:h-[300px]">
+                <div className="relative group rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                    <PlacesAutocomplete onSelect={onPlaceSelect} handleCurrentLocation={handleCurrentLocation} />
+                    <div className={className}>
                         <GoogleMap
                             mapContainerStyle={mapContainerStyle}
                             center={mapCenter}
-                            zoom={14}
+                            zoom={13}
                             onLoad={onMapLoad}
                             onClick={onMapClick}
                             options={{
                                 disableDefaultUI: true,
                                 zoomControl: true,
-                                mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || "DEMO_MAP_ID", // Required for AdvancedMarker
+                                mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || "DEMO_MAP_ID"
                             }}
                         >
                             {markerPos && mapRef.current && (
@@ -302,6 +306,7 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
                     </div>
                 </div>
             )}
+            <p className="text-xs text-gray-400 text-center">Click on the map to pin your location precisely.</p>
         </div>
     );
 }
