@@ -136,7 +136,7 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
     // Actually, `booking.status` is confirmed, we should increment `tickets.sold`
     await supabase.rpc('increment_ticket_sold', { ticket_id: ticketId, quantity });
     // Note: RPC needed for atomic increment, but for now we'll skip or just update directly (race condition risk)
-    const { error: updateError } = await supabase.from('tickets').update({ sold: ticket.sold + quantity }).eq('id', ticketId);
+    const { error: updateError } = await supabase.from('tickets').update({ sold: (ticket.sold || 0) + quantity }).eq('id', ticketId);
 
 
     revalidatePath(`/events/${eventId}`);

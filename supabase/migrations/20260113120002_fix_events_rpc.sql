@@ -1,6 +1,7 @@
 -- Fix get_events_pro to include category details (restoring from add_categories migration that might have been overwritten)
 -- and ensure price calculation is correct.
 
+drop function if exists get_events_pro;
 create or replace function get_events_pro(
   p_lat float default null,
   p_long float default null,

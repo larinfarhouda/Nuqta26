@@ -1,111 +1,85 @@
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- -----------------------------------------------------------------------------
--- 1. PROFILES (Public Users + Vendors + Admins)
--- -----------------------------------------------------------------------------
-create table profiles (
-  id uuid references auth.users on delete cascade primary key,
-  role text check (role in ('user', 'vendor', 'admin')) default 'user',
+-- USERS & PROFILES
+-- Suggestion: Link this to auth.users via a trigger to auto-create profile on signup
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
+  email text,
   avatar_url text,
-  favorites text[], -- Array of Vendor UUIDs (Consider migrating to a separate table for cleaner relations)
-  created_at timestamptz default now()
+  age int,
+  gender text,
+  country text,
+  city text,
+  district text,
+  phone text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-alter table profiles enable row level security;
+-- RLS Suggestion:
+-- alter table profiles enable row level security;
+-- create policy "Public profiles are viewable by everyone" on profiles for select using (true);
+-- create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
 
-create policy "Public profiles are viewable by everyone."
-  on profiles for select
-  using ( true );
 
-create policy "Users can insert their own profile."
-  on profiles for insert
-  with check ( auth.uid() = id );
-
-create policy "Users can update own profile."
-  on profiles for update
-  using ( auth.uid() = id );
-
--- -----------------------------------------------------------------------------
--- 2. VENDORS (Business Profiles)
--- -----------------------------------------------------------------------------
-create table vendors (
-  id uuid references profiles(id) on delete cascade primary key,
+-- VENDORS
+-- Represents event organizers/vendors. 
+-- Suggestion: Link to auth.users similar to profiles, or handle via separate registration flow.
+create table if not exists vendors (
+  id uuid primary key references auth.users(id) on delete cascade,
   business_name text not null,
-  category text not null,
-  description_ar text,
-  tax_id_document text, -- URL to private bucket
-  is_verified boolean default false,
-  whatsapp_number text,
-  location_lat float,
-  location_long float,
-  status text check (status in ('pending', 'approved', 'suspended')) default 'approved', -- Default is approved per recent changes
   company_logo text,
+  phone text,
+  -- Add other business details from registration if needed (e.g., tax_id, address)
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- RLS Suggestion:
+-- alter table vendors enable row level security;
+-- create policy "Vendors are viewable by everyone" on vendors for select using (true);
+-- create policy "Vendors can update own profile" on vendors for update using (auth.uid() = id);
+
+
+-- CATEGORIES
+create table if not exists categories (
+  id uuid default uuid_generate_v4() primary key,
+  slug text not null unique,
+  name_en text not null,
+  name_ar text,
+  icon text,
   created_at timestamptz default now()
 );
 
-alter table vendors enable row level security;
+-- RLS Suggestion:
+-- alter table categories enable row level security;
+-- create policy "Categories are viewable by everyone" on categories for select using (true);
+-- create policy "Only admins can insert/update categories" on categories for all using (auth.role() = 'service_role');
 
-create policy "Vendors are viewable by everyone if approved."
-  on vendors for select
-  using ( status = 'approved' or auth.uid() = id ); 
 
-create policy "Admins can view all vendors."
-  on vendors for select
-  using ( exists (select 1 from profiles where id = auth.uid() and role = 'admin') );
-
-create policy "Vendors can insert their own business profile."
-  on vendors for insert
-  with check ( auth.uid() = id );
-
-create policy "Vendors can update their own business profile."
-  on vendors for update
-  using ( auth.uid() = id );
-
--- -----------------------------------------------------------------------------
--- 3. VENDOR GALLERY
--- -----------------------------------------------------------------------------
-create table vendor_gallery (
+-- EVENTS
+create table if not exists events (
   id uuid default uuid_generate_v4() primary key,
   vendor_id uuid references vendors(id) on delete cascade not null,
-  image_url text not null,
-  caption text,
-  created_at timestamptz default now()
-);
-
-alter table vendor_gallery enable row level security;
-
-create policy "Gallery publicly viewable"
-  on vendor_gallery for select
-  using ( true );
-
-create policy "Vendors manage own gallery"
-  on vendor_gallery for all
-  using ( auth.uid() = vendor_id );
-
--- -----------------------------------------------------------------------------
--- 4. EVENTS
--- -----------------------------------------------------------------------------
-create table events (
-  id uuid default uuid_generate_v4() primary key,
-  vendor_id uuid references vendors(id) on delete cascade not null,
+  category_id uuid references categories(id) on delete set null,
   
-  -- Basic Details
   title text not null,
   description text,
   image_url text,
-  price numeric, -- Base price? (Note: tickets table handles detailed pricing)
-
-  -- Logistics
-  date timestamptz not null, -- Start date/time
-  end_date timestamptz,
-  status text check (status in ('draft', 'published', 'cancelled')) default 'draft',
-  event_type text check (event_type in ('workshop', 'meetup', 'bazaar', 'course', 'concert', 'exhibition', 'other')),
-  capacity int default 0,
   
-  -- Location
-  location text, -- Legacy generic field?
+  -- Date & Time
+  date timestamptz not null,
+  end_date timestamptz,
+  
+  -- Recurrence
+  is_recurring boolean default false,
+  recurrence_type text, -- 'daily', 'weekly', etc.
+  recurrence_days jsonb, -- e.g. ["Monday", "Wednesday"]
+  recurrence_end_date timestamptz,
+  
+  -- Location (Denormalized for search performance, or use PostGIS)
   location_name text,
   location_lat float,
   location_long float,
@@ -113,134 +87,68 @@ create table events (
   city text,
   country text,
   
-  -- Recurrence
-  is_recurring boolean default false,
-  recurrence_type text check (recurrence_type in ('daily', 'weekly', 'monthly', 'custom')),
-  recurrence_days text[], -- e.g. ['sun', 'mon']
-  recurrence_end_date timestamptz,
+  capacity int,
+  status text default 'draft', -- 'draft', 'published', 'cancelled'
+  event_type text, -- Deprecated in favor of category_id/slug? Kept for backward compatibility if needed.
   
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-alter table events enable row level security;
+-- RLS Suggestion:
+-- alter table events enable row level security;
+-- create policy "Published events are viewable by everyone" on events for select using (status = 'published');
+-- create policy "Vendors can manage own events" on events for all using (auth.uid() = vendor_id);
 
-create policy "Events publicly viewable"
-  on events for select
-  using ( true );
 
-create policy "Vendors manage own events"
-  on events for all
-  using ( auth.uid() = vendor_id );
-
--- -----------------------------------------------------------------------------
--- 5. TICKETS
--- -----------------------------------------------------------------------------
-create table tickets (
+-- TICKETS
+create table if not exists tickets (
   id uuid default uuid_generate_v4() primary key,
   event_id uuid references events(id) on delete cascade not null,
-  name text not null, -- e.g. "VIP", "Early Bird"
-  description text,
-  price numeric default 0,
-  quantity int not null default 0,
+  name text not null, -- e.g. "General Admission", "VIP"
+  price numeric not null default 0,
+  quantity int not null, -- Total available for this type
   sold int default 0,
+  
   created_at timestamptz default now()
 );
 
-alter table tickets enable row level security;
+-- RLS Suggestion:
+-- alter table tickets enable row level security;
+-- create policy "Tickets are viewable by everyone" on tickets for select using (true);
+-- create policy "Vendors can manage own event tickets" on tickets for all using (
+--   exists (select 1 from events where events.id = tickets.event_id and events.vendor_id = auth.uid())
+-- );
 
-create policy "Public view tickets" 
-  on tickets for select 
-  using (true);
 
-create policy "Vendors manage tickets" 
-  on tickets for all 
-  using (
-    exists (select 1 from events where events.id = tickets.event_id and events.vendor_id = auth.uid())
-  );
-
--- -----------------------------------------------------------------------------
--- 6. BOOKINGS
--- -----------------------------------------------------------------------------
-create table bookings (
+-- BOOKINGS
+create table if not exists bookings (
   id uuid default uuid_generate_v4() primary key,
-  event_id uuid references events(id) on delete cascade not null,
-  user_id uuid references auth.users(id) on delete set null, -- Nullable for guest checkout if needed
-  vendor_id uuid references vendors(id) on delete cascade not null, -- Denormalized for efficient querying
+  user_id uuid references profiles(id) on delete set null, -- User who booked
+  event_id uuid references events(id) on delete restrict, -- Event booked
+  vendor_id uuid references vendors(id) on delete restrict, -- Vendor (denormalized for easier querying by vendor)
   
-  status text check (status in ('pending', 'confirmed', 'cancelled', 'refunded')) default 'pending',
+  status text default 'confirmed', -- 'confirmed', 'cancelled', 'pending'
   total_amount numeric default 0,
   
-  -- Contact Info
-  contact_name text,
-  contact_email text,
-  contact_phone text,
+  -- Ideally linking to specific tickets:
+  -- ticket_id uuid references tickets(id), 
+  -- quantity int, 
+  -- OR if multiple ticket types per booking allowed, use a separate booking_items table.
+  -- Based on current code loops, it seems bookings might be 1:1 with ticket types or aggregated?
+  -- Assuming simple structure for now based on 'bookings' join in 'getVendorBookings'
   
   created_at timestamptz default now()
 );
 
-alter table bookings enable row level security;
+-- RLS Suggestion:
+-- alter table bookings enable row level security;
+-- create policy "Users can view own bookings" on bookings for select using (auth.uid() = user_id);
+-- create policy "Vendors can view bookings for their events" on bookings for select using (auth.uid() = vendor_id);
 
-create policy "Users view own bookings"
-  on bookings for select
-  using (auth.uid() = user_id);
 
-create policy "Vendors view own event bookings"
-  on bookings for select
-  using (auth.uid() = vendor_id);
-
-create policy "Vendors manage own event bookings"
-  on bookings for update
-  using (auth.uid() = vendor_id);
-
-create policy "Users create bookings"
-  on bookings for insert
-  with check (auth.uid() = user_id);
-
--- Indexes for bookings
-create index bookings_vendor_id_idx on bookings(vendor_id);
-create index bookings_event_id_idx on bookings(event_id);
-create index bookings_user_id_idx on bookings(user_id);
-
--- -----------------------------------------------------------------------------
--- 7. BOOKING ITEMS (Attendees / Specific Tickets)
--- -----------------------------------------------------------------------------
-create table booking_items (
-  id uuid default uuid_generate_v4() primary key,
-  booking_id uuid references bookings(id) on delete cascade not null,
-  ticket_id uuid references tickets(id) on delete set null,
-  
-  attendee_name text,
-  attendee_email text,
-  price_at_booking numeric,
-  
-  status text check (status in ('checked_in', 'pending', 'cancelled')) default 'pending',
-  created_at timestamptz default now()
-);
-
-alter table booking_items enable row level security;
-
-create policy "Users view own booking items" 
-  on booking_items for select 
-  using (
-    exists (select 1 from bookings where bookings.id = booking_items.booking_id and bookings.user_id = auth.uid())
-  );
-
-create policy "Vendors view own booking items" 
-  on booking_items for select 
-  using (
-    exists (select 1 from bookings where bookings.id = booking_items.booking_id and bookings.vendor_id = auth.uid())
-  );
-
-create policy "Users create booking items" 
-  on booking_items for insert 
-  with check (
-    exists (select 1 from bookings where bookings.id = booking_items.booking_id and bookings.user_id = auth.uid())
-  );
-
--- -----------------------------------------------------------------------------
--- 8. FAVORITE EVENTS
--- -----------------------------------------------------------------------------
-create table favorite_events (
+-- FAVORITE EVENTS
+create table if not exists favorite_events (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references profiles(id) on delete cascade not null,
   event_id uuid references events(id) on delete cascade not null,
@@ -248,107 +156,134 @@ create table favorite_events (
   unique(user_id, event_id)
 );
 
-alter table favorite_events enable row level security;
+-- RLS Suggestion:
+-- alter table favorite_events enable row level security;
+-- create policy "Users can manage own favorites" on favorite_events for all using (auth.uid() = user_id);
 
-create policy "Users can view their own favorites"
-  on favorite_events for select
-  using ( auth.uid() = user_id );
 
-create policy "Users can add their own favorites"
-  on favorite_events for insert
-  with check ( auth.uid() = user_id );
+-- FUNCTIONS
 
-create policy "Users can remove their own favorites"
-  on favorite_events for delete
-  using ( auth.uid() = user_id );
-
--- -----------------------------------------------------------------------------
--- 9. FUNCTIONS & TRIGGERS
--- -----------------------------------------------------------------------------
--- Auth Hook for handling new users
-create or replace function public.handle_new_user()
-returns trigger
+-- Advanced Event Search Function
+-- Calculates distance (Haversine), filters by category, date, price, etc.
+create or replace function get_events_pro(
+  p_lat float default null,
+  p_long float default null,
+  p_radius_km float default null,
+  p_category text default null, -- can be category slug
+  p_min_price float default null,
+  p_max_price float default null,
+  p_search text default null,
+  p_date_start timestamptz default null,
+  p_date_end timestamptz default null,
+  p_limit int default 50,
+  p_offset int default 0
+)
+returns table (
+  id uuid,
+  vendor_id uuid,
+  title text,
+  description text,
+  image_url text,
+  price numeric,
+  date timestamptz,
+  status text,
+  event_type text, 
+  category_id uuid,
+  category_name_en text,
+  category_name_ar text,
+  category_slug text,
+  category_icon text,
+  capacity int,
+  location_name text,
+  location_lat float,
+  location_long float,
+  district text,
+  city text,
+  country text,
+  dist_km float,
+  vendor_name text,
+  vendor_logo text
+)
 language plpgsql
-security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, role, full_name, avatar_url)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'role', 'user'),
-    new.raw_user_meta_data->>'full_name',
-    new.raw_user_meta_data->>'avatar_url'
-  );
-  return new;
+  return query
+  select
+    e.id,
+    e.vendor_id,
+    e.title,
+    e.description,
+    e.image_url,
+    coalesce((select min(t.price) from tickets t where t.event_id = e.id), 0) as price,
+    e.date,
+    e.status,
+    e.event_type,
+    c.id as category_id,
+    c.name_en as category_name_en,
+    c.name_ar as category_name_ar,
+    c.slug as category_slug,
+    c.icon as category_icon,
+    e.capacity,
+    e.location_name,
+    e.location_lat,
+    e.location_long,
+    e.district,
+    e.city,
+    e.country,
+    case
+      when p_lat is not null and p_long is not null and e.location_lat is not null and e.location_long is not null then
+        (
+          6371 * acos(
+            least(1.0, greatest(-1.0,
+              cos(radians(p_lat)) * cos(radians(e.location_lat)) * cos(radians(e.location_long) - radians(p_long)) +
+              sin(radians(p_lat)) * sin(radians(e.location_lat))
+            ))
+          )
+        )
+      else null::float
+    end as dist_km,
+    v.business_name as vendor_name,
+    v.company_logo as vendor_logo
+  from events e
+  join vendors v on e.vendor_id = v.id
+  left join categories c on e.category_id = c.id
+  where
+    e.status = 'published'
+    and (p_category is null or c.slug = p_category or e.event_type = p_category)
+    and (p_search is null or e.title ilike '%' || p_search || '%')
+    and (p_date_start is null or e.date >= p_date_start)
+    and (p_date_end is null or e.date <= p_date_end)
+    and (
+      p_lat is null or p_long is null or p_radius_km is null or
+      (
+        6371 * acos(
+          least(1.0, greatest(-1.0,
+            cos(radians(p_lat)) * cos(radians(e.location_lat)) * cos(radians(e.location_long) - radians(p_long)) +
+            sin(radians(p_lat)) * sin(radians(e.location_lat))
+          ))
+        )
+      ) <= p_radius_km
+    )
+  group by e.id, v.id, c.id
+  having
+    (p_min_price is null or coalesce(min((select t.price from tickets t where t.event_id = e.id limit 1)), 0) >= p_min_price)
+    and (p_max_price is null or coalesce(min((select t.price from tickets t where t.event_id = e.id limit 1)), 0) <= p_max_price)
+  order by
+    case when p_lat is not null then 
+        case
+        when p_lat is not null and p_long is not null and e.location_lat is not null and e.location_long is not null then
+            (
+            6371 * acos(
+                least(1.0, greatest(-1.0,
+                cos(radians(p_lat)) * cos(radians(e.location_lat)) * cos(radians(e.location_long) - radians(p_long)) +
+                sin(radians(p_lat)) * sin(radians(e.location_lat))
+                ))
+            )
+            )
+        else null::float
+        end
+    end asc,
+    e.date asc
+  limit p_limit offset p_offset;
 end;
 $$;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-
--- -----------------------------------------------------------------------------
--- 10. STORAGE SETUP
--- -----------------------------------------------------------------------------
-
--- Create buckets if they don't exist
-insert into storage.buckets (id, name, public)
-values ('vendor-documents', 'vendor-documents', false)
-on conflict (id) do nothing;
-
-insert into storage.buckets (id, name, public)
-values ('vendor-public', 'vendor-public', true)
-on conflict (id) do nothing;
-
--- Enable RLS on objects
-alter table storage.objects enable row level security;
-
--- Policy: Allow vendors to upload files to their own folder in vendor-documents
-create policy "Vendors can upload own documents"
-on storage.objects for insert
-with check (
-  bucket_id = 'vendor-documents' and
-  auth.uid()::text = (storage.foldername(name))[1]
-);
-
--- Policy: Allow vendors to update/overwrite own documents
-create policy "Vendors can update own documents"
-on storage.objects for update
-using (
-  bucket_id = 'vendor-documents' and
-  auth.uid()::text = (storage.foldername(name))[1]
-);
-
--- Policy: Allow vendors to read own documents
-create policy "Vendors can read own documents"
-on storage.objects for select
-using (
-  bucket_id = 'vendor-documents' and
-  auth.uid()::text = (storage.foldername(name))[1]
-);
-
--- Policies for vendor-public
-create policy "Public Access to Vendor Public Assets"
-  on storage.objects for select
-  using ( bucket_id = 'vendor-public' );
-
-create policy "Vendors can upload public assets"
-  on storage.objects for insert
-  with check (
-    bucket_id = 'vendor-public' and
-    auth.uid()::text = (storage.foldername(name))[1]
-  );
-
-create policy "Vendors can update public assets"
-  on storage.objects for update
-  using (
-    bucket_id = 'vendor-public' and
-    auth.uid()::text = (storage.foldername(name))[1]
-  );
-
-create policy "Vendors can delete public assets"
-  on storage.objects for delete
-  using (
-    bucket_id = 'vendor-public' and
-    auth.uid()::text = (storage.foldername(name))[1]
-  );
