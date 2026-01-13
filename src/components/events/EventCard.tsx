@@ -98,11 +98,11 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     <div className="p-6 flex flex-col flex-1">
                         <div className="flex items-center gap-2 mb-3">
                             <div className="px-2 py-0.5 bg-secondary text-primary text-[10px] font-black rounded-md uppercase tracking-wider">
-                                {event.category || 'Event'}
+                                {event.category_name_en || event.category || 'Event'}
                             </div>
                             <div className="w-1 h-1 rounded-full bg-gray-300" />
                             <span className="text-xs font-bold text-gray-400 truncate max-w-[120px]">
-                                {event.vendors?.business_name}
+                                {event.vendor_name || event.vendors?.business_name}
                             </span>
                         </div>
 
