@@ -47,7 +47,8 @@
         "profile": "Profile",
         "login": "Login",
         "logout": "Logout",
-        "bookings": "My Bookings"
+        "bookings": "My Bookings",
+        "for_vendors": "For Organizers"
     },
     "Auth": {
         "profile": "Profile",
@@ -97,6 +98,61 @@
         "benefit3": "Grow your brand within a thriving community.",
         "join_btn": "Register Now"
     },
+    "VendorLanding": {
+        "Hero": {
+            "title": "Expand Your Reach with Nuqta",
+            "subtitle": "The ultimate platform for Arab events and culture in Istanbul. Connect with a community that speaks your language.",
+            "cta": "Start for Free"
+        },
+        "ProblemSolution": {
+            "title": "The Challenges You Face vs. The Nuqta Solution",
+            "problem1": "Struggling to reach the right audience?",
+            "solution1": "Nuqta connects you directly with the Arab community in Istanbul actively looking for events.",
+            "problem2": "Fragmented marketing across social media?",
+            "solution2": "Centralize your presence on a dedicated platform built for discovery.",
+            "problem3": "Difficulties in managing bookings?",
+            "solution3": "Streamlined ticketing and reservation tools designed for your needs."
+        },
+        "WhyNuqta": {
+            "title": "Why Verified Vendors Choose Nuqta",
+            "reason1_title": "Targeted Exposure",
+            "reason1_desc": "Unlike general platforms, we focus 100% on the Arab demographic in Istanbul.",
+            "reason2_title": "Community Trust",
+            "reason2_desc": "Being listed on Nuqta signals quality and authenticity to our users.",
+            "reason3_title": "Professional Tools",
+            "reason3_desc": "Get insights, manage attendees, and handle payments all in one place."
+        },
+        "Pricing": {
+            "title": "Simple, Transparent Pricing",
+            "subtitle": "Start for free, upgrade as you grow.",
+            "free_tier": "Free",
+            "free_desc": "Perfect for getting started",
+            "free_features": [
+                "Basic Profile",
+                "List 1 Event/Month",
+                "Community Support"
+            ],
+            "pro_tier": "Professional",
+            "pro_price": "999 TL",
+            "pro_period": "/month",
+            "pro_desc": "For serious organizers",
+            "pro_features": [
+                "Verified Badge",
+                "Unlimited Events",
+                "Advanced Analytics",
+                "Priority Support"
+            ]
+        },
+        "Testimonials": {
+            "title": "Success Stories",
+            "t1_quote": "Nuqta changed the game for our workshops. We used to struggle to fill seats, now we're fully booked weeks in advance.",
+            "t1_author": "Sarah M.",
+            "t1_role": "Art Workshop Organizer",
+            "t2_quote": "The platform is incredibly easy to use. I can focus on my event quality rather than worrying about marketing logistics.",
+            "t2_author": "Ahmed K.",
+            "t2_role": "Concert Promoter"
+        }
+    },
     "Vendor": {
         "dashboard": "Dashboard",
         "uploadTaxId": "Upload Documents",
@@ -138,5 +194,45 @@
         "cat_educational": "Educational",
         "cat_artistic": "Artistic",
         "cat_social": "Social"
+    },
+    "StaticPages": {
+        "About": {
+            "title": "About Nuqta",
+            "subtitle": "Connecting the heart of Istanbul's Arab community.",
+            "mission_title": "Our Mission",
+            "mission_desc": "Nuqta is the heartbeat of the Arab community in Istanbul. We are a platform dedicated to bridging cultures, fostering connections, and centralizing the vibrant events and services that make this city home to so many.",
+            "story_title": "Our Story",
+            "story_desc": "Since our inception, Nuqta has aimed to provide a trusted source for discovering workshops, galleries, bazaars, and community gatherings. We believe that by providing professional tools to organizers and a seamless discovery experience for users, we can help our community thrive together in Istanbul.",
+            "name_title": "Why the name Nuqta?",
+            "name_desc": "In Arabic, 'Nuqta' (نقطة) means 'point' or 'dot'. We see ourselves as the meeting point — the central dot on the map where everyone comes together to start something new."
+        },
+        "Contact": {
+            "title": "Contact Us",
+            "subtitle": "We're here to help. Reach out with any questions about the platform or partnership opportunities.",
+            "form_title": "Send us a Message",
+            "name_placeholder": "Full Name",
+            "email_placeholder": "Email Address",
+            "message_placeholder": "How can we help?",
+            "submit_btn": "Send Message",
+            "success_msg": "Thank you! We will get back to you soon.",
+            "cards": {
+                "email": "Email",
+                "whatsapp": "WhatsApp",
+                "location": "Location",
+                "location_val": "Istanbul, Turkey"
+            }
+        },
+        "Privacy": {
+            "title": "Privacy Policy",
+            "last_updated": "Last updated: January 2026",
+            "s1_title": "1. Information We Collect",
+            "s1_desc": "We collect information you provide directly to us when you create an account, register for an event, or communicate with us. This may include your name, email address, password, and information about the events you organize or attend.",
+            "s2_title": "2. How We Use Your Information",
+            "s2_desc": "We use the information we collect to provide, maintain, and improve our services, including to process event registrations, provide customer support, and send you technical notices and security alerts.",
+            "s3_title": "3. Information Sharing",
+            "s3_desc": "We do not share your personal information with third parties except as described in this policy, such as when you register for an event and we share necessary details with the event organizer to facilitate your attendance.",
+            "s4_title": "4. Your Rights",
+            "s4_desc": "You have the right to access, update, or delete your personal information at any time through your account settings or by contacting us directly."
+        }
     }
 }

@@ -1,18 +1,20 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/navigation';
+import { Link, usePathname } from '@/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
 import LogoutButton from '../auth/LogoutButton';
 
 export default function Navbar({ user }: { user?: any }) {
     const tAuth = useTranslations('Auth');
+    const tNav = useTranslations('Navigation');
     const locale = useLocale();
+    const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <nav className="fixed top-0 w-full p-4 md:px-12 flex justify-between items-center z-50 bg-white/70 backdrop-blur-2xl border-b border-gray-100/50 transition-all h-24">
+        <nav className="fixed top-0 w-full p-4 md:px-12 flex justify-between items-center z-50 bg-[#fffdfa]/80 backdrop-blur-3xl border-b border-secondary/10 shadow-sm transition-all h-24">
             <Link href="/" className="flex items-center group">
                 <div className="relative w-32 md:w-40 h-16 transform group-hover:scale-105 transition-transform duration-300">
                     <Image
@@ -37,6 +39,10 @@ export default function Navbar({ user }: { user?: any }) {
                         </div>
                     ) : (
                         <>
+                            <Link href="/for-vendors" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+                                {tNav('for_vendors')}
+                            </Link>
+                            <div className="h-4 w-px bg-gray-200" />
                             <Link href="/login" className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">{tAuth('login')}</Link>
                             <div className="h-4 w-px bg-gray-200" />
                             <Link href="/register" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-primary text-white rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
@@ -49,19 +55,21 @@ export default function Navbar({ user }: { user?: any }) {
                 {/* Language Switch */}
                 <div className="hidden md:flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-inner">
                     <Link
-                        href="/en"
+                        href={pathname}
+                        locale="en"
                         className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all ${locale === 'en'
-                                ? 'bg-white text-primary shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                            ? 'bg-white text-primary shadow-sm'
+                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                             }`}
                     >
                         EN
                     </Link>
                     <Link
-                        href="/ar"
+                        href={pathname}
+                        locale="ar"
                         className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all ${locale === 'ar'
-                                ? 'bg-white text-primary shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
+                            ? 'bg-white text-primary shadow-sm'
+                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                             }`}
                     >
                         AR
@@ -69,7 +77,12 @@ export default function Navbar({ user }: { user?: any }) {
                 </div>
 
                 {/* Mobile Menu Toggle */}
-                <button className="md:hidden p-2 text-gray-700" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                <button
+                    className="md:hidden p-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                    aria-expanded={mobileMenuOpen}
+                >
                     {mobileMenuOpen ? <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg> : <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>}
                 </button>
             </div>
@@ -84,15 +97,18 @@ export default function Navbar({ user }: { user?: any }) {
                         </div>
                     ) : (
                         <>
+                            <Link href="/for-vendors" className="w-full py-4 text-center font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-colors">
+                                {tNav('for_vendors')}
+                            </Link>
                             <Link href="/login" className="w-full py-4 text-center font-bold bg-primary text-white rounded-xl shadow-md">{tAuth('loginUser')}</Link>
                             <Link href="/login" className="w-full py-4 text-center font-bold border-2 border-primary text-primary rounded-xl">{tAuth('loginVendor')}</Link>
                         </>
                     )}
 
                     <div className="flex justify-center gap-4 pt-4 border-t">
-                        <Link href="/ar" className="text-sm font-bold text-gray-600">عربي</Link>
+                        <Link href={pathname} locale="ar" className="text-sm font-bold text-gray-600">عربي</Link>
                         <span className="text-gray-300">|</span>
-                        <Link href="/en" className="text-sm font-bold text-gray-600">English</Link>
+                        <Link href={pathname} locale="en" className="text-sm font-bold text-gray-600">English</Link>
                     </div>
                     <button onClick={() => setMobileMenuOpen(false)} className="absolute top-[-3rem] right-4 p-2 bg-gray-100 rounded-full">
                         <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>

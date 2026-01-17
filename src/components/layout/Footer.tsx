@@ -6,33 +6,54 @@ import Image from 'next/image';
 
 export default function Footer() {
     const t = useTranslations('Index');
+    const tNav = useTranslations('Navigation');
 
     return (
-        <footer className="bg-white py-12 md:py-20 border-t border-gray-100 pb-24 md:pb-12">
-            <div className="container mx-auto px-6 flex flex-col items-center gap-12">
-                <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="relative w-32 h-12">
-                        <Image
-                            src="/images/logo_nav.png"
-                            alt="Nuqta Logo"
-                            fill
-                            className="object-contain"
-                        />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="font-black text-2xl text-gray-900 tracking-tighter">Nuqta<span className="text-primary italic">.ist</span></span>
-                        <p className="text-sm text-gray-400 font-medium max-w-sm mt-2">Connecting the Arab community in the heart of Istanbul.</p>
-                    </div>
-                </div>
+        <footer className="bg-[#fffdfa] py-12 border-t border-secondary/10 pb-32 md:pb-12 px-6">
+            <div className="container mx-auto">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
 
-                <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-sm font-bold text-gray-500">
-                    <Link href="#" className="hover:text-primary transition">{t('footer.about')}</Link>
-                    <Link href="#" className="hover:text-primary transition">{t('footer.contact')}</Link>
-                    <Link href="#" className="hover:text-primary transition">{t('footer.privacy')}</Link>
-                </div>
+                    {/* Brand Section */}
+                    <div className="flex items-center gap-6">
+                        <Link href="/" className="relative w-28 h-10 transition-opacity hover:opacity-80">
+                            <Image
+                                src="/images/logo_nav.png"
+                                alt="Nuqta Logo"
+                                fill
+                                className="object-contain"
+                            />
+                        </Link>
+                        <div className="hidden md:block h-6 w-px bg-gray-100" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                            © {new Date().getFullYear()} Nuqta Istanbul
+                        </span>
+                    </div>
 
-                <div className="text-xs text-gray-400 font-medium">
-                    {t('footer.rights')}
+                    {/* Minimal Navigation */}
+                    <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+                        {[
+                            { label: tNav('home'), href: '/' },
+                            { label: tNav('for_vendors'), href: '/for-vendors' },
+                            { label: t('footer.about'), href: '/about' },
+                            { label: t('footer.contact'), href: '/contact' },
+                            { label: t('footer.privacy'), href: '/privacy' }
+                        ].map((link, idx) => (
+                            <Link
+                                key={idx}
+                                href={link.href}
+                                className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors"
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                    </nav>
+
+                    {/* Subtle Social/Extra - Placeholder for future */}
+                    <div className="flex items-center gap-4 text-gray-300">
+                        <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                        <span className="text-[9px] font-black uppercase tracking-widest italic">{t('footer.rights')}</span>
+                    </div>
+
                 </div>
             </div>
         </footer>
