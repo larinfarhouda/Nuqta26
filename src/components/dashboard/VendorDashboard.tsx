@@ -78,8 +78,8 @@ export default function VendorDashboard() {
             let inferredDistrict = null;
             if (data.location_lat && data.location_long) {
                 const city = CITIES['tr'].find(c =>
-                    Math.abs(c.lat - data.location_lat) < 0.001 &&
-                    Math.abs(c.lng - data.location_long) < 0.001
+                    Math.abs(c.lat - data.location_lat!) < 0.001 &&
+                    Math.abs(c.lng - data.location_long!) < 0.001
                 );
                 if (city) inferredDistrict = city.id;
             }
@@ -99,9 +99,9 @@ export default function VendorDashboard() {
 
         const payload = {
             id: user.id,
-            business_name: formData.get('business_name'),
-            category: formData.get('category'),
-            description_ar: formData.get('description_ar'),
+            business_name: formData.get('business_name') as string,
+            category: formData.get('category') as string,
+            description_ar: (formData.get('description_ar') as string) || null,
         };
 
         const { error } = await supabase.from('vendors').upsert(payload);

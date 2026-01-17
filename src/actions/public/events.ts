@@ -69,15 +69,15 @@ export async function getPublicEvents(filters?: EventFilter) {
     }
 
     const { data, error } = await supabase.rpc('get_events_pro', {
-        p_search: filters?.search || null,
-        p_category: filters?.category || null,
-        p_min_price: filters?.minPrice || null,
-        p_max_price: filters?.maxPrice || null,
-        p_lat: filters?.lat || null,
-        p_long: filters?.lng || null,
-        p_radius_km: filters?.radius || null,
-        p_date_start: dateStart,
-        p_date_end: dateEnd,
+        p_search: filters?.search || undefined,
+        p_category: filters?.category || undefined,
+        p_min_price: filters?.minPrice || undefined,
+        p_max_price: filters?.maxPrice || undefined,
+        p_lat: filters?.lat || undefined,
+        p_long: filters?.lng || undefined,
+        p_radius_km: filters?.radius || undefined,
+        p_date_start: dateStart || undefined,
+        p_date_end: dateEnd || undefined,
         p_limit: 50,
         p_offset: 0
     });
@@ -108,7 +108,7 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
 
     if (!ticket || !event) return { error: 'Invalid Ticket' };
 
-    const totalAmount = ticket.price * quantity;
+    const totalAmount = (ticket.price || 0) * quantity;
 
     // 2. Create Booking
     const { data: booking, error: bookingError } = await supabase

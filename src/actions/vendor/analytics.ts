@@ -26,6 +26,7 @@ export async function getVendorAnalytics() {
 
     // 3. Recent Activity (simplistic)
     const recentSales = bookings?.filter(b => {
+        if (!b.created_at) return false;
         const date = new Date(b.created_at);
         const now = new Date();
         return (now.getTime() - date.getTime()) < (30 * 24 * 60 * 60 * 1000); // Last 30 days
