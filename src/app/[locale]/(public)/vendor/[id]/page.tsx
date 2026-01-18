@@ -13,7 +13,7 @@ export default async function VendorProfilePage({
 }) {
     const { id, locale } = await params;
     const supabase = await createClient();
-    const t = await getTranslations('Index');
+    const t = await getTranslations('VendorProfile');
 
     const { data: vendor } = await supabase
         .from('vendors')
@@ -44,8 +44,8 @@ export default async function VendorProfilePage({
             <div className="sticky top-0 z-50 bg-white/40 backdrop-blur-2xl border-b border-white/20 px-4 md:px-6 py-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <Link href="/" className="p-2 -ml-2 hover:bg-white/50 rounded-full transition-colors flex items-center gap-2 text-sm font-black text-gray-900 group">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span className="hidden sm:inline uppercase tracking-widest text-[10px]">Back to discovery</span>
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
+                        <span className="hidden sm:inline uppercase tracking-widest text-[10px]">{t('back_to_discovery')}</span>
                     </Link>
                     <div className="flex items-center gap-1">
                         <button className="p-2.5 hover:bg-white/50 rounded-full transition-colors text-gray-900">
@@ -105,11 +105,11 @@ export default async function VendorProfilePage({
                     <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10 pt-4 relative z-10">
                         <div className="flex items-center gap-2.5 text-[10px] md:text-sm font-black text-gray-500 uppercase tracking-widest bg-white/50 px-4 py-2 rounded-full border border-white">
                             <MapPin className="w-4 h-4 text-primary" />
-                            <span>Istanbul Hub</span>
+                            <span>{t('istanbul_hub')}</span>
                         </div>
                         <div className="flex items-center gap-2.5 text-[10px] md:text-sm font-black text-gray-500 uppercase tracking-widest bg-white/50 px-4 py-2 rounded-full border border-white">
                             <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                            <span className="text-gray-900">4.95 Elite Rating</span>
+                            <span className="text-gray-900">{t('elite_rating')}</span>
                         </div>
                     </div>
 
@@ -120,11 +120,11 @@ export default async function VendorProfilePage({
                             className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 md:px-12 md:py-6 bg-gray-900 text-white font-black rounded-2xl md:rounded-[2.5rem] hover:bg-primary transition-all shadow-2xl shadow-primary/20 active:scale-95 text-xs uppercase tracking-widest"
                         >
                             <MessageCircle className="w-5 h-5 text-primary" />
-                            <span>Inquire via WhatsApp</span>
+                            <span>{t('inquire_whatsapp')}</span>
                         </a>
                         <button className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 md:px-12 md:py-6 bg-white border-2 border-primary/10 text-gray-900 font-black rounded-2xl md:rounded-[2.5rem] hover:bg-primary/5 transition-all shadow-xl shadow-gray-200/50 active:scale-95 text-xs uppercase tracking-widest">
                             <Sparkles className="w-5 h-5 text-primary" />
-                            <span>View Full Gallery</span>
+                            <span>{t('view_gallery')}</span>
                         </button>
                     </div>
                 </div>
@@ -134,20 +134,20 @@ export default async function VendorProfilePage({
                     {/* About Section - Serif Accent */}
                     <div className="space-y-8 px-4">
                         <div className="flex items-center gap-6">
-                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Our <span className="text-primary italic font-serif">Mission</span></h2>
+                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">{t('our_mission')}</h2>
                             <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
                         </div>
                         <div className="prose prose-sm md:prose-xl text-gray-600 font-medium leading-[2] max-w-none">
-                            {vendor.description_ar || "Dedicated to creating safe, cultural, and exciting spaces for Istanbul's community. We believe in the power of shared moments and elite service standards."}
+                            {vendor.description_ar || t('mission_default')}
                         </div>
                     </div>
 
                     {/* Stats Grid - Colorful Icons */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
                         {[
-                            { label: 'Elite Partner', icon: <ShieldCheck className="text-emerald-500" />, desc: 'Vetted Quality', color: 'from-emerald-500/10' },
-                            { label: 'Community Trust', icon: <Heart className="text-rose-500" />, desc: 'Top Reviews', color: 'from-rose-500/10' },
-                            { label: 'High Intent', icon: <TrendingUp className="text-blue-500" />, desc: 'Instant Support', color: 'from-blue-500/10' }
+                            { label: t('stats.elite_partner'), icon: <ShieldCheck className="text-emerald-500" />, desc: t('stats.vetted_quality'), color: 'from-emerald-500/10' },
+                            { label: t('stats.community_trust'), icon: <Heart className="text-rose-500" />, desc: t('stats.top_reviews'), color: 'from-rose-500/10' },
+                            { label: t('stats.high_intent'), icon: <TrendingUp className="text-blue-500" />, desc: t('stats.instant_support'), color: 'from-blue-500/10' }
                         ].map((item, i) => (
                             <div key={i} className={`p-8 md:p-10 bg-gradient-to-br ${item.color} to-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-xl transition-transform hover:-translate-y-2`}>
                                 <div className="p-4 bg-white w-fit rounded-2xl shadow-xl border border-gray-100 mb-6">{item.icon}</div>
@@ -166,9 +166,9 @@ export default async function VendorProfilePage({
                             <div className="flex items-center justify-between relative z-10">
                                 <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                                     <Sparkles className="w-6 h-6 text-primary" />
-                                    Active Catalog
+                                    {t('active_catalog')}
                                 </h2>
-                                <span className="px-4 py-2 bg-white/50 backdrop-blur-xl rounded-full text-[10px] md:text-xs font-black text-primary uppercase tracking-[0.2em] border border-white shadow-sm cursor-pointer hover:bg-primary hover:text-white transition-all">Explore All Catalog</span>
+                                <span className="px-4 py-2 bg-white/50 backdrop-blur-xl rounded-full text-[10px] md:text-xs font-black text-primary uppercase tracking-[0.2em] border border-white shadow-sm cursor-pointer hover:bg-primary hover:text-white transition-all">{t('explore_all')}</span>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12 relative z-10">
@@ -187,14 +187,14 @@ export default async function VendorProfilePage({
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
                                             <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
-                                                <div className="px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest w-fit shadow-xl">Book Experience</div>
+                                                <div className="px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest w-fit shadow-xl">{t('book_experience')}</div>
                                             </div>
                                         </div>
                                         <div className="px-2 text-left">
                                             <h3 className="text-base md:text-xl font-black text-gray-900 line-clamp-1 group-hover:text-primary transition-colors tracking-tight">{event.title}</h3>
                                             <div className="flex items-center gap-2 mt-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">{new Date(event.date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                             </div>
                                         </div>
                                     </Link>
@@ -212,7 +212,7 @@ export default async function VendorProfilePage({
                     className="w-full flex items-center justify-center gap-3 py-5 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 active:scale-95 transition-all"
                 >
                     <MessageCircle className="w-5 h-5" />
-                    <span>Inquire Profile</span>
+                    <span>{t('inquire_profile')}</span>
                 </a>
             </div>
         </div>

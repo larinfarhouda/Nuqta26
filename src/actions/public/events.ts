@@ -142,3 +142,12 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
     revalidatePath(`/events/${eventId}`);
     return { success: true, bookingId: booking.id };
 }
+
+export async function getAllEventIdsForSitemap() {
+    const supabase = await createClient();
+    const { data } = await supabase
+        .from('events')
+        .select('id, updated_at')
+        .eq('status', 'published');
+    return data || [];
+}

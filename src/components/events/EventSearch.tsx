@@ -4,8 +4,10 @@ import { Search, X, Sparkles } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 export default function EventSearch() {
+    const t = useTranslations('Index');
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -53,7 +55,7 @@ export default function EventSearch() {
                         }`} />
                     <input
                         className="flex-1 bg-transparent py-6 md:py-8 text-lg md:text-xl font-bold text-gray-900 placeholder:text-gray-300 outline-none"
-                        placeholder="What are you in the mood for?"
+                        placeholder={t('search.placeholder')}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         value={search}
@@ -79,16 +81,16 @@ export default function EventSearch() {
 
                     <div className="hidden md:flex items-center gap-2 px-5 py-3 bg-gray-50 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-400 group-hover:text-primary transition-colors">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Search</span>
+                        <span>{t('search.label')}</span>
                     </div>
                 </div>
             </motion.div>
 
             {/* Discovery Suggestion Desktop Only */}
             <div className="absolute -bottom-8 left-12 hidden lg:flex items-center gap-4 text-xs font-bold text-white/40 uppercase tracking-widest pointer-events-none">
-                <span>Try "Jazz Night"</span>
+                <span>{t('search.try_jazz')}</span>
                 <span className="w-1 h-1 rounded-full bg-white/20" />
-                <span>Try "Photography Workshop"</span>
+                <span>{t('search.try_photo')}</span>
             </div>
         </div>
     );

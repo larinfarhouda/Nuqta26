@@ -38,7 +38,7 @@ export default function VendorTestimonials() {
                         className="inline-flex items-center gap-2 px-6 py-2 bg-white rounded-full text-secondary-dark text-amber-600 font-black uppercase tracking-widest text-sm shadow-xl shadow-amber-600/5 border border-amber-100"
                     >
                         <Star className="w-4 h-4 fill-amber-600" />
-                        <span>Community Voice</span>
+                        <span>{t('community_voice')}</span>
                     </motion.div>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -85,9 +85,9 @@ export default function VendorTestimonials() {
 
                 <div className="mt-20 text-center">
                     <p className="text-lg font-black text-gray-400 flex items-center justify-center gap-4">
-                        Loved by
-                        <span className="px-5 py-2 bg-secondary/20 text-primary rounded-2xl border border-secondary/30 scale-110">Organizers</span>
-                        all over Istanbul
+                        {t('loved_by_prefix')}
+                        <span className="px-5 py-2 bg-secondary/20 text-primary rounded-2xl border border-secondary/30 scale-110">{t('organizers')}</span>
+                        {t('loved_by_suffix')}
                     </p>
                 </div>
             </div>

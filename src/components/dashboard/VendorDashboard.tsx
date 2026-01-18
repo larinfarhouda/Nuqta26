@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NextImage from 'next/image';
+import { useTranslations } from 'next-intl';
 
 // Tabs
 import EventsTab from './vendor/events/EventsTab';
@@ -47,6 +48,7 @@ const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | n
 
 export default function VendorDashboard() {
     const supabase = createClient();
+    const t = useTranslations('Dashboard');
 
     // Core State
     const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>('LOADING');
@@ -128,11 +130,11 @@ export default function VendorDashboard() {
                 <div className="sticky top-20 z-30 mb-8 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-sm mx-4 lg:mx-0 overflow-x-auto scrollbar-hide">
                     <div className="flex gap-2 min-w-max">
                         {[
-                            { id: 'ANALYTICS', icon: BarChart3, label: 'لوحة القيادة' },
-                            { id: 'EVENTS', icon: Calendar, label: 'الفعاليات' },
-                            { id: 'CUSTOMERS', icon: Users, label: 'العملاء' },
-                            { id: 'GALLERY', icon: ImageIcon, label: 'المعرض' },
-                            { id: 'PROFILE', icon: Settings, label: 'الإعدادات' },
+                            { id: 'ANALYTICS', icon: BarChart3, label: t('vendor.tabs.analytics') },
+                            { id: 'EVENTS', icon: Calendar, label: t('vendor.tabs.events') },
+                            { id: 'CUSTOMERS', icon: Users, label: t('vendor.tabs.customers') },
+                            { id: 'GALLERY', icon: ImageIcon, label: t('vendor.tabs.gallery') },
+                            { id: 'PROFILE', icon: Settings, label: t('vendor.tabs.settings') },
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -159,27 +161,27 @@ export default function VendorDashboard() {
                 {step === 'DETAILS' && (
                     <form onSubmit={handleInitialSubmit} className="space-y-6 max-w-lg mx-auto py-12">
                         <div className="text-center mb-10">
-                            <h2 className="text-3xl font-black text-gray-900 mb-2">مرحباً بك!</h2>
-                            <p className="text-gray-600">لنقم بإعداد حساب نشاطك التجاري في خطوات بسيطة.</p>
+                            <h2 className="text-3xl font-black text-gray-900 mb-2">{t('vendor.welcome')}</h2>
+                            <p className="text-gray-600">{t('vendor.setup_title')}</p>
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">اسم النشاط</label>
-                                <input name="business_name" required className="input-field text-gray-900" placeholder="مثال: مسرح الفنون" />
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.business_name')}</label>
+                                <input name="business_name" required className="input-field text-gray-900" placeholder={t('vendor.business_name_placeholder')} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">التصنيف</label>
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.category')}</label>
                                 <select name="category" className="input-field text-gray-900">
-                                    <option value="cultural">ثقافي</option>
-                                    <option value="entertainment">ترفيهي</option>
+                                    <option value="cultural">{t('vendor.category_cultural')}</option>
+                                    <option value="entertainment">{t('vendor.category_entertainment')}</option>
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">وصف مختصر</label>
-                                <textarea name="description_ar" className="input-field min-h-[100px] text-gray-900" placeholder="نبذة عن نشاطك..." />
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.description')}</label>
+                                <textarea name="description_ar" className="input-field min-h-[100px] text-gray-900" placeholder={t('vendor.description_placeholder')} />
                             </div>
                         </div>
-                        <button type="submit" className="btn-primary w-full py-4 text-lg">ابدأ الآن</button>
+                        <button type="submit" className="btn-primary w-full py-4 text-lg">{t('vendor.start_now')}</button>
                     </form>
                 )}
 
@@ -200,7 +202,7 @@ export default function VendorDashboard() {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-black text-gray-900">{vendorData?.business_name}</h1>
-                                <p className="text-sm text-gray-500 font-medium">لوحة تحكم البائع</p>
+                                <p className="text-sm text-gray-500 font-medium">{t('vendor.title')}</p>
                             </div>
                         </div>
 

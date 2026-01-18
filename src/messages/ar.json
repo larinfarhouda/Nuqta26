@@ -21,7 +21,26 @@
       "exhibition": "معارض فنية",
       "other": "مأكولات وأخرى"
     },
+    "hero": {
+      "connected_community": "مجتمع متصل",
+      "discover_more": "اكتشف المزيد"
+    },
+    "features_section": {
+      "our_ecosystem": "نظامنا البيئي",
+      "thrive_title": "كل ما تحتاجه <highlight>لتزدهر</highlight> في إسطنبول"
+    },
+    "search": {
+      "placeholder": "عن ماذا تبحث اليوم؟",
+      "label": "بحث",
+      "try_jazz": "جرب \"ليلة جاز\"",
+      "try_photo": "جرب \"ورشة تصوير\"",
+      "view_options": "خيارات العرض",
+      "all_neighborhoods": "كل المناطق",
+      "near_me": "بالقرب مني",
+      "search_nearby": "بحث في الجوار"
+    },
     "cta": {
+      "ready_to_start": "جاهز للبدء؟",
       "title": "أنت جزء من القصة",
       "user_btn": "دخول الزوار",
       "vendor_btn": "دخول المنظمين",
@@ -96,7 +115,34 @@
     "benefit1": "وصول مباشر لجمهور يبحث عن خدماتك.",
     "benefit2": "أدوات متكاملة لإدارة فعالياتك وحجوزاتك.",
     "benefit3": "فرصة لنمو علامتك التجارية في مجتمع حيوي.",
-    "join_btn": "سجل الآن"
+    "join_btn": "سجل الآن",
+    "join_hub": "انضم إلى أكثر منصات إسطنبول دفئاً",
+    "trusted_partners": "٣٠٠+ شريك موثوق",
+    "perks": {
+      "audience": "جمهور مستهدف",
+      "setup_fee": "بدون رسوم تأسيس",
+      "analytics": "تحليلات مباشرة"
+    },
+    "mock": {
+      "dashboard_title": "لوحة المنظم",
+      "monthly_growth": "النمو الشهري",
+      "direct_inquiries": "استفسارات مباشرة",
+      "performance_trend": "أتجاه الأداء",
+      "verified": "مؤكد",
+      "premium_account": "حساب مميز",
+      "total_sales": "إجمالي المبيعات",
+      "tickets": "تذاكر",
+      "jan": "يناير",
+      "feb": "فبراير",
+      "mar": "مارس",
+      "apr": "أبريل",
+      "may": "مايو",
+      "jun": "يونيو",
+      "jul": "يوليو",
+      "aug": "أغسطس",
+      "sep": "سبتمبر",
+      "today": "اليوم"
+    }
   },
   "VendorLanding": {
     "Hero": {
@@ -141,7 +187,12 @@
         "فعاليات لا محدودة",
         "إحصائيات متقدمة",
         "أولوية الدعم"
-      ]
+      ],
+      "most_popular": "الأكثر طلباً",
+      "simple_growth": "نمو بسيط",
+      "no_credit_card": "لا يلزم بطاقة ائتمان للباقة المجانية",
+      "get_started": "ابدأ الآن",
+      "scale_now": "توسع الآن"
     },
     "Testimonials": {
       "title": "قصص نجاح",
@@ -150,8 +201,41 @@
       "t1_role": "فنانة",
       "t2_quote": "أسهل منصة استخدمتها لتنظيم الفعاليات.",
       "t2_author": "أحمد ك.",
-      "t2_role": "منظم حفلات"
+      "t2_role": "منظم حفلات",
+      "community_voice": "صوت المجتمع",
+      "loved_by_prefix": "محبوب من قبل",
+      "organizers": "المنظمين",
+      "loved_by_suffix": "في جميع أنحاء إسطنبول"
+    },
+    "Benefits": {
+      "title": "لماذا يختار المنظمون نقطة؟",
+      "advantage": "ميزة نقطة",
+      "express_setup": "إعداد سريع",
+      "community_focus": "تركيز مجتمعي",
+      "brand_customization": "تخصيص العلامة التجارية",
+      "multi_language": "متعدد اللغات"
     }
+  },
+  "VendorProfile": {
+    "back_to_discovery": "العودة للاكتشاف",
+    "istanbul_hub": "مركز إسطنبول",
+    "elite_rating": "٤.٩٥ تقييم مميز",
+    "inquire_whatsapp": "تواصل عبر واتساب",
+    "view_gallery": "عرض المعرض الكامل",
+    "our_mission": "مهمتنا",
+    "mission_default": "ملتزمون بخلق مساحات آمنة وثقافية ومثيرة لمجتمع إسطنبول. نؤمن بقوة اللحظات المشتركة ومعايير الخدمة المميزة.",
+    "stats": {
+      "elite_partner": "شريك مميز",
+      "vetted_quality": "جودة معتمدة",
+      "community_trust": "ثقة المجتمع",
+      "top_reviews": "أعلى التقييمات",
+      "high_intent": "اهتمام عالي",
+      "instant_support": "دعم فوري"
+    },
+    "active_catalog": "الفعاليات النشطة",
+    "explore_all": "استكشاف الكل",
+    "book_experience": "احجز تجربتك",
+    "inquire_profile": "استفسر عن الملف"
   },
   "Vendor": {
     "dashboard": "لوحة التحكم",
@@ -234,5 +318,172 @@
       "s4_title": "٤. حقوقك",
       "s4_desc": "لديك الحق في الوصول إلى معلوماتك الشخصية أو تحديثها أو حذفها في أي وقت من خلال إعدادات حسابك أو عن طريق الاتصال بنا مباشرة."
     }
+  },
+  "Dashboard": {
+    "menu": "القائمة",
+    "my_registrations": "تسجيلاتي",
+    "favorites": "المفضلة",
+    "my_profile": "ملفي الشخصي",
+    "user": {
+      "my_registrations": "تسجيلاتي",
+      "sign_out": "تسجيل الخروج",
+      "no_registrations": "لا توجد تسجيلات نشطة.",
+      "browse_events": "تصفح الفعاليات واحجز تذاكرك!",
+      "no_image": "لا توجد صورة",
+      "booking_id": "رقم الحجز",
+      "view_details": "عرض تفاصيل الفعالية",
+      "status": {
+        "confirmed": "مؤكد",
+        "pending": "قيد الانتظار",
+        "cancelled": "ملغي"
+      }
+    },
+    "vendor": {
+      "title": "لوحة تحكم البائع",
+      "tabs": {
+        "analytics": "لوحة القيادة",
+        "events": "الفعاليات",
+        "customers": "العملاء",
+        "gallery": "المعرض",
+        "settings": "الإعدادات"
+      },
+      "welcome": "مرحباً بك!",
+      "setup_title": "لنقم بإعداد حساب نشاطك التجاري في خطوات بسيطة.",
+      "business_name": "اسم النشاط",
+      "business_name_placeholder": "مثال: مسرح الفنون",
+      "category": "التصنيف",
+      "category_cultural": "ثقافي",
+      "category_entertainment": "ترفيهي",
+      "description": "وصف مختصر",
+      "description_placeholder": "نبذة عن نشاطك...",
+      "start_now": "ابدأ الآن",
+      "profile": {
+        "save_success": "تم حفظ التغييرات بنجاح",
+        "location_success": "تم تحديث الموقع بنجاح",
+        "logo_success": "تم تحديث الشعار بنجاح",
+        "upload_success": "تم رفع الملف بنجاح",
+        "uploading": "جاري الرفع...",
+        "change_logo": "اضغط لتغيير الشعار",
+        "business_name": "اسم النشاط",
+        "category": "التصنيف",
+        "category_cultural": "ثقافي",
+        "category_entertainment": "ترفيهي",
+        "description": "الوصف",
+        "save_changes": "حفظ التغييرات",
+        "location": "الموقع",
+        "select_district": "اختر المنطقة",
+        "update_location": "تحديث الموقع",
+        "verification": "التحقق والمستندات",
+        "tax_record": "السجل الضريبي",
+        "verified": "تم التحقق",
+        "pending": "بانتظار التحقق أو الرفع",
+        "upload_file": "رفع ملف"
+      },
+      "gallery": {
+        "add_success": "تم إضافة الصورة بنجاح",
+        "error_prefix": "حدث خطأ: ",
+        "delete_confirm": "هل أنت متأكد من حذف هذه الصورة؟",
+        "delete_success": "تم حذف الصورة بنجاح",
+        "my_works": "أعمالي",
+        "add_image": "إضافة صورة",
+        "no_images": "لا توجد صور بعد"
+      },
+      "events": {
+        "title": "الفعاليات",
+        "subtitle": "قم بإدارة فعالياتك وتتبع المبيعات",
+        "new_event": "فعالية جديدة",
+        "loading": "جاري التحميل...",
+        "published": "منشور",
+        "draft": "مسودة",
+        "general": "عام",
+        "tickets": "التذاكر",
+        "capacity": "السعة",
+        "no_upcoming": "لا توجد فعاليات قادمة",
+        "delete_confirm": "هل أنت متأكد من حذف هذه الفعالية؟",
+        "delete_error": "خطأ أثناء الحذف"
+      },
+      "customers": {
+        "title": "العملاء",
+        "subtitle": "قائمة عملائك وتاريخ حجوزاتهم",
+        "search_placeholder": "بحث بالاسم أو البريد...",
+        "loading": "جاري التحميل...",
+        "table": {
+          "customer": "العميل",
+          "bookings": "مرات الحجز",
+          "total_spent": "إجمالي الإنفاق",
+          "last_booking": "آخر حجز",
+          "interests": "الاهتمامات"
+        },
+        "vip_tooltip": "عميل مميز (مكرر)",
+        "currency": "ر.س",
+        "no_results": "لا توجد نتائج"
+      },
+      "analytics": {
+        "loading_analysis": "جاري تحليل البيانات...",
+        "no_data": "لا توجد بيانات متاحة بعد.",
+        "title": "الإحصائيات والتحليلات",
+        "subtitle": "نظرة عامة على أداء فعالياتك",
+        "total_revenue": "إجمالي المبيعات (ر.س)",
+        "tickets_sold": "التذاكر المباعة",
+        "total_events": "الفعاليات الكلية",
+        "recent_sales": "مبيعات آخر ٣٠ يوم",
+        "favorite_types": "أنواع الفعاليات المفضلة",
+        "no_enough_data": "لا توجد بيانات كافية",
+        "customer_loyalty": "ولاء العملاء",
+        "loyalty_types": {
+          "one_time": "مرة واحدة",
+          "recurring": "متكرر",
+          "loyal": "مخلص (VIP)"
+        },
+        "tip_label": "نصيحة:",
+        "tip_text": "ركز على العملاء \"المتكررين\" وقدم لهم عروضاً خاصة لتحويلهم إلى عملاء \"VIP\" لزيادة المبيعات طويلة الأمد.",
+        "gender_dist": "توزيع الجنس",
+        "gender": {
+          "male": "ذكر",
+          "female": "أنثى",
+          "unknown": "غير محدد"
+        },
+        "age_dist": "الفئات العمرية"
+      }
+    }
+  },
+  "Events": {
+    "back_to_discovery": "العودة للاستكشاف",
+    "link_copied": "تم نسخ الرابط!",
+    "added_favorites": "تمت الإضافة للمفضلة!",
+    "details_count": "+{count} تفاصيل",
+    "verified_community": "مجتمع موثوق",
+    "default_category": "تجربة",
+    "when": "الموعد",
+    "where": "المكان",
+    "default_location": "إسطنبول",
+    "elite_organizer": "منظم نخبة",
+    "default_partner": "شريك نقطة",
+    "super_partner": "شريك مميز",
+    "personal_host": "مضيف شخصي",
+    "the_experience": "عن التجربة",
+    "default_description": "هذه التجربة الحصرية تدعوك لاكتشاف القصص الخفية في إسطنبول. انضم إلينا في رحلة من التواصل والثقافة.",
+    "location_context": "الموقع",
+    "show_direct_route": "عرض الطريق المباشر",
+    "why_book_title": "لماذا تحجز مع نقطة؟",
+    "benefit_1_title": "معايير النخبة",
+    "benefit_1_desc": "تجارب منتقاة بعناية تم فحصها من قبل فريقنا في إسطنبول.",
+    "benefit_2_title": "دعم فوري",
+    "benefit_2_desc": "مساعدة ذات أولوية 24/7 لجميع أعضاء المجتمع.",
+    "booking_confirmed": "تم تأكيد الحجز!",
+    "booking_success_msg": "جهز حقائبك! أنت الآن مسجل رسمياً في {title}. تفقد بريدك الإلكتروني للحصول على التذاكر.",
+    "high_demand": "طلب مرتفع: {count} شخص حجزوا اليوم",
+    "starting_price": "السعر يبدأ من",
+    "free": "مجاني",
+    "per_person": "/ للشخص",
+    "select_ticket": "اختر نوع التذكرة",
+    "number_of_guests": "عدد الضيوف",
+    "max_guests": "الحد الأقصى {count} للحجز الواحد",
+    "total_to_pay": "الإجمالي للدفع",
+    "generic_error": "حدث خطأ ما. يرجى التحقق من اتصالك.",
+    "confirm_experience": "تأكيد التجربة",
+    "instant_confirmation": "تأكيد فوري",
+    "reserve": "احجز",
+    "total_price": "السعر الإجمالي"
   }
 }

@@ -8,6 +8,7 @@ import Image from 'next/image';
 
 export default function VendorHero() {
     const t = useTranslations('VendorLanding.Hero');
+    const tCommon = useTranslations('VendorHero');
 
     return (
         <div className="relative overflow-hidden bg-[#fffcf9] pt-24 md:pt-32 pb-16 md:pb-24">
@@ -30,7 +31,7 @@ export default function VendorHero() {
                                 className="inline-flex items-center gap-2 px-5 py-2 bg-secondary/40 backdrop-blur-md text-primary rounded-full text-xs md:text-sm font-black border border-secondary/40 shadow-xl shadow-secondary/10"
                             >
                                 <Heart className="w-4 h-4 fill-primary" />
-                                <span>Join Istanbul's Warmest Hub</span>
+                                <span>{tCommon('join_hub')}</span>
                             </motion.div>
 
                             <motion.h1
@@ -72,7 +73,7 @@ export default function VendorHero() {
                                             </div>
                                         ))}
                                     </div>
-                                    <span className="text-gray-400 text-sm font-bold uppercase tracking-widest">300+ Trusted Partners</span>
+                                    <span className="text-gray-400 text-sm font-bold uppercase tracking-widest">{tCommon('trusted_partners')}</span>
                                 </div>
                             </motion.div>
 
@@ -83,12 +84,12 @@ export default function VendorHero() {
                                 transition={{ delay: 0.4 }}
                                 className="flex flex-wrap items-center justify-center lg:justify-start gap-x-8 gap-y-3 pt-4 border-t border-gray-100"
                             >
-                                {['Targeted Audience', 'No Setup Fee', 'Live Analytics'].map((item, i) => (
+                                {['audience', 'setup_fee', 'analytics'].map((item, i) => (
                                     <div key={i} className="flex items-center gap-2 text-gray-500 text-sm md:text-base font-bold">
                                         <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center">
                                             <CheckCircle2 className="w-4 h-4" />
                                         </div>
-                                        <span>{item}</span>
+                                        <span>{tCommon(`perks.${item}`)}</span>
                                     </div>
                                 ))}
                             </motion.div>
@@ -110,7 +111,7 @@ export default function VendorHero() {
                                             <div className="w-3 h-3 rounded-full bg-amber-400" />
                                             <div className="w-3 h-3 rounded-full bg-emerald-400" />
                                         </div>
-                                        <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Vendor Dashboard</div>
+                                        <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">{tCommon('mock.dashboard_title')}</div>
                                     </div>
 
                                     {/* Mock Content */}
@@ -120,12 +121,12 @@ export default function VendorHero() {
                                             <div className="bg-secondary/10 rounded-[2rem] p-6 flex flex-col gap-2 border border-secondary/20 hover:bg-secondary/20 transition-colors">
                                                 <TrendingUp className="w-6 h-6 text-primary" />
                                                 <span className="text-3xl font-black text-gray-900">+127%</span>
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-widest leading-none">Monthly Growth</span>
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-widest leading-none">{tCommon('mock.monthly_growth')}</span>
                                             </div>
                                             <div className="bg-primary/5 rounded-[2rem] p-6 flex flex-col gap-2 border border-primary/10 hover:bg-primary/10 transition-colors">
                                                 <Users className="w-6 h-6 text-primary" />
                                                 <span className="text-3xl font-black text-gray-900">1.2k</span>
-                                                <span className="text-xs font-black text-gray-500 uppercase tracking-widest leading-none">Direct Inquiries</span>
+                                                <span className="text-xs font-black text-gray-500 uppercase tracking-widest leading-none">{tCommon('mock.direct_inquiries')}</span>
                                             </div>
                                         </div>
 
@@ -133,7 +134,7 @@ export default function VendorHero() {
                                         <div className="space-y-5">
                                             <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-primary" />
-                                                Performance Trend
+                                                {tCommon('mock.performance_trend')}
                                             </h4>
                                             <div className="flex justify-between items-end h-40 gap-2 px-1">
                                                 {[30, 50, 45, 80, 60, 40, 95, 70, 85, 90].map((h, i) => (
@@ -147,7 +148,7 @@ export default function VendorHero() {
                                                 ))}
                                             </div>
                                             <div className="flex justify-between text-[10px] font-black text-gray-300 px-1 uppercase tracking-tighter">
-                                                <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span className="text-primary">Today</span>
+                                                <span>{tCommon('mock.jan')}</span><span>{tCommon('mock.feb')}</span><span>{tCommon('mock.mar')}</span><span>{tCommon('mock.apr')}</span><span>{tCommon('mock.may')}</span><span>{tCommon('mock.jun')}</span><span>{tCommon('mock.jul')}</span><span>{tCommon('mock.aug')}</span><span>{tCommon('mock.sep')}</span><span className="text-primary">{tCommon('mock.today')}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -163,8 +164,8 @@ export default function VendorHero() {
                                         <Zap className="w-8 h-8 fill-white" />
                                     </div>
                                     <div className="pr-6">
-                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Verified</p>
-                                        <p className="text-xl font-black text-gray-900">Premium Account</p>
+                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{tCommon('mock.verified')}</p>
+                                        <p className="text-xl font-black text-gray-900">{tCommon('mock.premium_account')}</p>
                                     </div>
                                 </motion.div>
 
@@ -177,8 +178,8 @@ export default function VendorHero() {
                                         <Calendar className="w-8 h-8 text-primary" />
                                     </div>
                                     <div className="pr-8">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Sales</p>
-                                        <p className="text-3xl font-black text-gray-900">2.4k Tickets</p>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{tCommon('mock.total_sales')}</p>
+                                        <p className="text-3xl font-black text-gray-900">2.4k {tCommon('mock.tickets')}</p>
                                     </div>
                                 </motion.div>
                             </div>

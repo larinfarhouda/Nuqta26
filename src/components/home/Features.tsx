@@ -30,7 +30,7 @@ export default function Features() {
                         className="inline-flex items-center gap-2 px-6 py-2 bg-white border border-gray-100 shadow-sm rounded-full"
                     >
                         <Orbit className="w-4 h-4 text-primary animate-spin-slow" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Our Ecosystem</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">{t('features_section.our_ecosystem')}</span>
                     </motion.div>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -39,12 +39,14 @@ export default function Features() {
                         transition={{ delay: 0.1 }}
                         className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight"
                     >
-                        Everything you need to <br />
-                        <span className="relative inline-block">
-                            <span className="relative z-10 text-primary italic">thrive</span>
-                            <div className="absolute -bottom-1 left-0 w-full h-4 bg-secondary/20 -rotate-1 z-0" />
-                        </span>
-                        &nbsp;in Istanbul
+                        {t.rich('features_section.thrive_title', {
+                            highlight: (chunks) => (
+                                <span className="relative inline-block mx-2">
+                                    <span className="relative z-10 text-primary italic">{chunks}</span>
+                                    <div className="absolute -bottom-1 left-0 w-full h-4 bg-secondary/20 -rotate-1 z-0" />
+                                </span>
+                            )
+                        })}
                     </motion.h2>
                 </div>
 

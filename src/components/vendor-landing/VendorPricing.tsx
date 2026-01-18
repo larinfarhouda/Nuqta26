@@ -16,7 +16,7 @@ export default function VendorPricing() {
             desc: t('free_desc'),
             features: t.raw('free_features'),
             highlight: false,
-            cta: "Get Started",
+            cta: t('get_started'),
             color: "border-gray-100 bg-white"
         },
         {
@@ -26,7 +26,7 @@ export default function VendorPricing() {
             desc: t('pro_desc'),
             features: t.raw('pro_features'),
             highlight: true,
-            cta: "Scale Now",
+            cta: t('scale_now'),
             color: "border-primary/20 bg-white shadow-2xl shadow-primary/20"
         }
     ];
@@ -45,7 +45,7 @@ export default function VendorPricing() {
                         className="inline-flex items-center gap-2 px-6 py-2 bg-secondary text-primary rounded-full text-sm font-black uppercase tracking-widest"
                     >
                         <Zap className="w-4 h-4 fill-primary" />
-                        <span>Simple Growth</span>
+                        <span>{t('simple_growth')}</span>
                     </motion.div>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -73,7 +73,7 @@ export default function VendorPricing() {
                             {tier.highlight && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-2 bg-primary text-white rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-xl">
                                     <Star className="w-4 h-4 fill-secondary text-secondary" />
-                                    <span>Most Popular</span>
+                                    <span>{t('most_popular')}</span>
                                 </div>
                             )}
 
@@ -111,7 +111,7 @@ export default function VendorPricing() {
                 </div>
 
                 <p className="text-center mt-12 text-gray-400 font-bold text-sm uppercase tracking-[0.2em] animate-pulse">
-                    No credit card required for free tier
+                    {t('no_credit_card')}
                 </p>
             </div>
         </section>

@@ -50,13 +50,13 @@ export default function Hero() {
                                     href="/register"
                                     className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white font-black rounded-2xl hover:bg-white hover:text-gray-900 transition-all shadow-xl active:scale-95 text-sm uppercase tracking-widest"
                                 >
-                                    <span>Discover more</span>
+                                    <span>{t('hero.discover_more')}</span>
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
 
                                 <div className="hidden lg:flex items-center gap-3 px-6 py-3.5 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 text-white font-bold text-sm">
                                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span>Connected Community</span>
+                                    <span>{t('hero.connected_community')}</span>
                                 </div>
                             </div>
                         </motion.div>

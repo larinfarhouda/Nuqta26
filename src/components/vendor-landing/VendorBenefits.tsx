@@ -6,6 +6,7 @@ import { Target, ShieldCheck, BarChart3, Users2, Zap, Palette, MapPin, Globe } f
 
 export default function VendorBenefits() {
     const t = useTranslations('VendorLanding.WhyNuqta');
+    const tBenefits = useTranslations('VendorLanding.Benefits');
 
     const benefits = [
         {
@@ -29,10 +30,10 @@ export default function VendorBenefits() {
     ];
 
     const extraPerks = [
-        { icon: <Zap />, label: "Express setup" },
-        { icon: <Users2 />, label: "Community focus" },
-        { icon: <Palette />, label: "Brand customization" },
-        { icon: <Globe />, label: "Multi-language" }
+        { icon: <Zap />, label: tBenefits("express_setup") },
+        { icon: <Users2 />, label: tBenefits("community_focus") },
+        { icon: <Palette />, label: tBenefits("brand_customization") },
+        { icon: <Globe />, label: tBenefits("multi_language") }
     ];
 
     return (
@@ -49,7 +50,7 @@ export default function VendorBenefits() {
                         viewport={{ once: true }}
                         className="inline-flex items-center gap-2 px-6 py-2 bg-primary/10 text-primary rounded-full text-sm font-black uppercase tracking-widest border border-primary/20"
                     >
-                        <span>The Nuqta Advantage</span>
+                        <span>{tBenefits('advantage')}</span>
                     </motion.div>
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}

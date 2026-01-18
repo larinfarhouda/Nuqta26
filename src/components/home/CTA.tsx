@@ -39,7 +39,7 @@ export default function CTA() {
                                 className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20"
                             >
                                 <Sparkles className="w-3.5 h-3.5 text-secondary" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Ready to start?</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('cta.ready_to_start')}</span>
                             </motion.div>
                             <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
                                 {t('cta.title')}

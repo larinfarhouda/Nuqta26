@@ -21,7 +21,26 @@
             "exhibition": "Art & Exhibitions",
             "other": "Food & Other"
         },
+        "hero": {
+            "connected_community": "Connected Community",
+            "discover_more": "Discover more"
+        },
+        "features_section": {
+            "our_ecosystem": "Our Ecosystem",
+            "thrive_title": "Everything you need to <highlight>thrive</highlight> in Istanbul"
+        },
+        "search": {
+            "placeholder": "What are you in the mood for?",
+            "label": "Search",
+            "try_jazz": "Try \"Jazz Night\"",
+            "try_photo": "Try \"Photography Workshop\"",
+            "view_options": "View Options",
+            "all_neighborhoods": "All Neighborhoods",
+            "near_me": "Near Me",
+            "search_nearby": "Search Nearby"
+        },
         "cta": {
+            "ready_to_start": "Ready to start?",
             "title": "Be Part of the Story",
             "user_btn": "Visitor Login",
             "vendor_btn": "Organizer Login",
@@ -96,7 +115,34 @@
         "benefit1": "Reach a targeted audience looking for your services.",
         "benefit2": "Manage your events and bookings effortlessly.",
         "benefit3": "Grow your brand within a thriving community.",
-        "join_btn": "Register Now"
+        "join_btn": "Register Now",
+        "join_hub": "Join Istanbul's Warmest Hub",
+        "trusted_partners": "300+ Trusted Partners",
+        "perks": {
+            "audience": "Targeted Audience",
+            "setup_fee": "No Setup Fee",
+            "analytics": "Live Analytics"
+        },
+        "mock": {
+            "dashboard_title": "Vendor Dashboard",
+            "monthly_growth": "Monthly Growth",
+            "direct_inquiries": "Direct Inquiries",
+            "performance_trend": "Performance Trend",
+            "verified": "Verified",
+            "premium_account": "Premium Account",
+            "total_sales": "Total Sales",
+            "tickets": "Tickets",
+            "jan": "Jan",
+            "feb": "Feb",
+            "mar": "Mar",
+            "apr": "Apr",
+            "may": "May",
+            "jun": "Jun",
+            "jul": "Jul",
+            "aug": "Aug",
+            "sep": "Sep",
+            "today": "Today"
+        }
     },
     "VendorLanding": {
         "Hero": {
@@ -140,8 +186,14 @@
                 "Verified Badge",
                 "Unlimited Events",
                 "Advanced Analytics",
+                "Advanced Analytics",
                 "Priority Support"
-            ]
+            ],
+            "most_popular": "Most Popular",
+            "simple_growth": "Simple Growth",
+            "no_credit_card": "No credit card required for free tier",
+            "get_started": "Get Started",
+            "scale_now": "Scale Now"
         },
         "Testimonials": {
             "title": "Success Stories",
@@ -150,8 +202,41 @@
             "t1_role": "Art Workshop Organizer",
             "t2_quote": "The platform is incredibly easy to use. I can focus on my event quality rather than worrying about marketing logistics.",
             "t2_author": "Ahmed K.",
-            "t2_role": "Concert Promoter"
+            "t2_role": "Concert Promoter",
+            "community_voice": "Community Voice",
+            "loved_by_prefix": "Loved by",
+            "organizers": "Organizers",
+            "loved_by_suffix": "all over Istanbul"
+        },
+        "Benefits": {
+            "title": "Why Verified Vendors Choose Nuqta",
+            "advantage": "The Nuqta Advantage",
+            "express_setup": "Express setup",
+            "community_focus": "Community focus",
+            "brand_customization": "Brand customization",
+            "multi_language": "Multi-language"
         }
+    },
+    "VendorProfile": {
+        "back_to_discovery": "Back to discovery",
+        "istanbul_hub": "Istanbul Hub",
+        "elite_rating": "4.95 Elite Rating",
+        "inquire_whatsapp": "Inquire via WhatsApp",
+        "view_gallery": "View Full Gallery",
+        "our_mission": "Our Mission",
+        "mission_default": "Dedicated to creating safe, cultural, and exciting spaces for Istanbul's community. We believe in the power of shared moments and elite service standards.",
+        "stats": {
+            "elite_partner": "Elite Partner",
+            "vetted_quality": "Vetted Quality",
+            "community_trust": "Community Trust",
+            "top_reviews": "Top Reviews",
+            "high_intent": "High Intent",
+            "instant_support": "Instant Support"
+        },
+        "active_catalog": "Active Catalog",
+        "explore_all": "Explore All Catalog",
+        "book_experience": "Book Experience",
+        "inquire_profile": "Inquire Profile"
     },
     "Vendor": {
         "dashboard": "Dashboard",
@@ -234,5 +319,172 @@
             "s4_title": "4. Your Rights",
             "s4_desc": "You have the right to access, update, or delete your personal information at any time through your account settings or by contacting us directly."
         }
+    },
+    "Dashboard": {
+        "menu": "Menu",
+        "my_registrations": "My Registrations",
+        "favorites": "Favorites",
+        "my_profile": "My Profile",
+        "user": {
+            "my_registrations": "My Registrations",
+            "sign_out": "Sign Out",
+            "no_registrations": "No active registrations.",
+            "browse_events": "Browse events and book your tickets!",
+            "no_image": "No Image",
+            "booking_id": "Booking ID",
+            "view_details": "View Event Details",
+            "status": {
+                "confirmed": "Confirmed",
+                "pending": "Pending",
+                "cancelled": "Cancelled"
+            }
+        },
+        "vendor": {
+            "title": "Vendor Dashboard",
+            "tabs": {
+                "analytics": "Analytics",
+                "events": "Events",
+                "customers": "Customers",
+                "gallery": "Gallery",
+                "settings": "Settings"
+            },
+            "welcome": "Welcome!",
+            "setup_title": "Let's set up your business account in simple steps.",
+            "business_name": "Business Name",
+            "business_name_placeholder": "e.g. Art Theater",
+            "category": "Category",
+            "category_cultural": "Cultural",
+            "category_entertainment": "Entertainment",
+            "description": "Short Description",
+            "description_placeholder": "About your business...",
+            "start_now": "Start Now",
+            "profile": {
+                "save_success": "Changes saved successfully",
+                "location_success": "Location updated successfully",
+                "logo_success": "Logo updated successfully",
+                "upload_success": "File uploaded successfully",
+                "uploading": "Uploading...",
+                "change_logo": "Click to change logo",
+                "business_name": "Business Name",
+                "category": "Category",
+                "category_cultural": "Cultural",
+                "category_entertainment": "Entertainment",
+                "description": "Description",
+                "save_changes": "Save Changes",
+                "location": "Location",
+                "select_district": "Select District",
+                "update_location": "Update Location",
+                "verification": "Verification & Documents",
+                "tax_record": "Tax Record",
+                "verified": "Verified",
+                "pending": "Pending verification or upload",
+                "upload_file": "Upload File"
+            },
+            "gallery": {
+                "add_success": "Image added successfully",
+                "error_prefix": "Error: ",
+                "delete_confirm": "Are you sure you want to delete this image?",
+                "delete_success": "Image deleted successfully",
+                "my_works": "My Works",
+                "add_image": "Add Image",
+                "no_images": "No images yet"
+            },
+            "events": {
+                "title": "Events",
+                "subtitle": "Manage your events and track sales",
+                "new_event": "New Event",
+                "loading": "Loading...",
+                "published": "Published",
+                "draft": "Draft",
+                "general": "General",
+                "tickets": "Tickets",
+                "capacity": "Capacity",
+                "no_upcoming": "No upcoming events",
+                "delete_confirm": "Are you sure you want to delete this event?",
+                "delete_error": "Error deleting event"
+            },
+            "customers": {
+                "title": "Customers",
+                "subtitle": "List of your customers and their booking history",
+                "search_placeholder": "Search by name or email...",
+                "loading": "Loading...",
+                "table": {
+                    "customer": "Customer",
+                    "bookings": "Bookings",
+                    "total_spent": "Total Spent",
+                    "last_booking": "Last Booking",
+                    "interests": "Interests"
+                },
+                "vip_tooltip": "VIP Customer (Recurring)",
+                "currency": "TL",
+                "no_results": "No results found"
+            },
+            "analytics": {
+                "loading_analysis": "Analyzing data...",
+                "no_data": "No data available yet.",
+                "title": "Statistics & Analytics",
+                "subtitle": "Overview of your events performance",
+                "total_revenue": "Total Revenue (TL)",
+                "tickets_sold": "Tickets Sold",
+                "total_events": "Total Events",
+                "recent_sales": "Last 30 Days Sales",
+                "favorite_types": "Favorite Event Types",
+                "no_enough_data": "Not enough data",
+                "customer_loyalty": "Customer Loyalty",
+                "loyalty_types": {
+                    "one_time": "One-time",
+                    "recurring": "Recurring",
+                    "loyal": "Loyal (VIP)"
+                },
+                "tip_label": "Tip:",
+                "tip_text": "Focus on 'Recurring' customers and offer them special deals to convert them into 'VIP' customers for long-term sales growth.",
+                "gender_dist": "Gender Distribution",
+                "gender": {
+                    "male": "Male",
+                    "female": "Female",
+                    "unknown": "Unknown"
+                },
+                "age_dist": "Age Groups"
+            }
+        }
+    },
+    "Events": {
+        "back_to_discovery": "Back to discovery",
+        "link_copied": "Link copied to clipboard!",
+        "added_favorites": "Added to favorites!",
+        "details_count": "+{count} Details",
+        "verified_community": "Verified Community",
+        "default_category": "Experience",
+        "when": "When",
+        "where": "Where",
+        "default_location": "Istanbul",
+        "elite_organizer": "Elite Organizer",
+        "default_partner": "Nuqta Partner",
+        "super_partner": "Super Partner",
+        "personal_host": "Personal Host",
+        "the_experience": "The Experience",
+        "default_description": "This exclusive experience invites you to discover the hidden stories of Istanbul. Join us for a journey of connection and culture.",
+        "location_context": "Location Context",
+        "show_direct_route": "Show Direct Route",
+        "why_book_title": "Why book with Nuqta?",
+        "benefit_1_title": "Elite Standards",
+        "benefit_1_desc": "Hand-curated experiences vetted by our Istanbul team.",
+        "benefit_2_title": "Instant Support",
+        "benefit_2_desc": "24/7 priority assistance for all community members.",
+        "booking_confirmed": "Booking Confirmed!",
+        "booking_success_msg": "Pack your bags! You're officially attending {title}. Check your email for the tickets.",
+        "high_demand": "High Demand: {count} People booked today",
+        "starting_price": "Starting Price",
+        "free": "Free",
+        "per_person": "/ person",
+        "select_ticket": "Select Ticket Tier",
+        "number_of_guests": "Number of Guests",
+        "max_guests": "Max {count} per booking",
+        "total_to_pay": "Total to pay",
+        "generic_error": "Something went wrong. Please check your connection.",
+        "confirm_experience": "Confirm Experience",
+        "instant_confirmation": "Instant confirmation",
+        "reserve": "Reserve",
+        "total_price": "Total Price"
     }
 }

@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Calendar, DollarSign, PieChart } from 'lucide-react';
 import { getVendorAnalytics, getSegmentationData } from '@/actions/vendor/analytics';
+import { useTranslations } from 'next-intl';
 
 export default function AnalyticsTab() {
     const [analytics, setAnalytics] = useState<any>(null);
     const [segmentation, setSegmentation] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const t = useTranslations('Dashboard.vendor.analytics');
 
     useEffect(() => {
         const load = async () => {
@@ -20,14 +22,14 @@ export default function AnalyticsTab() {
         load();
     }, []);
 
-    if (loading) return <div className="text-center py-20">جاري تحليل البيانات...</div>;
-    if (!analytics) return <div className="text-center py-20">لا توجد بيانات متاحة بعد.</div>;
+    if (loading) return <div className="text-center py-20">{t('loading_analysis')}</div>;
+    if (!analytics) return <div className="text-center py-20">{t('no_data')}</div>;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             <div>
-                <h3 className="text-xl font-bold text-gray-900">الإحصائيات والتحليلات</h3>
-                <p className="text-sm text-gray-500">نظرة عامة على أداء فعالياتك</p>
+                <h3 className="text-xl font-bold text-gray-900">{t('title')}</h3>
+                <p className="text-sm text-gray-500">{t('subtitle')}</p>
             </div>
 
             {/* KPI Cards */}
@@ -35,22 +37,22 @@ export default function AnalyticsTab() {
                 <div className="stat-card bg-[#2CA58D]/5 border-[#2CA58D]/20 border p-6 rounded-3xl">
                     <DollarSign className="text-[#2CA58D] w-6 h-6 mb-2" />
                     <div className="text-3xl font-black text-gray-900">{analytics.revenue}</div>
-                    <div className="text-xs font-bold text-[#2CA58D] uppercase">إجمالي المبيعات (ر.س)</div>
+                    <div className="text-xs font-bold text-[#2CA58D] uppercase">{t('total_revenue')}</div>
                 </div>
                 <div className="stat-card bg-indigo-50 border-indigo-100 border p-6 rounded-3xl">
                     <Users className="text-indigo-600 w-6 h-6 mb-2" />
                     <div className="text-3xl font-black text-gray-900">{analytics.sales}</div>
-                    <div className="text-xs font-bold text-indigo-500 uppercase">التذاكر المباعة</div>
+                    <div className="text-xs font-bold text-indigo-500 uppercase">{t('tickets_sold')}</div>
                 </div>
                 <div className="stat-card bg-purple-50 border-purple-100 border p-6 rounded-3xl">
                     <Calendar className="text-purple-600 w-6 h-6 mb-2" />
                     <div className="text-3xl font-black text-gray-900">{analytics.events}</div>
-                    <div className="text-xs font-bold text-purple-500 uppercase">الفعاليات الكلية</div>
+                    <div className="text-xs font-bold text-purple-500 uppercase">{t('total_events')}</div>
                 </div>
                 <div className="stat-card bg-amber-50 border-amber-100 border p-6 rounded-3xl">
                     <TrendingUp className="text-amber-600 w-6 h-6 mb-2" />
                     <div className="text-3xl font-black text-gray-900">{analytics.recentSales}</div>
-                    <div className="text-xs font-bold text-amber-500 uppercase">مبيعات آخر 30 يوم</div>
+                    <div className="text-xs font-bold text-amber-500 uppercase">{t('recent_sales')}</div>
                 </div>
             </div>
 
@@ -60,7 +62,7 @@ export default function AnalyticsTab() {
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-6">
                         <PieChart className="w-5 h-5 text-gray-400" />
-                        <h4 className="font-bold text-gray-900">أنواع الفعاليات المفضلة</h4>
+                        <h4 className="font-bold text-gray-900">{t('favorite_types')}</h4>
                     </div>
                     <div className="space-y-4">
                         {segmentation?.typeDistribution.map((item: any) => (
@@ -75,7 +77,7 @@ export default function AnalyticsTab() {
                                 <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
                             </div>
                         ))}
-                        {segmentation?.typeDistribution.length === 0 && <p className="text-sm text-gray-400 text-center">لا توجد بيانات كافية</p>}
+                        {segmentation?.typeDistribution.length === 0 && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
                     </div>
                 </div>
 
@@ -83,23 +85,23 @@ export default function AnalyticsTab() {
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-6">
                         <Users className="w-5 h-5 text-gray-400" />
-                        <h4 className="font-bold text-gray-900">ولاء العملاء</h4>
+                        <h4 className="font-bold text-gray-900">{t('customer_loyalty')}</h4>
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-center">
                         {segmentation?.customerLoyalty.map((item: any) => (
                             <div key={item.name} className="p-4 bg-gray-50 rounded-2xl">
                                 <div className="text-2xl font-black text-gray-900">{item.value}</div>
                                 <div className="text-xs font-bold text-gray-500 mt-1">
-                                    {item.name === 'One-time' && 'مرة واحدة'}
-                                    {item.name === 'Recurring' && 'متكرر'}
-                                    {item.name === 'Loyal' && 'مخلص (VIP)'}
+                                    {item.name === 'One-time' && t('loyalty_types.one_time')}
+                                    {item.name === 'Recurring' && t('loyalty_types.recurring')}
+                                    {item.name === 'Loyal' && t('loyalty_types.loyal')}
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="mt-6 p-4 bg-blue-50 text-blue-800 text-xs rounded-xl leading-relaxed">
-                        <span className="font-bold block mb-1">نصيحة:</span>
-                        ركز على العملاء "المتكررين" وقدم لهم عروضاً خاصة لتحويلهم إلى عملاء "VIP" لزيادة المبيعات طويلة الأمد.
+                        <span className="font-bold block mb-1">{t('tip_label')}</span>
+                        {t('tip_text')}
                     </div>
                 </div>
 
@@ -107,13 +109,13 @@ export default function AnalyticsTab() {
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-6">
                         <Users className="w-5 h-5 text-gray-400" />
-                        <h4 className="font-bold text-gray-900">توزيع الجنس</h4>
+                        <h4 className="font-bold text-gray-900">{t('gender_dist')}</h4>
                     </div>
                     <div className="space-y-4">
                         {segmentation?.genderDistribution.map((item: any) => (
                             <div key={item.name} className="flex items-center gap-4">
                                 <div className="w-20 text-xs font-bold text-gray-500">
-                                    {item.name === 'Male' ? 'ذكر' : item.name === 'Female' ? 'أنثى' : 'غير محدد'}
+                                    {item.name === 'Male' ? t('gender.male') : item.name === 'Female' ? t('gender.female') : t('gender.unknown')}
                                 </div>
                                 <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                                     <div
@@ -124,7 +126,7 @@ export default function AnalyticsTab() {
                                 <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
                             </div>
                         ))}
-                        {(!segmentation?.genderDistribution || segmentation.genderDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">لا توجد بيانات كافية</p>}
+                        {(!segmentation?.genderDistribution || segmentation.genderDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
                     </div>
                 </div>
 
@@ -132,7 +134,7 @@ export default function AnalyticsTab() {
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-6">
                         <Users className="w-5 h-5 text-gray-400" />
-                        <h4 className="font-bold text-gray-900">الفئات العمرية</h4>
+                        <h4 className="font-bold text-gray-900">{t('age_dist')}</h4>
                     </div>
                     <div className="space-y-4">
                         {segmentation?.ageDistribution.map((item: any) => (
@@ -147,7 +149,7 @@ export default function AnalyticsTab() {
                                 <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
                             </div>
                         ))}
-                        {(!segmentation?.ageDistribution || segmentation.ageDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">لا توجد بيانات كافية</p>}
+                        {(!segmentation?.ageDistribution || segmentation.ageDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
                     </div>
                 </div>
             </div>

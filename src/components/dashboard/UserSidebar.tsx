@@ -12,9 +12,9 @@ export default function UserSidebar() {
     const t = useTranslations('Dashboard'); // Assuming we have or will add dashboard translations
 
     const links = [
-        { href: '/dashboard/user', label: 'My Registrations', icon: Calendar },
-        { href: '/dashboard/user/favorites', label: 'Favorites', icon: Heart },
-        { href: '/dashboard/user/profile', label: 'My Profile', icon: User },
+        { href: '/dashboard/user', label: t('my_registrations'), icon: Calendar },
+        { href: '/dashboard/user/favorites', label: t('favorites'), icon: Heart },
+        { href: '/dashboard/user/profile', label: t('my_profile'), icon: User },
     ];
 
     // Simple check if active
@@ -24,7 +24,7 @@ export default function UserSidebar() {
         <aside className="w-64 bg-white/50 backdrop-blur-xl border border-white/50 shadow-sm rounded-3xl h-full p-4 flex flex-col">
 
             <div className="px-4 py-4 mb-4">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('menu')}</span>
             </div>
 
             <div className="flex-1 space-y-1">

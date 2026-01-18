@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2, Edit3, CheckCircle, AlertCircle, ImageIcon } from 'lucide-react';
 import NextImage from 'next/image';
+import { useTranslations } from 'next-intl';
 
 const detailsSchema = z.object({
     business_name: z.string().min(2),
@@ -37,6 +38,7 @@ const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | n
 
 export default function ProfileTab({ vendorData, setVendorData, showAlert }: any) {
     const supabase = createClient();
+    const t = useTranslations('Dashboard.vendor.profile');
     const [uploading, setUploading] = useState(false);
 
     const { register, handleSubmit } = useForm({
@@ -48,7 +50,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
         const { error } = await supabase.from('vendors').update(data).eq('id', vendorData.id);
         if (!error) {
             setVendorData((prev: any) => ({ ...prev, ...data }));
-            showAlert("تم حفظ التغييرات بنجاح", 'success');
+            showAlert(t("save_success"), 'success');
         } else showAlert(error.message, 'error');
     };
 
@@ -58,7 +60,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
             location_lat: vendorData.lat,
             location_long: vendorData.lng
         }).eq('id', vendorData.id);
-        if (!error) showAlert("تم تحديث الموقع بنجاح", 'success');
+        if (!error) showAlert(t("location_success"), 'success');
     };
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +78,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
 
             if (!dbError) {
                 setVendorData((prev: any) => ({ ...prev, company_logo: publicUrl }));
-                showAlert("تم تحديث الشعار بنجاح", 'success');
+                showAlert(t("logo_success"), 'success');
             }
         } catch (err: any) {
             showAlert(err.message, 'error');
@@ -95,7 +97,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
             await supabase.storage.from('vendor-documents').upload(fileName, file, { upsert: true });
             await supabase.from('vendors').update({ tax_id_document: fileName, status: 'approved' }).eq('id', vendorData.id);
             setVendorData((prev: any) => ({ ...prev, tax_id_document: fileName, status: 'approved' }));
-            showAlert("تم رفع الملف بنجاح", 'success');
+            showAlert(t("upload_success"), 'success');
         } catch (err: any) { showAlert(err.message, 'error'); }
         finally { setUploading(false); }
     };
@@ -116,32 +118,32 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                     </div>
                 </div>
                 <input type="file" onChange={handleLogoUpload} className="absolute inset-0 cursor-pointer opacity-0" disabled={uploading} />
-                <p className="text-sm font-bold text-gray-600">{uploading ? 'جاري الرفع...' : 'اضغط لتغيير الشعار'}</p>
+                <p className="text-sm font-bold text-gray-600">{uploading ? t('uploading') : t('change_logo')}</p>
             </div>
 
             {/* Main Details Form */}
             <form onSubmit={handleSubmit(onDetailsSubmit)} className="space-y-5">
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase mr-1">اسم النشاط</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase mr-1">{t('business_name')}</label>
                     <input {...register('business_name')} className="input-field text-gray-900" />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase mr-1">التصنيف</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase mr-1">{t('category')}</label>
                     <select {...register('category')} className="input-field text-gray-900">
-                        <option value="cultural">ثقافي</option>
-                        <option value="entertainment">ترفيهي</option>
+                        <option value="cultural">{t('category_cultural')}</option>
+                        <option value="entertainment">{t('category_entertainment')}</option>
                     </select>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-500 uppercase mr-1">الوصف</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase mr-1">{t('description')}</label>
                     <textarea {...register('description_ar')} className="input-field min-h-[120px] text-gray-900" />
                 </div>
-                <button disabled={uploading} className="btn-primary w-full">حفظ التغييرات</button>
+                <button disabled={uploading} className="btn-primary w-full">{t('save_changes')}</button>
             </form>
 
             {/* Location Section */}
             <div className="pt-6 border-t border-gray-100">
-                <h3 className="font-bold text-gray-900 mb-4">الموقع</h3>
+                <h3 className="font-bold text-gray-900 mb-4">{t('location')}</h3>
                 <div className="space-y-4">
                     <select
                         className="input-field text-gray-900"
@@ -151,32 +153,32 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                         }}
                         value={vendorData?.district || ""}
                     >
-                        <option value="" disabled>اختر المنطقة</option>
+                        <option value="" disabled>{t('select_district')}</option>
                         {CITIES['tr'].map(d => <option key={d.id} value={d.id}>{d.name_ar}</option>)}
                     </select>
-                    <button onClick={handleLocationSubmit} disabled={!vendorData?.district} className="p-3 w-full bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">تحديث الموقع</button>
+                    <button onClick={handleLocationSubmit} disabled={!vendorData?.district} className="p-3 w-full bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">{t('update_location')}</button>
                 </div>
             </div>
 
             {/* Verification Section */}
             <div className="pt-6 border-t border-gray-100">
-                <h3 className="font-bold text-gray-900 mb-4">التحقق والمستندات</h3>
+                <h3 className="font-bold text-gray-900 mb-4">{t('verification')}</h3>
                 <div className="border-2 border-dashed border-gray-200 bg-gray-50 p-6 rounded-2xl relative flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         {vendorData?.status === 'approved' ? <CheckCircle className="text-green-500 w-6 h-6" /> : <AlertCircle className="text-amber-500 w-6 h-6" />}
                         <div>
-                            <p className="font-bold text-gray-700 text-sm">السجل الضريبي</p>
-                            <p className="text-xs text-gray-500">{vendorData?.status === 'approved' ? 'تم التحقق' : 'بانتظار التحقق أو الرفع'}</p>
+                            <p className="font-bold text-gray-700 text-sm">{t('tax_record')}</p>
+                            <p className="text-xs text-gray-500">{vendorData?.status === 'approved' ? t('verified') : t('pending')}</p>
                         </div>
                     </div>
                     <div className="relative">
                         <input type="file" onChange={handleVerificationUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                         <button className="text-xs font-bold text-primary bg-primary/10 px-3 py-2 rounded-lg pointer-events-none">
-                            {uploading ? 'جاري الرفع...' : 'رفع ملق'}
+                            {uploading ? t('uploading') : t('upload_file')}
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

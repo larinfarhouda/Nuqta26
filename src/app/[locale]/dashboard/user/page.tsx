@@ -3,8 +3,16 @@ import { Calendar, MapPin, Ticket } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/navigation';
 
-export default async function UserOverviewPage() {
+import { getTranslations } from 'next-intl/server';
+
+export default async function UserOverviewPage({
+    params
+}: {
+    params: Promise<{ locale: string }>;
+}) {
+    const { locale } = await params;
     const bookings = await getUserBookings();
+    const t = await getTranslations('Dashboard.user');
 
     return (
         <div className="space-y-8">
@@ -13,7 +21,7 @@ export default async function UserOverviewPage() {
                     <div className="p-2 bg-primary/10 text-primary rounded-xl">
                         <Calendar className="w-6 h-6" />
                     </div>
-                    <h1 className="text-2xl font-black text-gray-900">My Registrations</h1>
+                    <h1 className="text-2xl font-black text-gray-900">{t('my_registrations')}</h1>
                 </div>
 
                 <form action={async () => {
@@ -25,7 +33,7 @@ export default async function UserOverviewPage() {
                     await signOut();
                 }}>
                     <button className="px-4 py-2 bg-red-50 text-red-600 text-sm font-bold rounded-xl hover:bg-red-100 transition shadow-sm border border-red-100">
-                        Sign Out
+                        {t('sign_out')}
                     </button>
                 </form>
             </div>
@@ -33,8 +41,8 @@ export default async function UserOverviewPage() {
             {bookings.length === 0 ? (
                 <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                     <Ticket className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="font-bold text-gray-500">No active registrations.</p>
-                    <p className="text-sm text-gray-400">Browse events and book your tickets!</p>
+                    <p className="font-bold text-gray-500">{t('no_registrations')}</p>
+                    <p className="text-sm text-gray-400">{t('browse_events')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -45,7 +53,7 @@ export default async function UserOverviewPage() {
                                 {booking.event?.image_url ? (
                                     <Image src={booking.event.image_url} alt="Event" fill className="object-cover" />
                                 ) : (
-                                    <div className="flex items-center justify-center h-full text-xs text-gray-400">No Image</div>
+                                    <div className="flex items-center justify-center h-full text-xs text-gray-400">{t('no_image')}</div>
                                 )}
                             </div>
 
@@ -56,14 +64,14 @@ export default async function UserOverviewPage() {
                                         <h3 className="text-xl font-bold text-gray-900 mb-2">{booking.event?.title}</h3>
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                                             }`}>
-                                            {booking.status}
+                                            {t(`status.${booking.status}`)}
                                         </span>
                                     </div>
 
                                     <div className="flex flex-col gap-1 text-sm text-gray-500 mb-4">
                                         <div className="flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
-                                            <span>{new Date(booking.event?.date).toLocaleDateString()} at {new Date(booking.event?.date).toLocaleTimeString()}</span>
+                                            <span>{new Date(booking.event?.date).toLocaleDateString(locale)} at {new Date(booking.event?.date).toLocaleTimeString(locale)}</span>
                                         </div>
                                         {booking.event?.location_name && (
                                             <div className="flex items-center gap-2">
@@ -76,11 +84,11 @@ export default async function UserOverviewPage() {
 
                                 <div className="flex items-center gap-4 pt-4 border-t border-gray-50 mt-auto">
                                     <div className="text-xs text-gray-400">
-                                        Booking ID: <span className="font-mono">{booking.id.slice(0, 8)}</span>
+                                        {t('booking_id')}: <span className="font-mono">{booking.id.slice(0, 8)}</span>
                                     </div>
                                     <div className="ml-auto">
                                         <Link href={`/events/${booking.event_id}`} className="text-sm font-bold text-primary hover:underline">
-                                            View Event Details
+                                            {t('view_details')}
                                         </Link>
                                     </div>
                                 </div>
