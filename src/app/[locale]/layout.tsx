@@ -42,6 +42,9 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         site: '@nuqta_ist',
     },
+    appleWebApp: {
+        title: "Nuqta",
+    },
 };
 
 export default async function LocaleLayout({
