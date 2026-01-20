@@ -9,7 +9,9 @@ const cairo = Cairo({
     variable: "--font-cairo",
     display: 'swap',
     preload: true,
-    weight: ['400', '600', '700', '900'],
+    weight: ['400', '700', '900'], // Reduced font weights
+    fallback: ['system-ui', 'arial'],
+    adjustFontFallback: true,
 });
 
 const geistSans = Geist({
@@ -17,7 +19,9 @@ const geistSans = Geist({
     subsets: ["latin"],
     display: 'swap',
     preload: true,
-    weight: ['400', '500', '700'],
+    weight: ['400', '700'], // Reduced font weights
+    fallback: ['system-ui', 'sans-serif'],
+    adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -45,6 +49,19 @@ export const metadata: Metadata = {
     },
     appleWebApp: {
         title: "Nuqta",
+        statusBarStyle: 'default',
+    },
+    viewport: {
+        width: 'device-width',
+        initialScale: 1,
+        maximumScale: 5,
+    },
+    icons: {
+        icon: [
+            { url: '/icon0.svg', type: 'image/svg+xml' },
+            { url: '/icon1.png', sizes: '192x192', type: 'image/png' }
+        ],
+        apple: { url: '/apple-icon.png', sizes: '180x180' },
     },
 };
 
@@ -61,6 +78,12 @@ export default async function LocaleLayout({
 
     return (
         <html lang={locale} dir={dir}>
+            <head>
+                {/* Critical Resource Hints for faster font loading */}
+                <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            </head>
             <body
                 className={`${cairo.className} ${geistSans.variable} antialiased`}
                 suppressHydrationWarning
