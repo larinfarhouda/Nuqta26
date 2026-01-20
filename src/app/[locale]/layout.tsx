@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Cairo, Geist, Geist_Mono } from "next/font/google";
+import { Cairo, Geist } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import "../globals.css";
 
 const cairo = Cairo({
     subsets: ["arabic", "latin"],
-    variable: "--font-cairo"
+    variable: "--font-cairo",
+    display: 'swap',
+    preload: true,
+    weight: ['400', '600', '700', '900'],
 });
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+    display: 'swap',
+    preload: true,
+    weight: ['400', '500', '700'],
 });
 
 export const metadata: Metadata = {
@@ -61,7 +62,7 @@ export default async function LocaleLayout({
     return (
         <html lang={locale} dir={dir}>
             <body
-                className={`${cairo.className} ${geistSans.variable} ${geistMono.variable} antialiased`}
+                className={`${cairo.className} ${geistSans.variable} antialiased`}
                 suppressHydrationWarning
             >
                 <NextIntlClientProvider messages={messages}>

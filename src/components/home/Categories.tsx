@@ -1,7 +1,6 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/utils/cn';
 import { useEffect, useState, useRef } from 'react';
@@ -58,8 +57,8 @@ export default function Categories() {
     if (categories.length === 0) return null;
 
     return (
-        <section className="sticky top-24 z-40 w-full bg-white/95 backdrop-blur-2xl border-b border-gray-100 transition-all duration-300">
-            <div className="container mx-auto px-4 md:px-12 relative group max-w-[1800px]">
+        <section className="sticky top-24 z-40 w-full bg-white/95 backdrop-blur-xl md:backdrop-blur-2xl border-b border-gray-100 transition-shadow duration-300">
+            <div className="container mx-auto px-4 md:px-8 lg:px-12 relative group max-w-[1800px]">
 
                 {/* Desktop Scroll Nav */}
                 <button
@@ -71,7 +70,7 @@ export default function Categories() {
 
                 <div
                     ref={scrollRef}
-                    className="flex items-center md:justify-center gap-10 md:gap-16 lg:gap-20 overflow-x-auto no-scrollbar py-6 md:py-8 px-6"
+                    className="flex items-center md:justify-center gap-8 md:gap-12 lg:gap-16 xl:gap-20 overflow-x-auto no-scrollbar py-5 md:py-6 lg:py-8 px-4 md:px-6"
                 >
                     {categories.map((cat, idx) => {
                         const isActive = currentCategory === cat.slug;
@@ -82,13 +81,13 @@ export default function Categories() {
                                 key={cat.id}
                                 onClick={() => handleCategoryClick(cat.slug)}
                                 className={cn(
-                                    "flex flex-col items-center gap-3 min-w-fit group transition-all relative",
-                                    isActive ? "opacity-100" : "opacity-50 hover:opacity-100"
+                                    "flex flex-col items-center gap-2 md:gap-3 min-w-fit group transition-all relative",
+                                    isActive ? "opacity-100" : "opacity-50 hover:opacity-100 active:opacity-100"
                                 )}
                             >
                                 <span className={cn(
-                                    "text-2xl md:text-3xl lg:text-4xl transition-all duration-300 transform group-hover:-translate-y-1",
-                                    isActive ? "filter-none scale-110" : "grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100"
+                                    "text-2xl md:text-3xl lg:text-4xl transition-all duration-300 md:group-hover:-translate-y-1",
+                                    isActive ? "filter-none scale-110" : "grayscale opacity-80 md:group-hover:grayscale-0 md:group-hover:opacity-100"
                                 )}>
                                     {cat.icon}
                                 </span>
@@ -100,10 +99,8 @@ export default function Categories() {
                                 </span>
 
                                 {isActive && (
-                                    <motion.div
-                                        layoutId="activeCategory"
-                                        className="absolute -bottom-8 left-0 right-0 h-1 bg-gray-900 rounded-full"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    <div
+                                        className="absolute -bottom-5 md:-bottom-8 left-0 right-0 h-1 bg-gray-900 rounded-full transition-all duration-200"
                                     />
                                 )}
                             </button>
@@ -119,8 +116,8 @@ export default function Categories() {
                 </button>
 
                 {/* Desktop Fades */}
-                <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 hidden md:block" />
-                <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
+                <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 hidden md:block" />
+                <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
             </div>
         </section>
     );

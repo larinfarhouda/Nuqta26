@@ -6,7 +6,6 @@ import { Link } from '@/navigation';
 import { useState } from 'react';
 import { toggleFavoriteEvent } from '@/actions/user';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 
 interface EventCardProps {
     event: any;
@@ -38,10 +37,7 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
     };
 
     return (
-        <motion.div
-            whileHover={{ y: -8 }}
-            className="group relative bg-white rounded-2xl md:rounded-3xl p-2 md:p-3 border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 h-full flex flex-col"
-        >
+        <div className="group relative bg-white rounded-2xl md:rounded-3xl p-2 md:p-3 border border-gray-100 shadow-sm hover:shadow-2xl md:hover:-translate-y-2 transition-all duration-300 h-full flex flex-col">
             <Link href={`/events/${event.id}`} className="flex flex-col h-full">
                 {/* Image Container */}
                 <div className="relative aspect-square w-full overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 mb-3 md:mb-4 shrink-0">
@@ -50,7 +46,10 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                             src={event.image_url}
                             alt={event.title}
                             fill
-                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            className="object-cover md:transition-transform md:duration-700 md:group-hover:scale-110"
+                            loading="lazy"
+                            quality={75}
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300 font-bold uppercase tracking-widest text-[8px] md:text-[10px]">
@@ -120,6 +119,6 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     </div>
                 </div>
             </Link>
-        </motion.div>
+        </div>
     );
 }

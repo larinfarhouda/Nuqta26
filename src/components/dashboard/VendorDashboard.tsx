@@ -3,20 +3,33 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import {
-    Loader2, Upload, LayoutDashboard, Settings,
-    Image as ImageIcon, Calendar, Users, BarChart3,
-    TrendingUp // Added TrendingUp to imports just in case
+    Loader2, BarChart3,
+    Image as ImageIcon, Calendar, Users, Settings
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 
-// Tabs
-import EventsTab from './vendor/events/EventsTab';
-import CustomersTab from './vendor/customers/CustomersTab';
-import AnalyticsTab from './vendor/analytics/AnalyticsTab';
-import ProfileTab from './vendor/ProfileTab';
-import GalleryTab from './vendor/GalleryTab';
+// Dynamic imports for tab components  
+const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
+const CustomersTab = dynamic(() => import('./vendor/customers/CustomersTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
+const AnalyticsTab = dynamic(() => import('./vendor/analytics/AnalyticsTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
+const ProfileTab = dynamic(() => import('./vendor/ProfileTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
+const GalleryTab = dynamic(() => import('./vendor/GalleryTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
 
 const CITIES: Record<string, { id: string, name_en: string, name_ar: string, lat: number, lng: number }[]> = {
     'tr': [
@@ -127,8 +140,8 @@ export default function VendorDashboard() {
 
             {/* DASHBOARD NAVIGATION */}
             {step === 'DASHBOARD' && (
-                <div className="sticky top-20 z-30 mb-8 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-white shadow-sm mx-4 lg:mx-0 overflow-x-auto scrollbar-hide">
-                    <div className="flex gap-2 min-w-max">
+                <div className="sticky top-20 z-30 mb-6 md:mb-8 bg-white/80 backdrop-blur-sm md:backdrop-blur-md p-2 rounded-xl md:rounded-2xl border border-white shadow-sm mx-4 lg:mx-0 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-1.5 md:gap-2 min-w-max">
                         {[
                             { id: 'ANALYTICS', icon: BarChart3, label: t('vendor.tabs.analytics') },
                             { id: 'EVENTS', icon: Calendar, label: t('vendor.tabs.events') },
@@ -139,8 +152,8 @@ export default function VendorDashboard() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === tab.id
+                                    ? 'bg-primary text-white shadow-md md:shadow-lg shadow-primary/20'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
@@ -153,11 +166,7 @@ export default function VendorDashboard() {
             )}
 
             {/* MAIN CONTENT AREA */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`bg-white/60 backdrop-blur-xl border border-white/60 shadow-xl rounded-[2.5rem] relative z-10 overflow-hidden min-h-[600px] ${step === 'DASHBOARD' ? 'p-6 lg:p-10' : 'p-8 lg:p-12 mx-4 lg:mx-0'}`}
-            >
+            <div className={`bg-white/60 backdrop-blur-md md:backdrop-blur-xl border border-white/60 shadow-lg md:shadow-xl rounded-3xl md:rounded-[2.5rem] relative z-10 overflow-hidden min-h-[600px] transition-opacity duration-700 ${step === 'DASHBOARD' ? 'p-4 md:p-6 lg:p-10' : 'p-6 md:p-8 lg:p-12 mx-4 lg:mx-0'}`}>
                 {step === 'DETAILS' && (
                     <form onSubmit={handleInitialSubmit} className="space-y-6 max-w-lg mx-auto py-12">
                         <div className="text-center mb-10">
@@ -213,25 +222,19 @@ export default function VendorDashboard() {
                         {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} />}
                     </div>
                 )}
-            </motion.div>
+            </div>
 
             {/* CUSTOM ALERT MODAL */}
-            <AnimatePresence>
-                {alertState.show && (
-                    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-start p-6 pointer-events-none">
-                        <motion.div
-                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className={`pointer-events-auto flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/20 ${alertState.type === 'success' ? 'bg-[#2CA58D]/90 text-white' : 'bg-red-500/90 text-white'
-                                }`}
-                            dir="rtl"
-                        >
-                            <div className="font-bold">{alertState.message}</div>
-                        </motion.div>
+            {alertState.show && (
+                <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-start p-6 pointer-events-none">
+                    <div
+                        className={`pointer-events-auto flex items-center gap-4 px-6 py-4 rounded-2xl shadow-xl md:shadow-2xl backdrop-blur-md md:backdrop-blur-xl border border-white/20 transition-all duration-300 ${alertState.type === 'success' ? 'bg-[#2CA58D]/90 text-white' : 'bg-red-500/90 text-white'} animate-slide-up`}
+                        dir="rtl"
+                    >
+                        <div className="font-bold">{alertState.message}</div>
                     </div>
-                )}
-            </AnimatePresence>
+                </div>
+            )}
 
             {/* Global Styles */}
             <style jsx global>{`

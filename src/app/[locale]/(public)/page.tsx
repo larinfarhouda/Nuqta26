@@ -1,12 +1,7 @@
 import { getPublicEvents } from '@/actions/public/events';
 import { getUserFavoriteIds } from '@/actions/user';
 import Hero from '@/components/home/Hero';
-import EventSearch from '@/components/events/EventSearch';
 import EventCard from '@/components/events/EventCard';
-import Categories from '@/components/home/Categories';
-import LocalFilters from '@/components/home/LocalFilters';
-
-import Features from '@/components/home/Features';
 import CTA from '@/components/home/CTA';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/utils/supabase/server';
@@ -14,6 +9,24 @@ import BackgroundShapes from '@/components/home/BackgroundShapes';
 import { Search } from 'lucide-react';
 import { Link } from '@/navigation';
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamic imports for heavy components to reduce initial bundle size
+const EventSearchClient = dynamic(() => import('@/components/events/EventSearchClient'), {
+    loading: () => <div className="h-20 bg-gray-50 rounded-2xl animate-pulse" />
+});
+
+const Categories = dynamic(() => import('@/components/home/Categories'), {
+    loading: () => <div className="h-24 bg-white border-b border-gray-100 animate-pulse" />
+});
+
+const LocalFilters = dynamic(() => import('@/components/home/LocalFilters'), {
+    loading: () => <div className="h-12 bg-gray-50 rounded-xl animate-pulse w-48" />
+});
+
+const Features = dynamic(() => import('@/components/home/Features'), {
+    loading: () => <div className="h-96 bg-gray-50 rounded-3xl animate-pulse" />
+});
 
 export default async function HomePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const searchParams = await props.searchParams;
@@ -91,7 +104,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
                 {/* Search Bar - Better Desktop Integration */}
                 <div className={`relative z-50 transition-all duration-500 ${!isFiltered ? '-mt-10 mb-12' : 'pt-36 pb-12'}`}>
                     <Suspense fallback={<div className="h-20" />}>
-                        <EventSearch />
+                        <EventSearchClient />
                     </Suspense>
                 </div>
 
