@@ -429,7 +429,9 @@
         "capacity": "السعة",
         "no_upcoming": "لا توجد فعاليات قادمة",
         "delete_confirm": "هل أنت متأكد من حذف هذه الفعالية؟",
-        "delete_error": "خطأ أثناء الحذف"
+        "delete_error": "خطأ أثناء الحذف",
+        "expired": "منتهي",
+        "sold_out": "مكتمل"
       },
       "customers": {
         "title": "العملاء",
@@ -513,6 +515,11 @@
     "confirm_experience": "تأكيد التجربة",
     "instant_confirmation": "تأكيد فوري",
     "reserve": "احجز",
-    "total_price": "السعر الإجمالي"
+    "total_price": "السعر الإجمالي",
+    "status_expired": "منتهي",
+    "status_sold_out": "مكتمل",
+    "expired_message": "انتهت هذه الفعالية",
+    "sold_out_message": "هذه الفعالية مكتملة العدد",
+    "event_ended": "انتهت الفعالية"
   }
 }

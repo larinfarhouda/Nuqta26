@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { createBooking } from '@/actions/public/events';
-import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp } from 'lucide-react';
+import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { getEventStatus } from '@/utils/eventStatus';
 
 export default function EventBookingForm({ event, tickets }: { event: any, tickets: any[] }) {
     const t = useTranslations('Events');
@@ -17,8 +18,14 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     const activeTicket = tickets.find(t => t.id === selectedTicket);
     const totalPrice = activeTicket ? activeTicket.price * quantity : 0;
 
+    // Calculate event status
+    const eventStatus = getEventStatus(event);
+    const isExpired = eventStatus === 'expired';
+    const isSoldOut = eventStatus === 'sold_out';
+    const isBookable = eventStatus === 'active';
+
     const handleBook = async () => {
-        if (!activeTicket) return;
+        if (!activeTicket || !isBookable) return;
         setLoading(true);
         setErrorMsg('');
 
@@ -53,6 +60,29 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     {t('booking_success_msg', { title: event.title })}
                 </p>
             </motion.div>
+        );
+    }
+
+    // Show disabled state for expired or sold out events
+    if (isExpired || isSoldOut) {
+        return (
+            <div className={`rounded-[2.5rem] p-8 border sticky top-32 ${isExpired ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'}`}>
+                <div className="text-center py-8">
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
+                        {isExpired ? (
+                            <XCircle className="w-10 h-10 text-red-600" />
+                        ) : (
+                            <AlertCircle className="w-10 h-10 text-amber-600" />
+                        )}
+                    </div>
+                    <h3 className={`text-2xl font-black mb-3 tracking-tight ${isExpired ? 'text-red-900' : 'text-amber-900'}`}>
+                        {isExpired ? t('event_ended') : t('status_sold_out')}
+                    </h3>
+                    <p className={`font-bold leading-relaxed ${isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+                        {isExpired ? t('expired_message') : t('sold_out_message')}
+                    </p>
+                </div>
+            </div>
         );
     }
 
@@ -157,3 +187,4 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
         </div>
     );
 }
+

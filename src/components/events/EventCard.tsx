@@ -1,11 +1,13 @@
 'use client';
 
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, AlertCircle, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/navigation';
 import { useState } from 'react';
 import { toggleFavoriteEvent } from '@/actions/user';
 import { useRouter } from 'next/navigation';
+import { getEventStatus, EventStatus } from '@/utils/eventStatus';
+import { useTranslations } from 'next-intl';
 
 interface EventCardProps {
     event: any;
@@ -16,6 +18,12 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
     const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+    const t = useTranslations('Events');
+
+    // Calculate event status
+    const eventStatus = getEventStatus(event);
+    const isExpired = eventStatus === 'expired';
+    const isSoldOut = eventStatus === 'sold_out';
 
     const handleToggleFavorite = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -37,7 +45,7 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
     };
 
     return (
-        <div className="group relative bg-white rounded-xl md:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl md:hover:-translate-y-2 transition-all duration-300 h-full">
+        <div className={`group relative bg-white rounded-xl md:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl md:hover:-translate-y-2 transition-all duration-300 h-full ${isExpired ? 'grayscale opacity-75' : ''}`}>
             <Link href={`/events/${event.id}`} className="flex flex-col h-full">
                 {/* Image Container - Compact on mobile */}
                 <div className="relative w-full h-40 md:aspect-square overflow-hidden bg-gray-50 shrink-0">
@@ -60,6 +68,26 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     {/* Floating Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
+                    {/* Status Badge - Expired or Sold Out */}
+                    {(isExpired || isSoldOut) && (
+                        <div className={`absolute top-2 left-2 md:top-3 md:left-3 z-10 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 ${isExpired
+                                ? 'bg-red-500 text-white'
+                                : 'bg-amber-500 text-white'
+                            }`}>
+                            {isExpired ? (
+                                <>
+                                    <XCircle className="w-3 h-3" />
+                                    <span>{t('status_expired')}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <AlertCircle className="w-3 h-3" />
+                                    <span>{t('status_sold_out')}</span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
                     {/* Favorite Button */}
                     <button
                         onClick={handleToggleFavorite}
@@ -70,11 +98,13 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                         />
                     </button>
 
-                    {/* Type Badge - Positioned at bottom on mobile */}
-                    <div className="absolute bottom-2 left-2 md:top-3 md:left-3 md:bottom-auto px-2.5 py-1.5 md:px-3 md:py-1.5 bg-white/95 backdrop-blur-md rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm flex items-center gap-1 md:gap-1.5">
-                        <span className="text-sm md:text-sm">{event.category_icon || '✨'}</span>
-                        <span className="inline">{event.category_name_en || event.category || 'Event'}</span>
-                    </div>
+                    {/* Type Badge - Positioned at bottom on mobile (only show if not expired/sold out) */}
+                    {!isExpired && !isSoldOut && (
+                        <div className="absolute bottom-2 left-2 md:top-3 md:left-3 md:bottom-auto px-2.5 py-1.5 md:px-3 md:py-1.5 bg-white/95 backdrop-blur-md rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm flex items-center gap-1 md:gap-1.5">
+                            <span className="text-sm md:text-sm">{event.category_icon || '✨'}</span>
+                            <span className="inline">{event.category_name_en || event.category || 'Event'}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Content - Compact padding on mobile */}
@@ -94,15 +124,21 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                                     : (event.district || event.city || event.location_name || 'Istanbul')}
                             </span>
                         </p>
-                        <p className="text-xs md:text-sm font-bold text-gray-400">
+                        <p className={`text-xs md:text-sm font-bold ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
                             {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </p>
                     </div>
 
                     <div className="pt-3 flex items-center justify-between border-t border-gray-100 mt-4 flex-row-reverse">
                         <div className="flex items-center gap-2">
-                            <div className="bg-primary/10 px-3 py-2 md:px-3 md:py-2 rounded-xl md:rounded-xl border border-primary/10 transition-all duration-300 group-hover:bg-primary group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20">
-                                <span className="text-base md:text-lg font-black text-primary group-hover:text-white transition-colors">
+                            <div className={`px-3 py-2 md:px-3 md:py-2 rounded-xl md:rounded-xl border transition-all duration-300 ${isExpired || isSoldOut
+                                    ? 'bg-gray-100 border-gray-200'
+                                    : 'bg-primary/10 border-primary/10 group-hover:bg-primary group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20'
+                                }`}>
+                                <span className={`text-base md:text-lg font-black transition-colors ${isExpired || isSoldOut
+                                        ? 'text-gray-400'
+                                        : 'text-primary group-hover:text-white'
+                                    }`}>
                                     {(() => {
                                         const displayPrice = (event.tickets && event.tickets.length > 0)
                                             ? Math.min(...event.tickets.map((t: any) => t.price))
@@ -113,13 +149,27 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-emerald-100/50">
-                            <Star className="w-3 h-3 md:w-3 md:h-3 fill-current" />
-                            <span className="inline">NEW</span>
-                        </div>
+                        {/* Status badge in footer - show expired/sold out or NEW */}
+                        {isExpired ? (
+                            <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-red-600 bg-red-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-red-100/50">
+                                <XCircle className="w-3 h-3 md:w-3 md:h-3" />
+                                <span className="inline">{t('status_expired')}</span>
+                            </div>
+                        ) : isSoldOut ? (
+                            <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-amber-600 bg-amber-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-amber-100/50">
+                                <AlertCircle className="w-3 h-3 md:w-3 md:h-3" />
+                                <span className="inline">{t('status_sold_out')}</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-emerald-100/50">
+                                <Star className="w-3 h-3 md:w-3 md:h-3 fill-current" />
+                                <span className="inline">NEW</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </Link>
         </div>
     );
 }
+

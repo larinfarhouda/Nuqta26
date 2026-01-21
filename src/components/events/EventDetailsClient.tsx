@@ -5,11 +5,12 @@ import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { Link, useRouter } from '@/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles } from 'lucide-react';
+import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles, XCircle, AlertCircle } from 'lucide-react';
 import EventBookingForm from '@/components/events/EventBookingForm';
 import MobileBookingBar from '@/components/events/MobileBookingBar';
 import BackgroundShapes from '@/components/home/BackgroundShapes';
 import { Suspense } from 'react';
+import { getEventStatus } from '@/utils/eventStatus';
 
 type EventDetailsClientProps = {
     event: any;
@@ -29,6 +30,12 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
     const minPrice = event.tickets && event.tickets.length > 0
         ? Math.min(...event.tickets.map((t: any) => t.price))
         : event.price;
+
+    // Calculate event status
+    const eventStatus = getEventStatus(event);
+    const isExpired = eventStatus === 'expired';
+    const isSoldOut = eventStatus === 'sold_out';
+    const isBookable = eventStatus === 'active';
 
     return (
         <div className="min-h-screen bg-transparent pb-32 md:pb-24 selection:bg-primary selection:text-white relative">
@@ -73,6 +80,27 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                     </div>
                 </div>
             </div>
+
+            {/* Event Status Banner */}
+            {(isExpired || isSoldOut) && (
+                <div className={`mx-4 md:mx-6 max-w-7xl lg:mx-auto mt-4 p-4 md:p-5 rounded-2xl flex items-center gap-4 ${isExpired ? 'bg-red-50 border border-red-100' : 'bg-amber-50 border border-amber-100'}`}>
+                    <div className={`p-3 rounded-xl ${isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
+                        {isExpired ? (
+                            <XCircle className="w-6 h-6 text-red-600" />
+                        ) : (
+                            <AlertCircle className="w-6 h-6 text-amber-600" />
+                        )}
+                    </div>
+                    <div>
+                        <p className={`font-black text-sm uppercase tracking-wide ${isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+                            {isExpired ? t('status_expired') : t('status_sold_out')}
+                        </p>
+                        <p className={`text-xs font-bold ${isExpired ? 'text-red-600' : 'text-amber-600'}`}>
+                            {isExpired ? t('expired_message') : t('sold_out_message')}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* 2. Photo Gallery Layout - Floating Cinematic Frame */}
             <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-6 md:pt-32 md:pb-10 relative z-10">

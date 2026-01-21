@@ -2,6 +2,10 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { sendEmail } from '@/utils/mail';
+import BookingUserTemplate from '@/components/emails/BookingUserTemplate';
+import BookingVendorTemplate from '@/components/emails/BookingVendorTemplate';
+import EventSoldOutTemplate from '@/components/emails/EventSoldOutTemplate';
 
 
 export async function getPublicEvent(id: string) {
@@ -104,7 +108,7 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
 
     // 1. Fetch Ticket & Event details to verify price
     const { data: ticket } = await supabase.from('tickets').select('*').eq('id', ticketId).single();
-    const { data: event } = await supabase.from('events').select('vendor_id').eq('id', eventId).single();
+    const { data: event } = await supabase.from('events').select('vendor_id, title, date, location_name, city').eq('id', eventId).single();
 
     if (!ticket || !event) return { error: 'Invalid Ticket' };
 
@@ -138,8 +142,83 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
     // Note: RPC needed for atomic increment, but for now we'll skip or just update directly (race condition risk)
     const { error: updateError } = await supabase.from('tickets').update({ sold: (ticket.sold || 0) + quantity }).eq('id', ticketId);
 
-
     revalidatePath(`/events/${eventId}`);
+
+    // --- NOTIFICATIONS & POST-BOOKING LOGIC ---
+
+    // A. User Notification (Booking Requested / Confirmed)
+    // A. User Notification (Booking Requested / Confirmed)
+    // Fetch User Profile for email
+    const { data: userProfileData } = await supabase.from('profiles').select('email, full_name').eq('id', user.id).single();
+    const userProfile = userProfileData as any;
+
+    if (userProfile?.email) {
+        await sendEmail({
+            to: userProfile.email,
+            subject: `Booking Request Received: ${event.title || 'Event'}`,
+            react: BookingUserTemplate({
+                userName: userProfile.full_name || 'Explorer',
+                eventName: event.title || 'Event',
+                bookingId: booking.id,
+                status: 'requested', // Explicitly Requested as per plan, even if DB says confirmed for now
+                eventDate: event.date,
+                location: event.location_name || event.city || undefined
+            })
+        });
+    }
+
+    // B. Vendor Notification (New Booking)
+    // Fetch Vendor Email (via their User ID in vendors table if mapped, or direct auth user lookup if vendor_id is auth_id)
+    // Schema: vendors.id IS uuid references auth.users(id). So vendor_id IS the auth user id.
+    const { data: vendorUserData } = await supabase.from('profiles').select('email, full_name').eq('id', event.vendor_id).single();
+    const vendorUser = vendorUserData as any;
+
+    const { data: vendorDetails } = await supabase.from('vendors').select('business_name').eq('id', event.vendor_id).single();
+
+    if (vendorUser?.email) {
+        await sendEmail({
+            to: vendorUser.email,
+            subject: `New Booking Request: ${event.title || 'Event'}`,
+            react: BookingVendorTemplate({
+                vendorName: vendorDetails?.business_name || vendorUser.full_name || 'Partner',
+                eventName: event.title || 'Event',
+                customerName: userProfile?.full_name || 'Guest',
+                quantity,
+                totalAmount,
+                bookingId: booking.id
+            })
+        });
+    }
+
+    // C. Check Sold Out Status
+    // Fetch all tickets for this event
+    const { data: allTickets } = await supabase.from('tickets').select('quantity, sold').eq('event_id', eventId);
+
+    if (allTickets && allTickets.length > 0) {
+        const isFullySoldOut = allTickets.every(t => (t.sold || 0) >= t.quantity);
+
+        if (isFullySoldOut) {
+            // Need to check if we already sent this? 
+            // Ideally should have a flag on event `notified_sold_out`.
+            // For now, we'll just send it. Vendor might get duplicates if canceled/rebooked, effectively strictly minor issue.
+
+            const totalSold = allTickets.reduce((acc, t) => acc + (t.sold || 0), 0);
+
+            if (vendorUser?.email) {
+                await sendEmail({
+                    to: vendorUser.email,
+                    subject: `Event Fully Booked: ${event.title || 'Event'}`,
+                    react: EventSoldOutTemplate({
+                        vendorName: vendorDetails?.business_name || vendorUser.full_name || 'Partner',
+                        eventName: event.title || 'Event',
+                        eventId: eventId,
+                        soldCount: totalSold
+                    })
+                });
+            }
+        }
+    }
+
     return { success: true, bookingId: booking.id };
 }
 

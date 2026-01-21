@@ -430,7 +430,9 @@
                 "capacity": "Capacity",
                 "no_upcoming": "No upcoming events",
                 "delete_confirm": "Are you sure you want to delete this event?",
-                "delete_error": "Error deleting event"
+                "delete_error": "Error deleting event",
+                "expired": "Expired",
+                "sold_out": "Sold Out"
             },
             "customers": {
                 "title": "Customers",
@@ -514,6 +516,11 @@
         "confirm_experience": "Confirm Experience",
         "instant_confirmation": "Instant confirmation",
         "reserve": "Reserve",
-        "total_price": "Total Price"
+        "total_price": "Total Price",
+        "status_expired": "Expired",
+        "status_sold_out": "Sold Out",
+        "expired_message": "This event has already passed",
+        "sold_out_message": "This event is fully booked",
+        "event_ended": "Event Ended"
     }
 }
