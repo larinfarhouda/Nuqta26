@@ -14,9 +14,14 @@ export default function Navbar({ user }: { user?: any }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <nav className="fixed top-0 w-full p-4 md:px-12 flex justify-between items-center z-50 bg-[#fffdfa]/80 backdrop-blur-3xl border-b border-secondary/10 shadow-sm transition-all h-24">
+        <nav
+            className="fixed top-0 w-full px-4 md:px-12 flex justify-between items-center z-50 bg-background-alt/90 md:bg-background-alt/80 backdrop-blur-xl border-b border-secondary/10 shadow-sm transition-all h-16 md:h-24"
+            style={{
+                paddingTop: 'env(safe-area-inset-top, 0px)',
+            }}
+        >
             <Link href="/" className="flex items-center group">
-                <div className="relative w-32 md:w-40 h-16 transform group-hover:scale-105 transition-transform duration-300">
+                <div className="relative w-24 md:w-40 h-12 md:h-16 transform group-hover:scale-105 transition-transform duration-300">
                     <Image
                         src="/images/logo_nav.png"
                         alt="Nuqta Logo"
@@ -32,7 +37,7 @@ export default function Navbar({ user }: { user?: any }) {
                 <div className="hidden md:flex gap-4 items-center">
                     {user ? (
                         <div className="flex items-center gap-3">
-                            <Link href="/dashboard/user" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-gray-900 text-white rounded-2xl shadow-xl shadow-gray-200 hover:bg-primary transition-all active:scale-95">
+                            <Link href="/dashboard/user" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-accent text-white rounded-2xl shadow-xl shadow-accent/10 hover:bg-primary transition-all active:scale-95">
                                 {tAuth('welcome_title')}
                             </Link>
                             <LogoutButton variant="icon" />

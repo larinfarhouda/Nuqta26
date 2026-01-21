@@ -49,13 +49,21 @@ export const metadata: Metadata = {
     },
     appleWebApp: {
         title: "Nuqta",
-        statusBarStyle: 'default',
+        statusBarStyle: 'black-translucent',
+        capable: true,
     },
     viewport: {
         width: 'device-width',
         initialScale: 1,
         maximumScale: 5,
+        userScalable: true,
+        viewportFit: 'cover',
     },
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#2CA58D' },
+        { media: '(prefers-color-scheme: dark)', color: '#264653' }
+    ],
+    manifest: '/manifest.json',
     icons: {
         icon: [
             { url: '/icon0.svg', type: 'image/svg+xml' },
@@ -83,6 +91,24 @@ export default async function LocaleLayout({
                 <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+                {/* PWA Manifest */}
+                <link rel="manifest" href="/manifest.json" />
+
+                {/* iOS Meta Tags */}
+                <meta name="apple-mobile-web-app-capable" content="yes" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+                <meta name="apple-mobile-web-app-title" content="Nuqta" />
+                <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+                {/* Theme Color */}
+                <meta name="theme-color" content="#2CA58D" media="(prefers-color-scheme: light)" />
+                <meta name="theme-color" content="#264653" media="(prefers-color-scheme: dark)" />
+
+                {/* Mobile Optimizations */}
+                <meta name="mobile-web-app-capable" content="yes" />
+                <meta name="format-detection" content="telephone=no" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
             </head>
             <body
                 className={`${cairo.className} ${geistSans.variable} antialiased`}

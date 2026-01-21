@@ -50,14 +50,14 @@ export default function LocalFilters({ districts }: LocalFiltersProps) {
     const isNearMeActive = !!searchParams.get('lat');
 
     return (
-        <div className="flex items-center gap-4 lg:gap-6 bg-gray-50/50 p-1.5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:bg-white hover:shadow-md h-fit">
-            <div className="flex items-center gap-2 pl-3 border-r border-gray-200 pr-4">
+        <div className="flex items-center gap-2 lg:gap-6 bg-gray-50/50 p-1 md:p-1.5 rounded-2xl border border-gray-100 shadow-sm transition-all hover:bg-white hover:shadow-md h-fit shrink-0">
+            <div className="hidden md:flex items-center gap-2 pl-3 border-r border-gray-200 pr-4">
                 <LayoutGrid className="w-4 h-4 text-gray-400" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 hidden xl:block">{t('search.view_options')}</span>
             </div>
 
             {/* Neighborhood/District Dropdown */}
-            <div className="relative group min-w-[160px]">
+            <div className="relative group min-w-[100px] md:min-w-[160px]">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-primary transition-colors">
                     <MapPin className="w-4 h-4" />
                 </div>
@@ -83,14 +83,14 @@ export default function LocalFilters({ districts }: LocalFiltersProps) {
                 onClick={handleNearMe}
                 disabled={isLocating}
                 className={cn(
-                    "flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all border",
+                    "flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold transition-all border",
                     isNearMeActive
                         ? "bg-primary text-white border-primary shadow-xl shadow-primary/20 scale-105"
                         : "bg-white text-gray-700 border-gray-200 hover:border-gray-900 hover:bg-gray-50 active:scale-95"
                 )}
             >
                 <Navigation2 className={cn("w-4 h-4", isLocating && "animate-spin")} />
-                <span className="whitespace-nowrap">{isNearMeActive ? t('search.near_me') : t('search.search_nearby')}</span>
+                <span className="hidden md:inline whitespace-nowrap">{isNearMeActive ? t('search.near_me') : t('search.search_nearby')}</span>
             </button>
         </div>
     );

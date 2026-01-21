@@ -16,7 +16,7 @@ export default function VendorPricing() {
             features: t.raw('free_features'),
             highlight: false,
             cta: t('get_started'),
-            color: "border-gray-100 bg-white"
+            color: "border-secondary/20 bg-white"
         },
         {
             name: t('pro_tier'),
@@ -31,7 +31,7 @@ export default function VendorPricing() {
     ];
 
     return (
-        <section id="pricing" className="py-20 md:py-24 lg:py-32 bg-[#fffdfa] relative">
+        <section id="pricing" className="py-20 md:py-24 lg:py-32 bg-background-alt relative">
             {/* Added ambient glow - Reduced on mobile */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] md:w-[80%] h-[60%] md:h-[80%] bg-secondary/10 rounded-full blur-[80px] md:blur-[120px] pointer-events-none opacity-50 md:opacity-100" />
 
@@ -41,10 +41,10 @@ export default function VendorPricing() {
                         <Zap className="w-4 h-4 fill-primary" />
                         <span>{t('simple_growth')}</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-900 tracking-tight">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-accent tracking-tight">
                         {t('title')}
                     </h2>
-                    <p className="text-base md:text-lg text-gray-500 font-medium max-w-2xl mx-auto">
+                    <p className="text-base md:text-lg text-accent/70 font-medium max-w-2xl mx-auto">
                         {t('subtitle')}
                     </p>
                 </div>
@@ -63,20 +63,20 @@ export default function VendorPricing() {
                             )}
 
                             <div className="space-y-3 md:space-y-4 mb-8 md:mb-10 w-full">
-                                <h3 className="text-xl md:text-2xl font-black text-gray-900 group-hover:text-primary transition-colors">{tier.name}</h3>
+                                <h3 className="text-xl md:text-2xl font-black text-accent group-hover:text-primary transition-colors">{tier.name}</h3>
                                 <div className="flex items-baseline justify-center">
-                                    <span className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 leading-none">{tier.price}</span>
+                                    <span className="text-3xl md:text-4xl lg:text-5xl font-black text-accent leading-none">{tier.price}</span>
                                     <span className="text-gray-400 font-bold ml-1 uppercase text-xs md:text-sm tracking-widest">{tier.period}</span>
                                 </div>
                                 <p className="text-base md:text-lg text-gray-500 font-medium">{tier.desc}</p>
                             </div>
 
-                            <div className="w-12 h-1 bg-gray-100 mb-8 md:mb-10 group-hover:bg-primary/20 transition-colors" />
+                            <div className="w-12 h-1 bg-secondary/20 mb-8 md:mb-10 group-hover:bg-primary/20 transition-colors" />
 
                             <ul className="space-y-4 md:space-y-6 mb-10 md:mb-12 w-full">
                                 {tier.features.map((feature: string, fIdx: number) => (
-                                    <li key={fIdx} className="flex items-center gap-3 md:gap-4 text-gray-600 font-bold justify-center">
-                                        <div className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0 border transition-all duration-500 ${tier.highlight ? 'bg-primary border-primary text-white' : 'bg-white border-gray-200 text-gray-400 group-hover:border-primary/50'}`}>
+                                    <li key={fIdx} className="flex items-center gap-3 md:gap-4 text-accent/80 font-bold justify-center">
+                                        <div className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0 border transition-all duration-500 ${tier.highlight ? 'bg-primary border-primary text-white' : 'bg-white border-secondary/20 text-accent/50 group-hover:border-primary/50'}`}>
                                             <Check className="w-3 h-3 md:w-4 md:h-4 stroke-[3]" />
                                         </div>
                                         <span className="text-sm md:text-base lg:text-lg">{feature}</span>
@@ -86,7 +86,7 @@ export default function VendorPricing() {
 
                             <Link
                                 href="/register?role=vendor"
-                                className={`w-full py-5 md:py-6 rounded-2xl md:rounded-[2rem] font-black text-base md:text-lg transition-all shadow-lg md:shadow-xl flex items-center justify-center gap-2 md:gap-3 group/btn hover:scale-[1.03] active:scale-95 ${tier.highlight ? 'bg-primary text-white shadow-primary/30 hover:shadow-primary/50' : 'bg-gray-900 text-white shadow-gray-900/10 hover:shadow-gray-900/30'}`}
+                                className={`w-full py-5 md:py-6 rounded-2xl md:rounded-[2rem] font-black text-base md:text-lg transition-all shadow-lg md:shadow-xl flex items-center justify-center gap-2 md:gap-3 group/btn hover:scale-[1.03] active:scale-95 ${tier.highlight ? 'bg-primary text-white shadow-primary/30 hover:shadow-primary/50' : 'bg-accent text-white shadow-gray-900/10 hover:shadow-gray-900/30'}`}
                             >
                                 {tier.cta}
                                 <ArrowRight className="w-5 h-5 md:w-6 md:h-6 group-hover/btn:translate-x-2 transition-transform rtl:rotate-180 rtl:group-hover/btn:-translate-x-2" />

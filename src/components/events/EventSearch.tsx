@@ -47,14 +47,14 @@ export default function EventSearch() {
                         ? '0 25px 50px -12px rgba(45, 116, 116, 0.25)'
                         : '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
                 }}
-                className={`flex items-center bg-white border-2 transition-all duration-300 rounded-[2.5rem] py-1.5 px-8 ${isFocused ? 'border-primary/30 shadow-2xl' : 'border-gray-50 shadow-xl'
+                className={`flex items-center bg-white border-2 transition-all duration-300 rounded-xl md:rounded-[2.5rem] py-1 md:py-1.5 px-4 md:px-8 ${isFocused ? 'border-primary/30 shadow-2xl' : 'border-gray-50 shadow-xl'
                     } group`}
             >
-                <div className="flex items-center gap-4 flex-1">
-                    <Search className={`w-6 h-6 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-gray-300'
+                <div className="flex items-center gap-2 md:gap-4 flex-1">
+                    <Search className={`w-4 h-4 md:w-6 md:h-6 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-gray-300'
                         }`} />
                     <input
-                        className="flex-1 bg-transparent py-6 md:py-8 text-lg md:text-xl font-bold text-gray-900 placeholder:text-gray-300 outline-none"
+                        className="flex-1 bg-transparent py-3 md:py-6 lg:py-8 text-sm md:text-lg lg:text-xl font-bold text-gray-900 placeholder:text-gray-300 outline-none"
                         placeholder={t('search.placeholder')}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
@@ -63,7 +63,7 @@ export default function EventSearch() {
                     />
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                     <AnimatePresence>
                         {search && (
                             <motion.button
@@ -71,10 +71,10 @@ export default function EventSearch() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 onClick={() => { setSearch(''); handleSearch(''); }}
-                                className="p-3 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-2 md:p-3 hover:bg-gray-100 rounded-full transition-colors"
                                 aria-label="Clear search"
                             >
-                                <X className="w-5 h-5 text-gray-400" />
+                                <X className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
                             </motion.button>
                         )}
                     </AnimatePresence>

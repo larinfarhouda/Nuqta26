@@ -9,7 +9,12 @@ export default function Footer() {
     const tNav = useTranslations('Navigation');
 
     return (
-        <footer className="bg-[#fffdfa] py-12 border-t border-secondary/10 pb-32 md:pb-12 px-6">
+        <footer
+            className="bg-[#fffdfa] py-8 md:py-12 border-t border-secondary/10 px-6"
+            style={{
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 5rem)', // Account for bottom nav (4rem) + spacing
+            }}
+        >
             <div className="container mx-auto">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
 

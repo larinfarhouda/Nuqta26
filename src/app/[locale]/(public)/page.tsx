@@ -96,28 +96,28 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
 
             <main className="w-full relative z-10">
                 {!isFiltered && (
-                    <div className="pt-24 md:pt-28 px-4 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
+                    <div className="pt-20 md:pt-28 px-4 md:px-12 lg:px-20 max-w-[1440px] mx-auto">
                         <Hero />
                     </div>
                 )}
 
                 {/* Search Bar - Better Desktop Integration */}
-                <div className={`relative z-50 transition-all duration-500 ${!isFiltered ? '-mt-10 mb-12' : 'pt-36 pb-12'}`}>
+                <div className={`relative z-50 transition-all duration-500 ${!isFiltered ? '-mt-6 md:-mt-10 mb-8 md:mb-12' : 'pt-24 md:pt-36 pb-8 md:pb-12'}`}>
                     <Suspense fallback={<div className="h-20" />}>
                         <EventSearchClient />
                     </Suspense>
                 </div>
 
                 {/* Discovery Categories (Sticky) - Refined desktop container */}
-                <div className="sticky top-24 z-40">
+                <div className="sticky top-16 md:top-24 z-40">
                     <Categories />
                 </div>
 
                 <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-16 pb-24 mt-16 max-w-[1440px]">
                     {/* Listing Section Title with Local Filters - Improved Desktop Alignment */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16 border-b border-gray-100 pb-10">
-                        <div className="space-y-3">
-                            <h2 className="text-2xl md:text-3xl xl:text-4xl font-black text-gray-900 tracking-tight">
+                    <div className="flex flex-row items-center justify-between gap-2 md:gap-8 mb-8 md:mb-16 border-b border-gray-100 pb-6 md:pb-10 overflow-x-auto no-scrollbar">
+                        <div className="space-y-3 shrink-0">
+                            <h2 className="text-xl md:text-3xl xl:text-4xl font-black text-gray-900 tracking-tight">
                                 {isFiltered ? (
                                     <span className="flex items-center gap-4">
                                         {t('searchResults')}
@@ -160,7 +160,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
                             </Link>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-10 gap-y-12 md:gap-y-20">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-x-10 md:gap-y-20">
                             {events.map((event: any) => (
                                 <EventCard
                                     key={event.id}
