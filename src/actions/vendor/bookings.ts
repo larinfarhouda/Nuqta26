@@ -99,7 +99,7 @@ export async function updateBookingStatus(bookingId: string, status: 'confirmed'
         .eq('vendor_id', user.id);
 
     if (error) return { error: error.message };
-    if (error) return { error: error.message };
+
 
     // --- NOTIFICATIONS ---
     // Fetch Booking Details with Event and User info for email
