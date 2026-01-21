@@ -9,7 +9,7 @@ export default function Hero() {
     const t = useTranslations('Index');
 
     return (
-        <section className="relative w-[calc(100%-1rem)] md:w-full h-[32vh] md:h-[650px] m-2 md:m-0 rounded-[2rem] md:rounded-b-[2.5rem] md:rounded-t-none overflow-hidden bg-white border border-secondary/20 md:border-b md:border-secondary/20 md:border-x-0 md:border-t-0 mx-auto shadow-sm md:shadow-none">
+        <section className="relative w-[calc(100%-1rem)] md:w-full h-auto min-h-[35vh] md:min-h-0 md:h-[650px] py-8 md:py-0 m-2 md:m-0 rounded-[2rem] md:rounded-b-[2.5rem] md:rounded-t-none overflow-hidden bg-white border border-secondary/20 md:border-b md:border-secondary/20 md:border-x-0 md:border-t-0 mx-auto shadow-sm md:shadow-none">
             {/* 1. Enhanced Gradients (More Visible) */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-[30%] -right-[10%] w-[800px] h-[800px] bg-gradient-to-br from-primary/10 to-primary/5 rounded-full blur-[80px]" />
@@ -87,7 +87,7 @@ export default function Hero() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-2xl md:text-5xl lg:text-6xl font-black tracking-tight text-accent mb-2 md:mb-6 leading-tight md:leading-[1.1]"
+                    className="text-2xl md:text-5xl lg:text-6xl font-black tracking-normal md:tracking-tight text-accent mb-4 md:mb-6 leading-normal md:leading-[1.1]"
                 >
                     {t.rich('title', {
                         br: () => <br className="hidden md:block" />,
@@ -104,7 +104,7 @@ export default function Hero() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-xs md:text-xl text-accent/70 max-w-2xl mx-auto leading-relaxed mb-0 md:mb-10 font-medium px-4 md:px-0"
+                    className="text-sm md:text-xl text-accent/70 max-w-2xl mx-auto leading-relaxed mb-0 md:mb-10 font-medium px-4 md:px-0"
                 >
                     {t('description')}
                 </motion.p>

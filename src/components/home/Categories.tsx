@@ -92,17 +92,20 @@ export default function Categories() {
                                     {cat.icon}
                                 </span>
                                 <span className={cn(
-                                    "text-[10px] md:text-xs font-black uppercase tracking-[0.15em] whitespace-nowrap transition-colors",
+                                    "text-[10px] md:text-xs font-black uppercase whitespace-nowrap transition-colors",
+                                    locale === 'ar' ? "tracking-normal" : "tracking-[0.15em]",
                                     isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900"
                                 )}>
                                     {name}
                                 </span>
 
-                                {isActive && (
-                                    <div
-                                        className="absolute -bottom-5 md:-bottom-8 left-0 right-0 h-1 bg-gray-900 rounded-full transition-all duration-200"
-                                    />
-                                )}
+                                {
+                                    isActive && (
+                                        <div
+                                            className="absolute -bottom-5 md:-bottom-8 left-0 right-0 h-1 bg-gray-900 rounded-full transition-all duration-200"
+                                        />
+                                    )
+                                }
                             </button>
                         );
                     })}
@@ -119,6 +122,6 @@ export default function Categories() {
                 <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 hidden md:block" />
                 <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
             </div>
-        </section>
+        </section >
     );
 }
