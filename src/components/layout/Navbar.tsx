@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import LogoutButton from '../auth/LogoutButton';
 
@@ -12,6 +12,11 @@ export default function Navbar({ user }: { user?: any }) {
     const locale = useLocale();
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Close mobile menu when route changes
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [pathname]);
 
     return (
         <nav
@@ -105,8 +110,7 @@ export default function Navbar({ user }: { user?: any }) {
                             <Link href="/for-vendors" className="w-full py-4 text-center font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-colors">
                                 {tNav('for_vendors')}
                             </Link>
-                            <Link href="/login" className="w-full py-4 text-center font-bold bg-primary text-white rounded-xl shadow-md">{tAuth('loginUser')}</Link>
-                            <Link href="/login" className="w-full py-4 text-center font-bold border-2 border-primary text-primary rounded-xl">{tAuth('loginVendor')}</Link>
+                            <Link href="/login" className="w-full py-4 text-center font-bold bg-primary text-white rounded-xl shadow-md">{tAuth('login')}</Link>
                         </>
                     )}
 
