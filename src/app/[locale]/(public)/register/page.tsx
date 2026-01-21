@@ -12,13 +12,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import LocationPicker from '@/components/ui/LocationPicker';
 import { Calendar, UserCircle, MapPin } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 // Schemas
-const userSchema = z.object({
-    fullName: z.string().min(2, "Full name is required"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    age: z.string().optional(), // We'll parse to int on submit or use number input
+const createUserSchema = (t: any) => z.object({
+    fullName: z.string().min(2, t('validation_full_name_required')),
+    email: z.string().email(t('validation_email_invalid')),
+    password: z.string().min(6, t('validation_password_min')),
+    age: z.string().optional(),
     gender: z.enum(['Male', 'Female']).optional(),
     country: z.string().optional(),
     city: z.string().optional(),
@@ -26,16 +27,14 @@ const userSchema = z.object({
     phone: z.string().optional(),
 });
 
-const vendorSchema = z.object({
-    businessName: z.string().min(2, "Business name is required"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+const createVendorSchema = (t: any) => z.object({
+    businessName: z.string().min(2, t('validation_business_name_required')),
+    email: z.string().email(t('validation_email_invalid')),
+    password: z.string().min(6, t('validation_password_min')),
 });
 
-type UserFormData = z.infer<typeof userSchema>;
-type VendorFormData = z.infer<typeof vendorSchema>;
-
-import { useSearchParams } from 'next/navigation';
+type UserFormData = z.infer<ReturnType<typeof createUserSchema>>;
+type VendorFormData = z.infer<ReturnType<typeof createVendorSchema>>;
 
 export default function RegisterPage() {
     const t = useTranslations('Auth');
@@ -48,6 +47,9 @@ export default function RegisterPage() {
     const [role, setRole] = useState<'user' | 'vendor'>(initialRole);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const userSchema = createUserSchema(t);
+    const vendorSchema = createVendorSchema(t);
 
     const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<UserFormData & VendorFormData>({
         resolver: zodResolver(role === 'user' ? userSchema : vendorSchema) as any,
@@ -157,29 +159,29 @@ export default function RegisterPage() {
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-sm font-bold border border-white/20 mb-8">
                                 {role === 'user' ? <Sparkles className="w-4 h-4 text-secondary" /> : <Building2 className="w-4 h-4 text-emerald-300" />}
                                 <span className={role === 'user' ? "text-secondary" : "text-emerald-100"}>
-                                    {role === 'user' ? 'للمستكشفين' : 'للمنظمين'}
+                                    {role === 'user' ? t('for_explorers') : t('for_organizers')}
                                 </span>
                             </div>
 
                             <h1 className="text-4xl lg:text-6xl font-black mb-6 leading-tight">
-                                {role === 'user' ? 'اكتشف تجارب لا تُنسى' : 'وسّع نطاق عملك مع نقطة'}
+                                {role === 'user' ? t('user_hero_title') : t('vendor_hero_title')}
                             </h1>
 
                             <p className="text-lg text-gray-200 mb-10 leading-relaxed font-light">
                                 {role === 'user'
-                                    ? 'استكشف أفضل الفعاليات والتجمعات في مدينتك. عالم من الترفيه بانتظارك.'
-                                    : 'أدر فعالياتك، وتواصل مع جمهورك، وحقق أقصى استفادة من منصتنا المتكاملة.'}
+                                    ? t('user_hero_desc')
+                                    : t('vendor_hero_desc')}
                             </p>
 
                             <div className="space-y-4">
                                 {(role === 'user' ? [
-                                    'حجوزات سهلة وسريعة',
-                                    'اقتراحات مخصصة لك',
-                                    'عروض حصرية'
+                                    t('user_feature_1'),
+                                    t('user_feature_2'),
+                                    t('user_feature_3')
                                 ] : [
-                                    'أدوات تسويق قوية',
-                                    'تحليلات ورؤى',
-                                    'دعم فني متواصل'
+                                    t('vendor_feature_1'),
+                                    t('vendor_feature_2'),
+                                    t('vendor_feature_3')
                                 ]).map((item, i) => (
                                     <div key={i} className="flex items-center gap-3">
                                         <CheckCircle className={`w-6 h-6 ${role === 'user' ? 'text-secondary' : 'text-emerald-400'}`} />
@@ -193,7 +195,7 @@ export default function RegisterPage() {
             </div>
 
             {/* --- FORM SIDE (Right) --- */}
-            <div className="lg:w-1/2 p-4 lg:p-12 flex items-center justify-center bg-gray-50 relative overflow-hidden" dir="rtl">
+            <div className="lg:w-1/2 p-4 lg:p-12 flex items-center justify-center bg-gray-50 relative overflow-hidden" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                 {/* Decorative background elements */}
                 <div className="absolute top-[-10%] left-[-5%] w-72 h-72 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-[-10%] right-[-5%] w-72 h-72 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -206,8 +208,8 @@ export default function RegisterPage() {
                 >
                     {/* Header */}
                     <div className="mb-8 text-center">
-                        <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">إنشاء حساب جديد</h2>
-                        <p className="text-gray-500 font-medium">ابدأ رحلتك معنا اليوم</p>
+                        <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">{t('create_account_heading')}</h2>
+                        <p className="text-gray-500 font-medium">{t('start_journey')}</p>
                     </div>
 
                     {/* Role Toggle */}
@@ -225,7 +227,7 @@ export default function RegisterPage() {
                                 />
                             )}
                             <User className="w-4 h-4" />
-                            زائر
+                            {t('visitor')}
                         </button>
                         <button
                             type="button"
@@ -240,7 +242,7 @@ export default function RegisterPage() {
                                 />
                             )}
                             <Building2 className="w-4 h-4" />
-                            منظم
+                            {t('organizer')}
                         </button>
                     </div>
 
@@ -253,7 +255,7 @@ export default function RegisterPage() {
                             className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
                         >
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
-                            <span className="text-sm">جوجل</span>
+                            <span className="text-sm">{t('continue_google')}</span>
                         </motion.button>
 
                         <motion.button
@@ -263,13 +265,13 @@ export default function RegisterPage() {
                             className="p-3 bg-[#1877F2] text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
                         >
                             <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
-                            <span className="text-sm">فيسبوك</span>
+                            <span className="text-sm">{t('continue_facebook')}</span>
                         </motion.button>
                     </div>
 
                     <div className="relative flex items-center gap-4 mb-6">
                         <div className="h-px bg-gray-200 flex-1"></div>
-                        <span className="text-xs font-extra bold text-gray-400 uppercase tracking-widest">أو البريد الإلكتروني</span>
+                        <span className="text-xs font-extra bold text-gray-400 uppercase tracking-widest">{t('or_email')}</span>
                         <div className="h-px bg-gray-200 flex-1"></div>
                     </div>
 
@@ -287,13 +289,13 @@ export default function RegisterPage() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                         {role === 'user' ? <User className="w-3.5 h-3.5" /> : <Building2 className="w-3.5 h-3.5" />}
-                                        {role === 'user' ? 'الاسم الكامل' : 'اسم النشاط التجاري'}
+                                        {role === 'user' ? t('label_fullname') : t('business_name_label')}
                                     </label>
                                     <input
                                         {...register(role === 'user' ? 'fullName' : 'businessName')}
                                         type="text"
                                         className={`w-full p-4 bg-white/50 border ${errors.fullName || errors.businessName ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
-                                        placeholder={role === 'user' ? "الاسم الكامل" : "اسم المعرض أو الشركة"}
+                                        placeholder={role === 'user' ? t('label_fullname') : t('business_name_placeholder')}
                                     />
                                     {(errors.fullName || errors.businessName) && (
                                         <span className="text-red-500 text-xs font-bold ml-1">
@@ -308,7 +310,7 @@ export default function RegisterPage() {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                                     <Calendar className="w-3.5 h-3.5" />
-                                                    Age
+                                                    {t('age_label')}
                                                 </label>
                                                 <input
                                                     {...register('age')}
@@ -322,15 +324,15 @@ export default function RegisterPage() {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                                     <UserCircle className="w-3.5 h-3.5" />
-                                                    Gender
+                                                    {t('gender_label')}
                                                 </label>
                                                 <select
                                                     {...register('gender')}
                                                     className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
                                                 >
-                                                    <option value="">Select...</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
+                                                    <option value="">{t('select_placeholder')}</option>
+                                                    <option value="Male">{t('gender_male')}</option>
+                                                    <option value="Female">{t('gender_female')}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -338,7 +340,7 @@ export default function RegisterPage() {
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                                 <Phone className="w-3.5 h-3.5" />
-                                                Phone Number
+                                                {t('phone_label')}
                                             </label>
                                             <input
                                                 {...register('phone')}
@@ -351,7 +353,7 @@ export default function RegisterPage() {
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                                 <MapPin className="w-3.5 h-3.5" />
-                                                Location
+                                                {t('location_label')}
                                             </label>
                                             <LocationPicker setValue={setValue} className="h-[200px]" />
                                             {/* Hidden inputs to ensure data is passed if not validating strictly via schema requirement yet, 
@@ -365,7 +367,7 @@ export default function RegisterPage() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                         <Mail className="w-3.5 h-3.5" />
-                                        البريد الإلكتروني
+                                        {t('email')}
                                     </label>
                                     <input
                                         {...register('email')}
@@ -379,7 +381,7 @@ export default function RegisterPage() {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                         <Lock className="w-3.5 h-3.5" />
-                                        كلمة المرور
+                                        {t('password')}
                                     </label>
                                     <input
                                         {...register('password')}
@@ -411,7 +413,7 @@ export default function RegisterPage() {
                         >
                             {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                 <>
-                                    <span>إنشاء حساب جديد</span>
+                                    <span>{t('create_account_heading')}</span>
                                     <ArrowRight className="w-5 h-5 rtl:rotate-180" />
                                 </>
                             )}
@@ -421,9 +423,9 @@ export default function RegisterPage() {
                     {/* Footer */}
                     <div className="mt-8 text-center pt-6 border-t border-gray-200/50">
                         <p className="text-gray-500 text-sm font-medium">
-                            لديك حساب بالفعل؟{' '}
+                            {t('have_account')} {' '}
                             <Link href="/login" className={`font-bold hover:underline transition-colors ${role === 'user' ? 'text-primary' : 'text-teal-700'}`}>
-                                تسجيل الدخول
+                                {t('login')}
                             </Link>
                         </p>
                     </div>

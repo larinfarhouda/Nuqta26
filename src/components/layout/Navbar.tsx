@@ -43,7 +43,7 @@ export default function Navbar({ user }: { user?: any }) {
                     {user ? (
                         <div className="flex items-center gap-3">
                             <Link href="/dashboard/user" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-accent text-white rounded-2xl shadow-xl shadow-accent/10 hover:bg-primary transition-all active:scale-95">
-                                {tAuth('welcome_title')}
+                                {tAuth('profile')}
                             </Link>
                             <LogoutButton variant="icon" />
                         </div>

@@ -12,13 +12,13 @@ import { Loader2, Mail, Lock, ArrowRight, AlertCircle, Facebook } from 'lucide-r
 import Link from 'next/link';
 import Image from 'next/image';
 
-// Schema
-const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(1, "Password is required"),
+// Schema creator
+const createLoginSchema = (t: any) => z.object({
+    email: z.string().email(t('validation_email_invalid')),
+    password: z.string().min(1, t('validation_password_required')),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
 
 export default function LoginPage() {
     const t = useTranslations('Auth');
@@ -27,6 +27,8 @@ export default function LoginPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const loginSchema = createLoginSchema(t);
 
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -117,15 +119,15 @@ export default function LoginPage() {
                     <div className="w-32 h-32 bg-white rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-black/20 mx-auto lg:mr-0 relative overflow-hidden group hover:scale-105 transition-all duration-500">
                         <Image src="/H-logo-removebg.png" alt="Nuqta Logo" fill className="object-contain p-4" />
                     </div>
-                    <h1 className="text-5xl font-black mb-6 leading-tight">مرحباً بك في نقطة</h1>
+                    <h1 className="text-5xl font-black mb-6 leading-tight">{t('welcome_title')}</h1>
                     <p className="text-xl text-teal-100 leading-relaxed font-light">
-                        انضم إلينا واكتشف عالماً من الفرص والفعاليات المميزة.
+                        {t('welcome_subtitle')}
                     </p>
                 </div>
             </motion.div>
 
             {/* Right Side: Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 relative overflow-hidden" dir="rtl">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 relative overflow-hidden" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                 {/* Decorative background elements for the form side */}
                 <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -136,9 +138,9 @@ export default function LoginPage() {
                     transition={{ delay: 0.2 }}
                     className="w-full max-w-md space-y-8 bg-white/60 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 relative z-10"
                 >
-                    <div className="text-center lg:text-right">
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">تسجيل الدخول</h2>
-                        <p className="mt-2 text-gray-500 font-medium">أدخل بياناتك للمتابعة</p>
+                    <div className={`text-center ${locale === 'ar' ? 'lg:text-right' : 'lg:text-left'}`}>
+                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">{t('signin_title')}</h2>
+                        <p className="mt-2 text-gray-500 font-medium">{t('enter_details')}</p>
                     </div>
 
                     {/* Social Login */}
@@ -150,7 +152,7 @@ export default function LoginPage() {
                             className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
                         >
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
-                            <span className="text-sm">جوجل</span>
+                            <span className="text-sm">{t('continue_google')}</span>
                         </motion.button>
 
                         <motion.button
@@ -160,13 +162,13 @@ export default function LoginPage() {
                             className="p-3 bg-[#1877F2] text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
                         >
                             <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
-                            <span className="text-sm">فيسبوك</span>
+                            <span className="text-sm">{t('continue_facebook')}</span>
                         </motion.button>
                     </div>
 
                     <div className="relative flex items-center gap-4 my-2">
                         <div className="h-px bg-gray-200 flex-1"></div>
-                        <span className="text-xs font-extrabold text-gray-400 uppercase tracking-widest">أو البريد الإلكتروني</span>
+                        <span className="text-xs font-extrabold text-gray-400 uppercase tracking-widest">{t('or_email')}</span>
                         <div className="h-px bg-gray-200 flex-1"></div>
                     </div>
 
@@ -175,7 +177,7 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                 <Mail className="w-3.5 h-3.5" />
-                                البريد الإلكتروني
+                                {t('email')}
                             </label>
                             <input
                                 {...register('email')}
@@ -190,9 +192,9 @@ export default function LoginPage() {
                             <div className="flex justify-between items-center px-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
                                     <Lock className="w-3.5 h-3.5" />
-                                    كلمة المرور
+                                    {t('password')}
                                 </label>
-                                <a href="#" className="text-xs font-bold text-primary hover:text-teal-700 transition-colors">نسيت كلمة المرور؟</a>
+                                <a href="#" className="text-xs font-bold text-primary hover:text-teal-700 transition-colors">{t('forgot_password')}</a>
                             </div>
                             <input
                                 {...register('password')}
@@ -219,7 +221,7 @@ export default function LoginPage() {
                         >
                             {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                 <>
-                                    <span>تسجيل الدخول</span>
+                                    <span>{t('login')}</span>
                                     <ArrowRight className="w-5 h-5 rtl:rotate-180" />
                                 </>
                             )}
@@ -228,9 +230,9 @@ export default function LoginPage() {
 
                     <div className="text-center pt-4">
                         <p className="text-gray-500 text-sm font-medium">
-                            ليس لديك حساب؟{' '}
+                            {t('no_account')} {' '}
                             <Link href="/register" className="text-primary font-bold hover:underline hover:text-teal-700 transition-colors">
-                                إنشاء حساب جديد
+                                {t('create_account')}
                             </Link>
                         </p>
                     </div>
