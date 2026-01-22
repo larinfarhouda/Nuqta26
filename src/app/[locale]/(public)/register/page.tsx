@@ -9,9 +9,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Building2, User, Mail, Lock, CheckCircle, ArrowRight, Sparkles, Facebook, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import LocationPicker from '@/components/ui/LocationPicker';
-import { Calendar, UserCircle, MapPin } from 'lucide-react';
+import { Calendar, UserCircle, MapPin, Check } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 // Schemas
@@ -47,6 +47,8 @@ export default function RegisterPage() {
     const [role, setRole] = useState<'user' | 'vendor'>(initialRole);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [submittedEmail, setSubmittedEmail] = useState('');
 
     const userSchema = createUserSchema(t);
     const vendorSchema = createVendorSchema(t);
@@ -91,11 +93,9 @@ export default function RegisterPage() {
             if (signUpError) throw signUpError;
 
             // Successful signup
-            if (role === 'vendor') {
-                router.push('/dashboard/vendor');
-            } else {
-                router.push('/');
-            }
+            setIsSuccess(true);
+            setSubmittedEmail(data.email);
+
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -206,229 +206,259 @@ export default function RegisterPage() {
                     transition={{ duration: 0.6 }}
                     className="w-full max-w-md bg-white/60 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 relative z-10"
                 >
-                    {/* Header */}
-                    <div className="mb-8 text-center">
-                        <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">{t('create_account_heading')}</h2>
-                        <p className="text-gray-500 font-medium">{t('start_journey')}</p>
-                    </div>
-
-                    {/* Role Toggle */}
-                    <div className="flex bg-gray-100/50 backdrop-blur-sm p-1.5 rounded-2xl mb-8 relative border border-gray-200/50">
-                        <button
-                            type="button"
-                            onClick={() => handleRoleChange('user')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl z-10 transition-colors font-bold text-sm relative ${role === 'user' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                        >
-                            {role === 'user' && (
-                                <motion.div
-                                    layoutId="role-indicator"
-                                    className="absolute inset-0 bg-white rounded-xl shadow-sm border border-gray-100 z-[-1]"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <User className="w-4 h-4" />
-                            {t('visitor')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleRoleChange('vendor')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl z-10 transition-colors font-bold text-sm relative ${role === 'vendor' ? 'text-teal-900' : 'text-gray-500 hover:text-gray-700'}`}
-                        >
-                            {role === 'vendor' && (
-                                <motion.div
-                                    layoutId="role-indicator"
-                                    className="absolute inset-0 bg-white rounded-xl shadow-sm border border-gray-100 z-[-1]"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <Building2 className="w-4 h-4" />
-                            {t('organizer')}
-                        </button>
-                    </div>
-
-                    {/* Social Login */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <motion.button
-                            whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleOAuthLogin('google')}
-                            className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
-                        >
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
-                            <span className="text-sm">{t('continue_google')}</span>
-                        </motion.button>
-
-                        <motion.button
-                            whileHover={{ scale: 1.02, backgroundColor: '#166fe5' }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleOAuthLogin('facebook')}
-                            className="p-3 bg-[#1877F2] text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
-                        >
-                            <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
-                            <span className="text-sm">{t('continue_facebook')}</span>
-                        </motion.button>
-                    </div>
-
-                    <div className="relative flex items-center gap-4 mb-6">
-                        <div className="h-px bg-gray-200 flex-1"></div>
-                        <span className="text-xs font-extra bold text-gray-400 uppercase tracking-widest">{t('or_email')}</span>
-                        <div className="h-px bg-gray-200 flex-1"></div>
-                    </div>
-
-                    {/* Form */}
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                        <AnimatePresence mode="wait">
+                    {/* Success State or Form */}
+                    <AnimatePresence mode="wait">
+                        {isSuccess ? (
                             <motion.div
-                                key={role}
-                                initial={{ opacity: 0, x: role === 'user' ? -20 : 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: role === 'user' ? 20 : -20 }}
-                                transition={{ duration: 0.3 }}
-                                className="space-y-5"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="text-center py-8"
                             >
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                        {role === 'user' ? <User className="w-3.5 h-3.5" /> : <Building2 className="w-3.5 h-3.5" />}
-                                        {role === 'user' ? t('label_fullname') : t('business_name_label')}
-                                    </label>
-                                    <input
-                                        {...register(role === 'user' ? 'fullName' : 'businessName')}
-                                        type="text"
-                                        className={`w-full p-4 bg-white/50 border ${errors.fullName || errors.businessName ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
-                                        placeholder={role === 'user' ? t('label_fullname') : t('business_name_placeholder')}
-                                    />
-                                    {(errors.fullName || errors.businessName) && (
-                                        <span className="text-red-500 text-xs font-bold ml-1">
-                                            {role === 'user' ? errors.fullName?.message : errors.businessName?.message}
-                                        </span>
-                                    )}
+                                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Check className="w-10 h-10 text-green-600" />
+                                </div>
+                                <h2 className="text-3xl font-black text-gray-900 mb-4">{t('registration_success_title')}</h2>
+                                <p className="text-gray-500 text-lg mb-8 leading-relaxed max-w-sm mx-auto">
+                                    {t('registration_success_desc', {
+                                        email: submittedEmail
+                                    })}
+                                </p>
+                                <Link
+                                    href="/login"
+                                    className={`inline-flex items-center justify-center px-8 py-4 font-bold text-white rounded-2xl shadow-lg transition-all active:scale-95 ${role === 'user' ? 'bg-primary hover:bg-teal-700 shadow-primary/30' : 'bg-teal-700 hover:bg-teal-800 shadow-teal-700/30'
+                                        }`}
+                                >
+                                    {t('back_to_login')}
+                                </Link>
+                            </motion.div>
+                        ) : (
+                            <>
+                                {/* Header */}
+                                <div className="mb-8 text-center">
+                                    <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">{t('create_account_heading')}</h2>
+                                    <p className="text-gray-500 font-medium">{t('start_journey')}</p>
                                 </div>
 
-                                {role === 'user' && (
-                                    <>
-                                        <div className="grid grid-cols-2 gap-4">
+                                {/* Role Toggle */}
+                                <div className="flex bg-gray-100/50 backdrop-blur-sm p-1.5 rounded-2xl mb-8 relative border border-gray-200/50">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRoleChange('user')}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl z-10 transition-colors font-bold text-sm relative ${role === 'user' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        {role === 'user' && (
+                                            <motion.div
+                                                layoutId="role-indicator"
+                                                className="absolute inset-0 bg-white rounded-xl shadow-sm border border-gray-100 z-[-1]"
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
+                                        <User className="w-4 h-4" />
+                                        {t('visitor')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRoleChange('vendor')}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl z-10 transition-colors font-bold text-sm relative ${role === 'vendor' ? 'text-teal-900' : 'text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        {role === 'vendor' && (
+                                            <motion.div
+                                                layoutId="role-indicator"
+                                                className="absolute inset-0 bg-white rounded-xl shadow-sm border border-gray-100 z-[-1]"
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
+                                        <Building2 className="w-4 h-4" />
+                                        {t('organizer')}
+                                    </button>
+                                </div>
+
+                                {/* Social Login */}
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => handleOAuthLogin('google')}
+                                        className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
+                                    >
+                                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
+                                        <span className="text-sm">{t('continue_google')}</span>
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileHover={{ scale: 1.02, backgroundColor: '#166fe5' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => handleOAuthLogin('facebook')}
+                                        className="p-3 bg-[#1877F2] text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
+                                    >
+                                        <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
+                                        <span className="text-sm">{t('continue_facebook')}</span>
+                                    </motion.button>
+                                </div>
+
+                                <div className="relative flex items-center gap-4 mb-6">
+                                    <div className="h-px bg-gray-200 flex-1"></div>
+                                    <span className="text-xs font-extra bold text-gray-400 uppercase tracking-widest">{t('or_email')}</span>
+                                    <div className="h-px bg-gray-200 flex-1"></div>
+                                </div>
+
+                                {/* Form */}
+                                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={role}
+                                            initial={{ opacity: 0, x: role === 'user' ? -20 : 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: role === 'user' ? 20 : -20 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="space-y-5"
+                                        >
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                                    <Calendar className="w-3.5 h-3.5" />
-                                                    {t('age_label')}
+                                                    {role === 'user' ? <User className="w-3.5 h-3.5" /> : <Building2 className="w-3.5 h-3.5" />}
+                                                    {role === 'user' ? t('label_fullname') : t('business_name_label')}
                                                 </label>
                                                 <input
-                                                    {...register('age')}
-                                                    type="number"
-                                                    min="13"
-                                                    max="100"
-                                                    className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
-                                                    placeholder="18"
+                                                    {...register(role === 'user' ? 'fullName' : 'businessName')}
+                                                    type="text"
+                                                    className={`w-full p-4 bg-white/50 border ${errors.fullName || errors.businessName ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
+                                                    placeholder={role === 'user' ? t('label_fullname') : t('business_name_placeholder')}
                                                 />
+                                                {(errors.fullName || errors.businessName) && (
+                                                    <span className="text-red-500 text-xs font-bold ml-1">
+                                                        {role === 'user' ? errors.fullName?.message : errors.businessName?.message}
+                                                    </span>
+                                                )}
                                             </div>
+
+                                            {role === 'user' && (
+                                                <>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                                <Calendar className="w-3.5 h-3.5" />
+                                                                {t('age_label')}
+                                                            </label>
+                                                            <input
+                                                                {...register('age')}
+                                                                type="number"
+                                                                min="13"
+                                                                max="100"
+                                                                className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
+                                                                placeholder="18"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                                <UserCircle className="w-3.5 h-3.5" />
+                                                                {t('gender_label')}
+                                                            </label>
+                                                            <select
+                                                                {...register('gender')}
+                                                                className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
+                                                            >
+                                                                <option value="">{t('select_placeholder')}</option>
+                                                                <option value="Male">{t('gender_male')}</option>
+                                                                <option value="Female">{t('gender_female')}</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                            <Phone className="w-3.5 h-3.5" />
+                                                            {t('phone_label')}
+                                                        </label>
+                                                        <input
+                                                            {...register('phone')}
+                                                            type="tel"
+                                                            className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
+                                                            placeholder="+90 555 123 45 67"
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                            <MapPin className="w-3.5 h-3.5" />
+                                                            {t('location_label')}
+                                                        </label>
+                                                        <LocationPicker setValue={setValue} className="h-[200px]" />
+                                                        {/* Hidden inputs to ensure data is passed if not validating strictly via schema requirement yet, 
+                                                            but we marked them optional in schema so it's fine. 
+                                                            If we want validation, we should make them required in schema and use `setValue` with `shouldValidate`.
+                                                        */}
+                                                    </div>
+                                                </>
+                                            )}
+
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                                    <UserCircle className="w-3.5 h-3.5" />
-                                                    {t('gender_label')}
+                                                    <Mail className="w-3.5 h-3.5" />
+                                                    {t('email')}
                                                 </label>
-                                                <select
-                                                    {...register('gender')}
-                                                    className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
-                                                >
-                                                    <option value="">{t('select_placeholder')}</option>
-                                                    <option value="Male">{t('gender_male')}</option>
-                                                    <option value="Female">{t('gender_female')}</option>
-                                                </select>
+                                                <input
+                                                    {...register('email')}
+                                                    type="email"
+                                                    className={`w-full p-4 bg-white/50 border ${errors.email ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
+                                                    placeholder="name@example.com"
+                                                />
+                                                {errors.email && <span className="text-red-500 text-xs font-bold ml-1">{errors.email.message}</span>}
                                             </div>
-                                        </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                                <Phone className="w-3.5 h-3.5" />
-                                                {t('phone_label')}
-                                            </label>
-                                            <input
-                                                {...register('phone')}
-                                                type="tel"
-                                                className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
-                                                placeholder="+90 555 123 45 67"
-                                            />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                    <Lock className="w-3.5 h-3.5" />
+                                                    {t('password')}
+                                                </label>
+                                                <input
+                                                    {...register('password')}
+                                                    type="password"
+                                                    className={`w-full p-4 bg-white/50 border ${errors.password ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
+                                                    placeholder="••••••••"
+                                                />
+                                                {errors.password && <span className="text-red-500 text-xs font-bold ml-1">{errors.password.message}</span>}
+                                            </div>
+                                        </motion.div>
+                                    </AnimatePresence>
 
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                                <MapPin className="w-3.5 h-3.5" />
-                                                {t('location_label')}
-                                            </label>
-                                            <LocationPicker setValue={setValue} className="h-[200px]" />
-                                            {/* Hidden inputs to ensure data is passed if not validating strictly via schema requirement yet, 
-                                                but we marked them optional in schema so it's fine. 
-                                                If we want validation, we should make them required in schema and use `setValue` with `shouldValidate`.
-                                            */}
+                                    {error && (
+                                        <div className="p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-700 text-sm rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                            <span className="font-medium">{error}</span>
                                         </div>
-                                    </>
-                                )}
+                                    )}
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                        <Mail className="w-3.5 h-3.5" />
-                                        {t('email')}
-                                    </label>
-                                    <input
-                                        {...register('email')}
-                                        type="email"
-                                        className={`w-full p-4 bg-white/50 border ${errors.email ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
-                                        placeholder="name@example.com"
-                                    />
-                                    {errors.email && <span className="text-red-500 text-xs font-bold ml-1">{errors.email.message}</span>}
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className={`w-full py-4 text-white font-bold rounded-2xl active:scale-[0.98] transition-all flex justify-center items-center gap-2 shadow-lg ${role === 'user'
+                                            ? 'bg-primary hover:bg-teal-700 shadow-primary/30'
+                                            : 'bg-teal-700 hover:bg-teal-800 shadow-teal-700/30'
+                                            }`}
+                                    >
+                                        {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : (
+                                            <>
+                                                <span>{t('create_account_heading')}</span>
+                                                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
+                                            </>
+                                        )}
+                                    </motion.button>
+                                </form>
+
+                                {/* Footer */}
+                                <div className="mt-8 text-center pt-6 border-t border-gray-200/50">
+                                    <p className="text-gray-500 text-sm font-medium">
+                                        {t('have_account')} {' '}
+                                        <Link href="/login" className={`font-bold hover:underline transition-colors ${role === 'user' ? 'text-primary' : 'text-teal-700'}`}>
+                                            {t('login')}
+                                        </Link>
+                                    </p>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
-                                        <Lock className="w-3.5 h-3.5" />
-                                        {t('password')}
-                                    </label>
-                                    <input
-                                        {...register('password')}
-                                        type="password"
-                                        className={`w-full p-4 bg-white/50 border ${errors.password ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
-                                        placeholder="••••••••"
-                                    />
-                                    {errors.password && <span className="text-red-500 text-xs font-bold ml-1">{errors.password.message}</span>}
-                                </div>
-                            </motion.div>
-                        </AnimatePresence>
-
-                        {error && (
-                            <div className="p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-700 text-sm rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                                <span className="font-medium">{error}</span>
-                            </div>
+                            </>
                         )}
-
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            type="submit"
-                            disabled={isLoading}
-                            className={`w-full py-4 text-white font-bold rounded-2xl active:scale-[0.98] transition-all flex justify-center items-center gap-2 shadow-lg ${role === 'user'
-                                ? 'bg-primary hover:bg-teal-700 shadow-primary/30'
-                                : 'bg-teal-700 hover:bg-teal-800 shadow-teal-700/30'
-                                }`}
-                        >
-                            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : (
-                                <>
-                                    <span>{t('create_account_heading')}</span>
-                                    <ArrowRight className="w-5 h-5 rtl:rotate-180" />
-                                </>
-                            )}
-                        </motion.button>
-                    </form>
-
-                    {/* Footer */}
-                    <div className="mt-8 text-center pt-6 border-t border-gray-200/50">
-                        <p className="text-gray-500 text-sm font-medium">
-                            {t('have_account')} {' '}
-                            <Link href="/login" className={`font-bold hover:underline transition-colors ${role === 'user' ? 'text-primary' : 'text-teal-700'}`}>
-                                {t('login')}
-                            </Link>
-                        </p>
-                    </div>
+                    </AnimatePresence>
                 </motion.div>
             </div>
         </div>

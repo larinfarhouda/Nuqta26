@@ -2,14 +2,13 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from '@/navigation';
+import { useRouter, Link } from '@/navigation';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Mail, Lock, ArrowRight, AlertCircle, Facebook } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
 
 // Schema creator
@@ -194,7 +193,7 @@ export default function LoginPage() {
                                     <Lock className="w-3.5 h-3.5" />
                                     {t('password')}
                                 </label>
-                                <a href="#" className="text-xs font-bold text-primary hover:text-teal-700 transition-colors">{t('forgot_password')}</a>
+                                <Link href="/forgot-password" className="text-xs font-bold text-primary hover:text-teal-700 transition-colors">{t('forgot_password')}</Link>
                             </div>
                             <input
                                 {...register('password')}

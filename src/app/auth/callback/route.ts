@@ -20,12 +20,16 @@ export async function GET(request: Request) {
 
                 let finalRole = profile?.role;
 
-                // If user purposefully signed up as vendor via social login (role param present), ensure they are a vendor
                 if (roleParam && roleParam === 'vendor') {
                     if (!profile || profile.role !== 'vendor') {
                         await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
                         finalRole = 'vendor';
                     }
+                }
+
+                const next = searchParams.get('next');
+                if (next) {
+                    return NextResponse.redirect(`${origin}${next}`);
                 }
 
                 // Determine redirect path
