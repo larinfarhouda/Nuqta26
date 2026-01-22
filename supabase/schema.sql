@@ -66,6 +66,7 @@ create table if not exists events (
   category_id uuid references categories(id) on delete set null,
   
   title text not null,
+  slug text unique,
   description text,
   image_url text,
   
@@ -202,7 +203,8 @@ returns table (
   country text,
   dist_km float,
   vendor_name text,
-  vendor_logo text
+  vendor_logo text,
+  slug text
 )
 language plpgsql
 as $$
@@ -243,7 +245,8 @@ begin
       else null::float
     end as dist_km,
     v.business_name as vendor_name,
-    v.company_logo as vendor_logo
+    v.company_logo as vendor_logo,
+    e.slug
   from events e
   join vendors v on e.vendor_id = v.id
   left join categories c on e.category_id = c.id

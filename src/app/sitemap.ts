@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     events.forEach((event: any) => {
         locales.forEach(locale => {
             sitemapEntries.push({
-                url: `${BASE_URL}/${locale}/events/${event.id}`,
+                url: `${BASE_URL}/${locale}/events/${event.slug || event.id}`,
                 lastModified: new Date(event.updated_at || new Date()),
                 changeFrequency: 'weekly',
                 priority: 0.9,

@@ -46,7 +46,7 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
 
     return (
         <div className={`group relative bg-white rounded-xl md:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl md:hover:-translate-y-2 transition-all duration-300 h-full ${isExpired ? 'grayscale opacity-75' : ''}`}>
-            <Link href={`/events/${event.id}`} className="flex flex-col h-full">
+            <Link href={`/events/${event.slug || event.id}`} className="flex flex-col h-full">
                 {/* Image Container - Compact on mobile */}
                 <div className="relative w-full h-40 md:aspect-square overflow-hidden bg-gray-50 shrink-0">
                     {event.image_url ? (
@@ -71,8 +71,8 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     {/* Status Badge - Expired or Sold Out */}
                     {(isExpired || isSoldOut) && (
                         <div className={`absolute top-2 left-2 md:top-3 md:left-3 z-10 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 ${isExpired
-                                ? 'bg-red-500 text-white'
-                                : 'bg-amber-500 text-white'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-amber-500 text-white'
                             }`}>
                             {isExpired ? (
                                 <>
@@ -132,12 +132,12 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     <div className="pt-3 flex items-center justify-between border-t border-gray-100 mt-4 flex-row-reverse">
                         <div className="flex items-center gap-2">
                             <div className={`px-3 py-2 md:px-3 md:py-2 rounded-xl md:rounded-xl border transition-all duration-300 ${isExpired || isSoldOut
-                                    ? 'bg-gray-100 border-gray-200'
-                                    : 'bg-primary/10 border-primary/10 group-hover:bg-primary group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20'
+                                ? 'bg-gray-100 border-gray-200'
+                                : 'bg-primary/10 border-primary/10 group-hover:bg-primary group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20'
                                 }`}>
                                 <span className={`text-base md:text-lg font-black transition-colors ${isExpired || isSoldOut
-                                        ? 'text-gray-400'
-                                        : 'text-primary group-hover:text-white'
+                                    ? 'text-gray-400'
+                                    : 'text-primary group-hover:text-white'
                                     }`}>
                                     {(() => {
                                         const displayPrice = (event.tickets && event.tickets.length > 0)

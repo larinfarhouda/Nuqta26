@@ -8,14 +8,24 @@ import BookingVendorTemplate from '@/components/emails/BookingVendorTemplate';
 import EventSoldOutTemplate from '@/components/emails/EventSoldOutTemplate';
 
 
-export async function getPublicEvent(id: string) {
+export async function getPublicEvent(idOrSlug: string) {
     const supabase = await createClient();
-    const { data, error } = await supabase
+
+    // Check if the input is a valid UUID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+
+    let query = supabase
         .from('events')
         .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number)')
-        .eq('id', id)
-        .eq('status', 'published')
-        .single();
+        .eq('status', 'published');
+
+    if (isUuid) {
+        query = query.eq('id', idOrSlug);
+    } else {
+        query = query.eq('slug', idOrSlug);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) return null;
     return data;
@@ -226,7 +236,7 @@ export async function getAllEventIdsForSitemap() {
     const supabase = await createClient();
     const { data } = await supabase
         .from('events')
-        .select('id, updated_at')
+        .select('id, slug, updated_at')
         .eq('status', 'published');
     return data || [];
 }

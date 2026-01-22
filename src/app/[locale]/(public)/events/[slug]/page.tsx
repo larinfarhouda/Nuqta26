@@ -6,8 +6,8 @@ import { createClient } from '@/utils/supabase/server';
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
-    const { id } = await params;
-    const event = await getPublicEvent(id);
+    const { slug } = await params;
+    const event = await getPublicEvent(slug);
 
     if (!event) {
         return {
@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
 }
 
 export default async function EventPage({ params }: { params: any }) {
-    const { id } = await params;
-    const event = await getPublicEvent(id);
+    const { slug } = await params;
+    const event = await getPublicEvent(slug);
 
     if (!event) return notFound();
 

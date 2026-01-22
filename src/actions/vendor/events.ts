@@ -50,10 +50,21 @@ export async function createEvent(formData: FormData) {
         }
     }
 
+    // 1.5 Generate Slug
+    const { slugify } = await import('@/utils/slugify');
+    let slug = slugify(rawData.title);
+
+    // Check for uniqueness
+    const { data: existingSlug } = await supabase.from('events').select('slug').eq('slug', slug).maybeSingle();
+    if (existingSlug) {
+        slug = `${slug}-${Date.now().toString().slice(-4)}`;
+    }
+
     // 2. Create Event
     const { data: event, error: eventError } = await supabase.from('events').insert({
         vendor_id: vendor.id,
         ...rawData,
+        slug,
         image_url
     }).select().single();
 
