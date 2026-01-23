@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import {
     Loader2, BarChart3,
-    Image as ImageIcon, Calendar, Users, Settings
+    Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles
 } from 'lucide-react';
 import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -19,6 +19,10 @@ const CustomersTab = dynamic(() => import('./vendor/customers/CustomersTab'), {
     loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 });
 
+const BookingsTab = dynamic(() => import('./vendor/BookingsTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
 const AnalyticsTab = dynamic(() => import('./vendor/analytics/AnalyticsTab'), {
     loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 });
@@ -28,6 +32,10 @@ const ProfileTab = dynamic(() => import('./vendor/ProfileTab'), {
 });
 
 const GalleryTab = dynamic(() => import('./vendor/GalleryTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
+const DiscountsTab = dynamic(() => import('./vendor/discounts/DiscountsTab'), {
     loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 });
 
@@ -66,7 +74,7 @@ export default function VendorDashboard() {
     // Core State
     const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>('LOADING');
     const [vendorData, setVendorData] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'PROFILE' | 'GALLERY'>('ANALYTICS');
+    const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS'>('ANALYTICS');
 
     // Alert State
     const [alertState, setAlertState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
@@ -145,8 +153,10 @@ export default function VendorDashboard() {
                         {[
                             { id: 'ANALYTICS', icon: BarChart3, label: t('vendor.tabs.analytics') },
                             { id: 'EVENTS', icon: Calendar, label: t('vendor.tabs.events') },
+                            { id: 'BOOKINGS', icon: Sparkles, label: t('vendor.tabs.bookings') },
                             { id: 'CUSTOMERS', icon: Users, label: t('vendor.tabs.customers') },
                             { id: 'GALLERY', icon: ImageIcon, label: t('vendor.tabs.gallery') },
+                            { id: 'DISCOUNTS', icon: Settings, label: t('vendor.tabs.discounts') }, // Using settings icon for now or Lucide has Tag/Ticket
                             { id: 'PROFILE', icon: Settings, label: t('vendor.tabs.settings') },
                         ].map((tab) => (
                             <button
@@ -196,29 +206,61 @@ export default function VendorDashboard() {
 
                 {step === 'DASHBOARD' && (
                     <div dir="rtl">
-                        <div className="mb-8 flex items-center gap-4 border-b border-gray-100 pb-6">
-                            <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-white shadow-lg overflow-hidden relative">
-                                <ImageWithFallback
-                                    src={vendorData?.company_logo}
-                                    alt="Logo"
-                                    className="w-full h-full object-cover"
-                                    fallback={
-                                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold text-2xl">
-                                            {vendorData?.business_name?.[0]}
-                                        </div>
-                                    }
-                                />
+                        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-white shadow-lg overflow-hidden relative">
+                                    <ImageWithFallback
+                                        src={vendorData?.company_logo}
+                                        alt="Logo"
+                                        className="w-full h-full object-cover"
+                                        fallback={
+                                            <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold text-2xl">
+                                                {vendorData?.business_name?.[0]}
+                                            </div>
+                                        }
+                                    />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-black text-gray-900">{vendorData?.business_name}</h1>
+                                    <p className="text-sm text-gray-500 font-medium">{t('vendor.title')}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-black text-gray-900">{vendorData?.business_name}</h1>
-                                <p className="text-sm text-gray-500 font-medium">{t('vendor.title')}</p>
+
+                            <div className="flex items-center gap-3">
+                                {vendorData?.slug ? (
+                                    <a
+                                        href={`/v/${vendorData.slug}`}
+                                        target="_blank"
+                                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        <span>{t('vendor.profile.view_live_profile')}</span>
+                                    </a>
+                                ) : (
+                                    <button
+                                        onClick={() => setActiveTab('PROFILE')}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-sm shadow-sm hover:bg-primary/20 hover:-translate-y-0.5 transition-all"
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        <span>{t('vendor.profile.create_live_profile')}</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setActiveTab('PROFILE')}
+                                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl font-bold text-sm shadow-lg hover:bg-gray-800 hover:-translate-y-0.5 transition-all"
+                                >
+                                    <Settings className="w-4 h-4" />
+                                    <span>{t('vendor.tabs.settings')}</span>
+                                </button>
                             </div>
                         </div>
 
                         {activeTab === 'ANALYTICS' && <AnalyticsTab />}
                         {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} />}
+                        {activeTab === 'BOOKINGS' && <BookingsTab />}
                         {activeTab === 'CUSTOMERS' && <CustomersTab />}
                         {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} />}
+                        {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} />}
                         {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} />}
                     </div>
                 )}

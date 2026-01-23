@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo, Geist } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import "../globals.css";
 
 const cairo = Cairo({
@@ -117,6 +118,9 @@ export default async function LocaleLayout({
                 <NextIntlClientProvider messages={messages}>
                     {children}
                 </NextIntlClientProvider>
+                {process.env.NEXT_PUBLIC_GA_ID && (
+                    <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+                )}
             </body>
         </html>
     );

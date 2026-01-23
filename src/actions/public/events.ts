@@ -16,7 +16,7 @@ export async function getPublicEvent(idOrSlug: string) {
 
     let query = supabase
         .from('events')
-        .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number)')
+        .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug), bulk_discounts(*)')
         .eq('status', 'published');
 
     if (isUuid) {
@@ -110,7 +110,7 @@ export async function getPublicEvents(filters?: EventFilter) {
 }
 
 
-export async function createBooking(eventId: string, ticketId: string, quantity: number) {
+export async function createBooking(eventId: string, ticketId: string, quantity: number, discountCode?: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -122,17 +122,57 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
 
     if (!ticket || !event) return { error: 'Invalid Ticket' };
 
-    const totalAmount = (ticket.price || 0) * quantity;
+    const basePrice = (ticket.price || 0) * quantity;
+    let totalAmount = basePrice;
+    let discountAmount = 0;
+    let discountCodeId = null;
+
+    // 1.5 Apply Bulk Discounts
+    const { data: bulkDiscounts } = await (supabase.from('bulk_discounts' as any) as any)
+        .select('*')
+        .eq('event_id', eventId)
+        .order('min_quantity', { descending: true });
+
+    if (bulkDiscounts && bulkDiscounts.length > 0) {
+        const applicableBulk = bulkDiscounts.find((d: any) => quantity >= d.min_quantity);
+        if (applicableBulk) {
+            if (applicableBulk.discount_type === 'percentage') {
+                discountAmount += (basePrice * applicableBulk.discount_value) / 100;
+            } else {
+                discountAmount += applicableBulk.discount_value;
+            }
+        }
+    }
+
+    // 1.6 Apply Discount Code
+    if (discountCode) {
+        const { validateDiscountCode } = await import('./discounts');
+        const validation = await validateDiscountCode(discountCode, event.vendor_id, eventId, basePrice - discountAmount);
+        if (validation.success) {
+            discountAmount += validation.discountAmount!;
+            discountCodeId = validation.discountId;
+
+            // Increment used_count (simple update as sql`used_count + 1` isn't easy here)
+            // We'll trust the validation logic already checked if its allowed.
+            await (supabase.from('discount_codes' as any) as any)
+                .update({ used_count: (validation as any).currentUsedCount ? (validation as any).currentUsedCount + 1 : 1 })
+                .eq('id', discountCodeId);
+        }
+    }
+
+    totalAmount = Math.max(0, basePrice - discountAmount);
 
     // 2. Create Booking
-    const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
+    const { data: booking, error: bookingError } = await (supabase.from('bookings' as any) as any)
         .insert({
             event_id: eventId,
             vendor_id: event.vendor_id,
             user_id: user.id,
             total_amount: totalAmount,
-            status: 'confirmed' // Auto-confirm for now (free/mock payment)
+            discount_amount: discountAmount,
+            discount_code_id: discountCodeId,
+            status: totalAmount > 0 ? 'pending_payment' : 'confirmed',
+            payment_method: totalAmount > 0 ? 'bank_transfer' : 'free'
         })
         .select()
         .single();
@@ -147,10 +187,11 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
     // Note: JS client doesn't support bulk insert well with returning in one go easily without array match
     // We'll just do a loop or bulk insert without return.
 
-    // Actually, `booking.status` is confirmed, we should increment `tickets.sold`
-    await supabase.rpc('increment_ticket_sold', { ticket_id: ticketId, quantity });
-    // Note: RPC needed for atomic increment, but for now we'll skip or just update directly (race condition risk)
-    const { error: updateError } = await supabase.from('tickets').update({ sold: (ticket.sold || 0) + quantity }).eq('id', ticketId);
+    // 4. Update Ticket Sold Count (Only if confirmed/free)
+    if (totalAmount === 0) {
+        await supabase.rpc('increment_ticket_sold', { ticket_id: ticketId, quantity });
+        await supabase.from('tickets').update({ sold: (ticket.sold || 0) + quantity }).eq('id', ticketId);
+    }
 
     revalidatePath(`/events/${eventId}`);
 

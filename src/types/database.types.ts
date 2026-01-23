@@ -68,8 +68,13 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string | null
+          discount_amount: number | null
+          discount_code_id: string | null
           event_id: string
           id: string
+          payment_method: string | null
+          payment_note: string | null
+          payment_proof_url: string | null
           status: string | null
           total_amount: number | null
           user_id: string | null
@@ -80,8 +85,13 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          discount_amount?: number | null
+          discount_code_id?: string | null
           event_id: string
           id?: string
+          payment_method?: string | null
+          payment_note?: string | null
+          payment_proof_url?: string | null
           status?: string | null
           total_amount?: number | null
           user_id?: string | null
@@ -92,14 +102,26 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          discount_amount?: number | null
+          discount_code_id?: string | null
           event_id?: string
           id?: string
+          payment_method?: string | null
+          payment_note?: string | null
+          payment_proof_url?: string | null
           status?: string | null
           total_amount?: number | null
           user_id?: string | null
           vendor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_event_id_fkey"
             columns: ["event_id"]
@@ -112,6 +134,41 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_discounts: {
+        Row: {
+          created_at: string | null
+          discount_type: string
+          discount_value: number
+          event_id: string
+          id: string
+          min_quantity: number
+        }
+        Insert: {
+          created_at?: string | null
+          discount_type: string
+          discount_value: number
+          event_id: string
+          id?: string
+          min_quantity: number
+        }
+        Update: {
+          created_at?: string | null
+          discount_type?: string
+          discount_value?: number
+          event_id?: string
+          id?: string
+          min_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_discounts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -143,6 +200,124 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          discount_type: string
+          discount_value: number
+          event_id: string | null
+          expiry_date: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_purchase_amount: number | null
+          used_count: number | null
+          vendor_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          discount_type: string
+          discount_value: number
+          event_id?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          used_count?: number | null
+          vendor_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          discount_type?: string
+          discount_value?: number
+          event_id?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          used_count?: number | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_codes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_codes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reviews: {
+        Row: {
+          booking_id: string | null
+          comment: string | null
+          created_at: string | null
+          event_id: string
+          id: string
+          is_flagged: boolean | null
+          rating: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          is_flagged?: boolean | null
+          rating: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          is_flagged?: boolean | null
+          rating?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           capacity: number | null
@@ -164,6 +339,7 @@ export type Database = {
           recurrence_days: string[] | null
           recurrence_end_date: string | null
           recurrence_type: string | null
+          slug: string | null
           status: string | null
           title: string
           vendor_id: string
@@ -188,6 +364,7 @@ export type Database = {
           recurrence_days?: string[] | null
           recurrence_end_date?: string | null
           recurrence_type?: string | null
+          slug?: string | null
           status?: string | null
           title: string
           vendor_id: string
@@ -212,6 +389,7 @@ export type Database = {
           recurrence_days?: string[] | null
           recurrence_end_date?: string | null
           recurrence_type?: string | null
+          slug?: string | null
           status?: string | null
           title?: string
           vendor_id?: string
@@ -314,6 +492,45 @@ export type Database = {
         }
         Relationships: []
       }
+      review_helpful: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpful_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "event_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_helpful_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           created_at: string | null
@@ -389,9 +606,13 @@ export type Database = {
       }
       vendors: {
         Row: {
+          bank_account_name: string | null
+          bank_iban: string | null
+          bank_name: string | null
           business_name: string
           category: string
           company_logo: string | null
+          cover_image: string | null
           created_at: string | null
           description_ar: string | null
           id: string
@@ -399,15 +620,20 @@ export type Database = {
           is_verified: boolean | null
           location_lat: number | null
           location_long: number | null
+          slug: string | null
           status: string | null
           tax_id_document: string | null
           website: string | null
           whatsapp_number: string | null
         }
         Insert: {
+          bank_account_name?: string | null
+          bank_iban?: string | null
+          bank_name?: string | null
           business_name: string
           category: string
           company_logo?: string | null
+          cover_image?: string | null
           created_at?: string | null
           description_ar?: string | null
           id: string
@@ -415,15 +641,20 @@ export type Database = {
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          slug?: string | null
           status?: string | null
           tax_id_document?: string | null
           website?: string | null
           whatsapp_number?: string | null
         }
         Update: {
+          bank_account_name?: string | null
+          bank_iban?: string | null
+          bank_name?: string | null
           business_name?: string
           category?: string
           company_logo?: string | null
+          cover_image?: string | null
           created_at?: string | null
           description_ar?: string | null
           id?: string
@@ -431,6 +662,7 @@ export type Database = {
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          slug?: string | null
           status?: string | null
           tax_id_document?: string | null
           website?: string | null
@@ -451,6 +683,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_review_event: {
+        Args: { p_event_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      get_event_rating_summary: {
+        Args: { p_event_id: string }
+        Returns: {
+          average_rating: number
+          rating_1_count: number
+          rating_2_count: number
+          rating_3_count: number
+          rating_4_count: number
+          rating_5_count: number
+          review_count: number
+        }[]
+      }
       get_events_pro: {
         Args: {
           p_category?: string
@@ -485,11 +733,19 @@ export type Database = {
           location_long: number
           location_name: string
           price: number
+          slug: string
           status: string
           title: string
           vendor_id: string
           vendor_logo: string
           vendor_name: string
+        }[]
+      }
+      get_review_helpful_count: {
+        Args: { p_review_id: string }
+        Returns: {
+          helpful_count: number
+          not_helpful_count: number
         }[]
       }
       increment_ticket_sold: {

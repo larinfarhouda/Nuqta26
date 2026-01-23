@@ -14,6 +14,7 @@ import { createClient } from '@/utils/supabase/client';
 import ImageUploader from './components/ImageUploader';
 import TicketManager from './components/TicketManager';
 import EventMap from './components/EventMap';
+import BulkDiscountManager from './components/BulkDiscountManager';
 
 // Zod Schema Definition
 const schema = z.object({
@@ -84,6 +85,9 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(event?.image_url || null);
+
+    // Bulk Discounts State
+    const [bulkDiscounts, setBulkDiscounts] = useState<any[]>(event?.bulk_discounts || []);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -156,6 +160,8 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                 else formData.append(key, value as string);
             }
         });
+
+        formData.append('bulk_discounts', JSON.stringify(bulkDiscounts));
 
         if (imageFile) {
             formData.append('image', imageFile);
@@ -334,6 +340,9 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
 
                     {/* Ticket Management Component */}
                     <TicketManager control={control} register={register} errors={errors} />
+
+                    {/* Bulk Discount Management Component */}
+                    <BulkDiscountManager discounts={bulkDiscounts} setDiscounts={setBulkDiscounts} />
 
                     <div className="flex gap-4 pt-4 border-t border-gray-100 sticky bottom-0 bg-white/80 backdrop-blur-lg p-4 -mx-6 -mb-6 mt-4 z-20">
                         <button type="button" onClick={onClose} className="flex-1 py-4 font-bold text-gray-600 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors">إلغاء</button>

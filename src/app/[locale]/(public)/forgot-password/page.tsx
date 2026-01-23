@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { createClient } from '@/utils/supabase/client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -18,6 +18,7 @@ type ForgotPasswordFormData = z.infer<ReturnType<typeof createForgotPasswordSche
 
 export default function ForgotPasswordPage() {
     const t = useTranslations('Auth');
+    const locale = useLocale();
     const supabase = createClient();
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -36,7 +37,7 @@ export default function ForgotPasswordPage() {
 
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-                redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+                redirectTo: `${window.location.origin}/auth/callback?next=/update-password&locale=${locale}`,
             });
 
             if (error) throw error;

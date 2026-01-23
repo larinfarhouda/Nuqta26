@@ -93,6 +93,29 @@ export async function createEvent(formData: FormData) {
         }
     }
 
+    // 4. Create Bulk Discounts
+    const bulkDiscountsJson = formData.get('bulk_discounts') as string;
+    if (bulkDiscountsJson) {
+        try {
+            const bulkDiscounts = JSON.parse(bulkDiscountsJson);
+            if (Array.isArray(bulkDiscounts)) {
+                const bulkInserts = bulkDiscounts.map((d: any) => ({
+                    event_id: event.id,
+                    min_quantity: parseInt(d.min_quantity),
+                    discount_type: d.discount_type,
+                    discount_value: parseFloat(d.discount_value)
+                }));
+
+                if (bulkInserts.length > 0) {
+                    const { error: bulkError } = await (supabase.from('bulk_discounts' as any) as any).insert(bulkInserts);
+                    if (bulkError) console.error("Error creating bulk discounts:", bulkError);
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing bulk discounts JSON", e);
+        }
+    }
+
     revalidatePath('/dashboard/vendor');
     return { success: true, eventId: event.id };
 }
@@ -158,7 +181,6 @@ export async function updateEvent(eventId: string, formData: FormData) {
     }
 
     // Handle Tickets (Upsert: Update existing, Insert new)
-    // Note: Deleting tickets is risky if they have sales, so we'll skip deletion for now or handle it carefully in future.
     const ticketsJson = formData.get('tickets') as string;
     if (ticketsJson) {
         try {
@@ -166,14 +188,12 @@ export async function updateEvent(eventId: string, formData: FormData) {
             if (Array.isArray(tickets)) {
                 for (const t of tickets) {
                     if (t.id) {
-                        // Update existing ticket
                         await supabase.from('tickets').update({
                             name: t.name,
                             price: parseFloat(t.price),
                             quantity: parseInt(t.quantity)
                         }).eq('id', t.id).eq('event_id', eventId);
                     } else {
-                        // Insert new ticket
                         await supabase.from('tickets').insert({
                             event_id: eventId,
                             name: t.name,
@@ -188,6 +208,30 @@ export async function updateEvent(eventId: string, formData: FormData) {
         }
     }
 
+    // Handle Bulk Discounts
+    const bulkDiscountsJson = formData.get('bulk_discounts') as string;
+    if (bulkDiscountsJson) {
+        try {
+            const bulkDiscounts = JSON.parse(bulkDiscountsJson);
+            if (Array.isArray(bulkDiscounts)) {
+                await (supabase.from('bulk_discounts' as any) as any).delete().eq('event_id', eventId);
+
+                const bulkInserts = bulkDiscounts.map((d: any) => ({
+                    event_id: eventId,
+                    min_quantity: parseInt(d.min_quantity),
+                    discount_type: d.discount_type,
+                    discount_value: parseFloat(d.discount_value)
+                }));
+
+                if (bulkInserts.length > 0) {
+                    await (supabase.from('bulk_discounts' as any) as any).insert(bulkInserts);
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing bulk discounts for update", e);
+        }
+    }
+
     revalidatePath('/dashboard/vendor');
     return { success: true };
 }
@@ -198,7 +242,7 @@ export async function getVendorEvents() {
 
     if (!user) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
         .from('events')
         .select(`
             *,
@@ -209,8 +253,9 @@ export async function getVendorEvents() {
                 sold,
                 quantity
             ),
-            bookings (count)
-        `)
+            bookings (count),
+            bulk_discounts (*)
+        `) as any)
         .eq('vendor_id', user.id)
         .order('date', { ascending: true });
 

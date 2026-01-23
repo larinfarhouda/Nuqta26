@@ -5,7 +5,7 @@ import { Home, Calendar, Heart, User, LogIn } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/utils/cn';
 
-export default function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
+export default function BottomNav({ isLoggedIn, role }: { isLoggedIn: boolean; role?: string }) {
     const t = useTranslations('Navigation');
     const pathname = usePathname();
 
@@ -19,19 +19,19 @@ export default function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
         {
             key: 'bookings',
             label: t('bookings'),
-            href: '/dashboard/user',
+            href: role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user',
             icon: Calendar
         },
         {
             key: 'favorites',
             label: t('favorites'),
-            href: '/dashboard/user/favorites',
+            href: role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user/favorites',
             icon: Heart
         },
         {
             key: 'profile',
             label: isLoggedIn ? t('profile') : t('login'),
-            href: isLoggedIn ? '/dashboard/user/profile' : '/login',
+            href: (isLoggedIn && role === 'vendor') ? '/dashboard/vendor' : (isLoggedIn ? '/dashboard/user/profile' : '/login'),
             icon: isLoggedIn ? User : LogIn
         }
     ];

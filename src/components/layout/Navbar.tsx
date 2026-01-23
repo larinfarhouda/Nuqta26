@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import LogoutButton from '../auth/LogoutButton';
 
-export default function Navbar({ user }: { user?: any }) {
+export default function Navbar({ user, role }: { user?: any; role?: string }) {
     const tAuth = useTranslations('Auth');
     const tNav = useTranslations('Navigation');
     const locale = useLocale();
@@ -17,6 +17,9 @@ export default function Navbar({ user }: { user?: any }) {
     useEffect(() => {
         setMobileMenuOpen(false);
     }, [pathname]);
+
+    const dashboardLink = role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user';
+    const mobileDashboardLink = role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user/profile';
 
     return (
         <nav
@@ -42,7 +45,7 @@ export default function Navbar({ user }: { user?: any }) {
                 <div className="hidden md:flex gap-4 items-center">
                     {user ? (
                         <div className="flex items-center gap-3">
-                            <Link href="/dashboard/user" className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-accent text-white rounded-2xl shadow-xl shadow-accent/10 hover:bg-primary transition-all active:scale-95">
+                            <Link href={dashboardLink} className="px-6 py-3 text-sm font-black uppercase tracking-widest bg-accent text-white rounded-2xl shadow-xl shadow-accent/10 hover:bg-primary transition-all active:scale-95">
                                 {tAuth('profile')}
                             </Link>
                             <LogoutButton variant="icon" />
@@ -102,7 +105,7 @@ export default function Navbar({ user }: { user?: any }) {
                 <div className="absolute top-20 left-0 w-full bg-white border-b shadow-lg p-6 flex flex-col gap-4 md:hidden animate-in slide-in-from-top-4">
                     {user ? (
                         <div className="space-y-3">
-                            <Link href="/dashboard/user/profile" className="w-full block py-4 text-center font-bold bg-primary text-white rounded-xl shadow-md">{tAuth('profile')}</Link>
+                            <Link href={mobileDashboardLink} className="w-full block py-4 text-center font-bold bg-primary text-white rounded-xl shadow-md">{tAuth('profile')}</Link>
                             <LogoutButton className="w-full py-4 flex justify-center items-center gap-2 font-bold text-red-600 bg-red-50 rounded-xl" />
                         </div>
                     ) : (

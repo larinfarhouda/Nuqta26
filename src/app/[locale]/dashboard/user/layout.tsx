@@ -21,6 +21,22 @@ export default async function UserDashboardLayout({
         return null;
     }
 
+    // Check role and redirect vendors
+    let role = user.user_metadata?.role;
+    if (!role) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        role = profile?.role;
+    }
+
+    if (role === 'vendor') {
+        redirect({ href: '/dashboard/vendor', locale });
+        return null;
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col relative overflow-hidden text-gray-900">
             {/* Background Blobs */}
@@ -68,7 +84,7 @@ export default async function UserDashboardLayout({
                 </div>
             </main>
 
-            <BottomNav isLoggedIn={true} />
+            <BottomNav isLoggedIn={true} role={role} />
         </div>
     );
 }

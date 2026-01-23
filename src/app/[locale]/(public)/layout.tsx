@@ -10,15 +10,25 @@ export default async function PublicLayout({
 }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+    // Check role
+    let role = user?.user_metadata?.role;
+    if (user && !role) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        role = profile?.role;
+    }
 
     return (
         <div className="flex flex-col min-h-screen">
-            <Navbar user={user} />
+            <Navbar user={user} role={role} />
             <main className="flex-grow">
                 {children}
             </main>
             <Footer />
-            <BottomNav isLoggedIn={!!user} />
+            <BottomNav isLoggedIn={!!user} role={role} />
         </div>
     );
 }

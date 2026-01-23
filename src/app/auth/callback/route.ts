@@ -29,7 +29,11 @@ export async function GET(request: Request) {
 
                 const next = searchParams.get('next');
                 if (next) {
-                    return NextResponse.redirect(`${origin}${next}`);
+                    // If next is already localized or starts with /, use it
+                    // Otherwise, prefix with locale
+                    const target = next.startsWith('/') ? next : `/${next}`;
+                    const localizedTarget = next.match(/^\/(ar|en)\//) ? target : `/${locale}${target}`;
+                    return NextResponse.redirect(`${origin}${localizedTarget}`);
                 }
 
                 // Determine redirect path

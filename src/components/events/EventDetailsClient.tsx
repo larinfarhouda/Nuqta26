@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { Link, useRouter } from '@/navigation';
@@ -11,6 +11,10 @@ import MobileBookingBar from '@/components/events/MobileBookingBar';
 import BackgroundShapes from '@/components/home/BackgroundShapes';
 import { Suspense } from 'react';
 import { getEventStatus } from '@/utils/eventStatus';
+import ReviewStats from '@/components/reviews/ReviewStats';
+import ReviewForm from '@/components/reviews/ReviewForm';
+import ReviewList from '@/components/reviews/ReviewList';
+import { getEventRatingSummary, checkCanReviewEvent, getUserReviewForEvent } from '@/actions/public/reviews';
 
 type EventDetailsClientProps = {
     event: any;
@@ -19,9 +23,18 @@ type EventDetailsClientProps = {
 
 export default function EventDetailsClient({ event, user }: EventDetailsClientProps) {
     const t = useTranslations('Events');
+    const tReviews = useTranslations('Reviews');
     const locale = useLocale();
     const router = useRouter();
     const bookingRef = useRef<HTMLDivElement>(null);
+
+    // Review state
+    const [reviewStats, setReviewStats] = useState<any>(null);
+    const [canReview, setCanReview] = useState(false);
+    const [reviewReason, setReviewReason] = useState('');
+    const [userReview, setUserReview] = useState<any>(null);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [editingReview, setEditingReview] = useState(false);
 
     const scrollToBooking = () => {
         bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -36,6 +49,34 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
     const isExpired = eventStatus === 'expired';
     const isSoldOut = eventStatus === 'sold_out';
     const isBookable = eventStatus === 'active';
+
+    // Fetch review data on component mount
+    useEffect(() => {
+        async function fetchReviewData() {
+            // Get rating summary
+            const summaryResult = await getEventRatingSummary(event.id);
+            if (summaryResult.success) {
+                setReviewStats(summaryResult.data);
+            }
+
+            // Check if user can review (only if logged in)
+            if (user) {
+                const canReviewResult = await checkCanReviewEvent(event.id);
+                setCanReview(canReviewResult.canReview);
+                setReviewReason(canReviewResult.reason || '');
+
+                // Get user's existing review if they have one
+                if (canReviewResult.reason === 'already_reviewed') {
+                    const userReviewResult = await getUserReviewForEvent(event.id);
+                    if (userReviewResult.success && userReviewResult.data) {
+                        setUserReview(userReviewResult.data);
+                    }
+                }
+            }
+        }
+
+        fetchReviewData();
+    }, [event.id, user]);
 
     return (
         <div className="min-h-screen bg-transparent pb-32 md:pb-24 selection:bg-primary selection:text-white relative">
@@ -203,7 +244,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-                            <Link href={`/vendor/${event.vendor_id}`} className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left text-gray-900 group/vendor cursor-pointer">
+                            <Link href={event.vendors?.slug ? `/v/${event.vendors.slug}` : `/vendor/${event.vendor_id}`} className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left text-gray-900 group/vendor cursor-pointer">
                                 <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white transition-transform group-hover/vendor:scale-105">
                                     <Image
                                         src={event.vendors?.company_logo || '/images/logo_nav.png'}
@@ -281,6 +322,90 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                             </div>
                         </div>
                     )}
+
+                    {/* Reviews Section */}
+                    <div className="space-y-8 pt-8">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{tReviews('title')}</h2>
+                            <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
+                        </div>
+
+                        {/* Review Stats */}
+                        {reviewStats && reviewStats.review_count > 0 && (
+                            <ReviewStats
+                                averageRating={Number(reviewStats.average_rating) || 0}
+                                reviewCount={Number(reviewStats.review_count) || 0}
+                                ratingDistribution={{
+                                    rating_1_count: Number(reviewStats.rating_1_count) || 0,
+                                    rating_2_count: Number(reviewStats.rating_2_count) || 0,
+                                    rating_3_count: Number(reviewStats.rating_3_count) || 0,
+                                    rating_4_count: Number(reviewStats.rating_4_count) || 0,
+                                    rating_5_count: Number(reviewStats.rating_5_count) || 0
+                                }}
+                            />
+                        )}
+
+                        {/* Review Form - Show if user can review OR if editing */}
+                        {user && (canReview || userReview) && (
+                            <div>
+                                {editingReview || (canReview && showReviewForm) ? (
+                                    <ReviewForm
+                                        eventId={event.id}
+                                        existingReview={editingReview ? userReview : undefined}
+                                        onSuccess={() => {
+                                            setShowReviewForm(false);
+                                            setEditingReview(false);
+                                            router.refresh();
+                                        }}
+                                        onCancel={() => {
+                                            setShowReviewForm(false);
+                                            setEditingReview(false);
+                                        }}
+                                    />
+                                ) : userReview ? (
+                                    <div className="bg-gradient-to-br from-emerald-50 to-white/40 backdrop-blur-xl border border-emerald-200 p-6 rounded-2xl shadow-lg">
+                                        <p className="text-sm font-black text-emerald-700 mb-3">
+                                            {tReviews('you_reviewed')}
+                                        </p>
+                                        <button
+                                            onClick={() => setEditingReview(true)}
+                                            className="text-sm font-bold text-primary hover:underline"
+                                        >
+                                            {tReviews('edit_review')}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowReviewForm(true)}
+                                        className="w-full px-6 py-4 bg-white/40 backdrop-blur-xl border-2 border-primary/30 hover:border-primary text-primary rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-primary/5 transition-all shadow-lg"
+                                    >
+                                        {tReviews('write_review')}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Show message if user cannot review */}
+                        {user && !canReview && !userReview && reviewReason && (
+                            <div className="bg-gray-50 border border-gray-200 p-6 rounded-2xl">
+                                <p className="text-sm font-bold text-gray-600">
+                                    {reviewReason === 'not_attended' && tReviews('must_attend')}
+                                    {reviewReason === 'event_not_passed' && tReviews('event_not_ended')}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Review List */}
+                        <ReviewList
+                            eventId={event.id}
+                            currentUserId={user?.id}
+                            onEditReview={(reviewId) => {
+                                if (userReview?.id === reviewId) {
+                                    setEditingReview(true);
+                                }
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Right Column: Booking Widget - Glowing Card */}
