@@ -120,6 +120,8 @@
     "gender_female": "أنثى",
     "phone_label": "رقم الهاتف",
     "location_label": "الموقع",
+    "country": "الدولة",
+    "city": "المدينة",
     "validation_full_name_required": "الاسم الكامل مطلوب",
     "validation_email_invalid": "البريد الإلكتروني غير صالح",
     "validation_password_min": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
@@ -153,7 +155,13 @@
     "update_password_btn": "تحديث كلمة المرور",
     "password_updated_title": "تم تحديث كلمة المرور",
     "password_updated_desc": "تم تحديث كلمة المرور بنجاح. سيتم توجيهك إلى صفحة تسجيل الدخول قريباً.",
-    "validation_passwords_match": "كلمات المرور غير متطابقة"
+    "validation_passwords_match": "كلمات المرور غير متطابقة",
+    "error_email_not_confirmed": "البريد الإلكتروني غير مؤكد",
+    "error_invalid_credentials": "بيانات الدخول غير صحيحة",
+    "error_user_already_registered": "المستخدم مسجل بالفعل",
+    "resend_confirmation": "إعادة إرسال بريد التأكيد",
+    "resend_success": "تم إرسال بريد التأكيد بنجاح",
+    "resend_error": "فشل في إعادة إرسال بريد التأكيد"
   },
   "VendorHero": {
     "title": "كن شريكاً في النجاح",

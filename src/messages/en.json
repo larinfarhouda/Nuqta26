@@ -120,6 +120,8 @@
         "gender_female": "Female",
         "phone_label": "Phone Number",
         "location_label": "Location",
+        "country": "Country",
+        "city": "City",
         "validation_full_name_required": "Full name is required",
         "validation_email_invalid": "Invalid email address",
         "validation_password_min": "Password must be at least 6 characters",
@@ -153,7 +155,13 @@
         "update_password_btn": "Update Password",
         "password_updated_title": "Password Updated",
         "password_updated_desc": "Your password has been successfully updated. You will be redirected to the login page shortly.",
-        "validation_passwords_match": "Passwords must match"
+        "validation_passwords_match": "Passwords must match",
+        "error_email_not_confirmed": "Email not confirmed",
+        "error_invalid_credentials": "Invalid login credentials",
+        "error_user_already_registered": "User already registered",
+        "resend_confirmation": "Resend confirmation email",
+        "resend_success": "Confirmation email sent successfully",
+        "resend_error": "Failed to resend confirmation email"
     },
     "VendorHero": {
         "title": "Partner with Nuqta",

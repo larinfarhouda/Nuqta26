@@ -26,6 +26,8 @@ export default function LoginPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [resendStatus, setResendStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [emailForResend, setEmailForResend] = useState<string>('');
 
     const loginSchema = createLoginSchema(t);
 
@@ -61,6 +63,12 @@ export default function LoginPage() {
             const { data: { user } } = await supabase.auth.getUser();
 
             if (user) {
+                // If email is not confirmed, don't let them in and show the error
+                if (!user.email_confirmed_at) {
+                    await supabase.auth.signOut();
+                    throw new Error('Email not confirmed');
+                }
+
                 // Prioritize user_metadata role (set during signup)
                 let role = user.user_metadata?.role;
 
@@ -70,6 +78,7 @@ export default function LoginPage() {
                     role = profile?.role;
                 }
 
+                router.refresh();
                 if (role === 'vendor') {
                     router.push('/dashboard/vendor');
                 } else if (role === 'admin') {
@@ -77,16 +86,43 @@ export default function LoginPage() {
                 } else {
                     router.push('/');
                 }
-
-
             } else {
+                router.refresh();
                 router.push('/');
             }
 
         } catch (err: any) {
-            setError(err.message || 'Failed to sign in');
+            const message = err.message || '';
+            if (message.includes('Email not confirmed')) {
+                setError(t('error_email_not_confirmed'));
+                setEmailForResend(data.email);
+            } else if (message.includes('Invalid login credentials')) {
+                setError(t('error_invalid_credentials'));
+            } else {
+                setError(message || 'Failed to sign in');
+            }
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleResendConfirmation = async () => {
+        if (!emailForResend) return;
+        setResendStatus('loading');
+        try {
+            const { error } = await supabase.auth.resend({
+                type: 'signup',
+                email: emailForResend,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback?locale=${locale}`
+                }
+            });
+            if (error) throw error;
+            setResendStatus('success');
+            setError(t('resend_success'));
+        } catch (err: any) {
+            setResendStatus('error');
+            setError(err.message || t('resend_error'));
         }
     };
 
@@ -205,9 +241,21 @@ export default function LoginPage() {
                         </div>
 
                         {error && (
-                            <div className="p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-700 text-sm rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                                <AlertCircle className="w-5 h-5 shrink-0" />
-                                <span className="font-medium">{error}</span>
+                            <div className={`p-4 ${resendStatus === 'success' ? 'bg-emerald-50/80 border-emerald-200 text-emerald-700' : 'bg-red-50/80 border-red-200 text-red-700'} backdrop-blur-sm border text-sm rounded-2xl animate-in fade-in slide-in-from-top-2`}>
+                                <div className="flex items-center gap-3">
+                                    <AlertCircle className="w-5 h-5 shrink-0" />
+                                    <span className="font-medium flex-1">{error}</span>
+                                    {error === t('error_email_not_confirmed') && resendStatus !== 'loading' && resendStatus !== 'success' && (
+                                        <button
+                                            type="button"
+                                            onClick={handleResendConfirmation}
+                                            className="text-xs font-bold underline hover:text-red-900 transition-colors"
+                                        >
+                                            {t('resend_confirmation')}
+                                        </button>
+                                    )}
+                                    {resendStatus === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
+                                </div>
                             </div>
                         )}
 

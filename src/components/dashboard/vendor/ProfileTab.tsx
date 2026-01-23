@@ -10,6 +10,8 @@ import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
 import { slugify } from '@/utils/slugify';
 import { useEffect } from 'react';
+import PhoneInput from '@/components/ui/PhoneInput';
+import { COUNTRIES } from '@/constants/locations';
 
 const detailsSchema = z.object({
     business_name: z.string().min(2),
@@ -24,16 +26,7 @@ const detailsSchema = z.object({
     bank_iban: z.string().optional(),
 });
 
-// Reusing the CITIES const from original file - ideally move to constants file
-const CITIES: Record<string, { id: string, name_en: string, name_ar: string, lat: number, lng: number }[]> = {
-    'tr': [
-        { id: 'istanbul', name_en: 'Istanbul', name_ar: 'إسطنبول', lat: 41.0082, lng: 28.9784 },
-        { id: 'ankara', name_en: 'Ankara', name_ar: 'أنقرة', lat: 39.9334, lng: 32.8597 },
-        { id: 'izmir', name_en: 'Izmir', name_ar: 'إزمير', lat: 38.4237, lng: 27.1428 },
-        { id: 'antalya', name_en: 'Antalya', name_ar: 'أنطاليا', lat: 36.8969, lng: 30.7133 },
-        { id: 'bursa', name_en: 'Bursa', name_ar: 'بورصة', lat: 40.1885, lng: 29.0610 }
-    ]
-};
+// CITIES moved to constants/locations.ts
 
 const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | null, alt: string, className?: string, fallback: React.ReactNode }) => {
     const [error, setError] = useState(false);
@@ -260,7 +253,13 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase">{t('whatsapp')}</label>
-                                    <input {...register('whatsapp_number')} className="input-field" placeholder="90..." />
+                                    <PhoneInput
+                                        register={register}
+                                        setValue={setValue}
+                                        name="whatsapp_number"
+                                        initialValue={vendorData.whatsapp_number}
+                                        className="text-left"
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -307,13 +306,14 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                             <select
                                 className="input-field w-full"
                                 onChange={(e) => {
-                                    const district = CITIES['tr'].find(d => d.id === e.target.value);
-                                    if (district) setVendorData({ ...vendorData, district: district.id, lat: district.lat, lng: district.lng });
+                                    const allCities = COUNTRIES.flatMap(c => c.cities);
+                                    const district = allCities.find(d => d.id === e.target.value);
+                                    if (district) setVendorData({ ...vendorData, district: district.id });
                                 }}
                                 value={vendorData?.district || ""}
                             >
                                 <option value="" disabled>{t('select_district')}</option>
-                                {CITIES['tr'].map(d => <option key={d.id} value={d.id}>{d.name_ar}</option>)}
+                                {COUNTRIES.flatMap(c => c.cities).map(d => <option key={d.id} value={d.id}>{d.name_ar}</option>)}
                             </select>
                             <button type="button" onClick={handleLocationSubmit} disabled={!vendorData?.district} className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold rounded-xl transition-colors text-sm">
                                 {t('update_location')}
