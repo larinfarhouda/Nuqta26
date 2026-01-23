@@ -8,7 +8,7 @@ export async function getPublicVendor(slug: string) {
     // Fetch vendor details
     const { data: vendor, error } = await supabase
         .from('vendors')
-        .select('id, slug, business_name, description_ar, company_logo, whatsapp_number, website, category, instagram, banner_url:cover_image')
+        .select('id, slug, business_name, description_ar, company_logo, whatsapp_number, website, category, instagram, banner_url:cover_image, location_lat, location_long')
         .eq('slug', slug)
         .single();
 
