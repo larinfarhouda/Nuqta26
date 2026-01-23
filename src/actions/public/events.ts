@@ -148,50 +148,41 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
     if (discountCode) {
         const { validateDiscountCode } = await import('./discounts');
         const validation = await validateDiscountCode(discountCode, event.vendor_id, eventId, basePrice - discountAmount);
+
         if (validation.success) {
+            // Atomically increment usage
+            const { data: usageResult, error: usageError } = await (supabase as any).rpc('increment_discount_usage', {
+                p_discount_id: validation.discountId
+            });
+
+            if (usageError || !(usageResult as any).success) {
+                return { error: (usageResult as any)?.error || 'Failed to apply discount code' };
+            }
+
             discountAmount += validation.discountAmount!;
             discountCodeId = validation.discountId;
-
-            // Increment used_count (simple update as sql`used_count + 1` isn't easy here)
-            // We'll trust the validation logic already checked if its allowed.
-            await (supabase.from('discount_codes' as any) as any)
-                .update({ used_count: (validation as any).currentUsedCount ? (validation as any).currentUsedCount + 1 : 1 })
-                .eq('id', discountCodeId);
         }
     }
 
     totalAmount = Math.max(0, basePrice - discountAmount);
 
-    // 2. Create Booking
-    const { data: booking, error: bookingError } = await (supabase.from('bookings' as any) as any)
-        .insert({
-            event_id: eventId,
-            vendor_id: event.vendor_id,
-            user_id: user.id,
-            total_amount: totalAmount,
-            discount_amount: discountAmount,
-            discount_code_id: discountCodeId,
-            status: totalAmount > 0 ? 'pending_payment' : 'confirmed',
-            payment_method: totalAmount > 0 ? 'bank_transfer' : 'free'
-        })
-        .select()
-        .single();
+    // 2. Call Transactional RPC
+    const { data: bookingResult, error: rpcError } = await (supabase.rpc as any)('place_booking', {
+        p_event_id: eventId,
+        p_ticket_id: ticketId,
+        p_quantity: quantity,
+        p_user_id: user.id,
+        p_total_amount: totalAmount,
+        p_discount_amount: discountAmount,
+        p_discount_code_id: discountCodeId
+    });
 
-    if (bookingError) return { error: bookingError.message };
-
-    // 3. Create Booking Item (Simplistic: 1 item per bulk quantity or just record it?)
-    // Schema has `booking_items` to track individual attendees. 
-    // For now, we'll just create one item representing the bulk or loop. 
-    // Let's create `quantity` items.
-
-    // Note: JS client doesn't support bulk insert well with returning in one go easily without array match
-    // We'll just do a loop or bulk insert without return.
-
-    // 4. Update Ticket Sold Count (Only if confirmed/free)
-    if (totalAmount === 0) {
-        await supabase.rpc('increment_ticket_sold', { ticket_id: ticketId, quantity });
-        await supabase.from('tickets').update({ sold: (ticket.sold || 0) + quantity }).eq('id', ticketId);
+    if (rpcError || !bookingResult?.success) {
+        console.error('Booking RPC Error:', rpcError || bookingResult?.error);
+        return { error: bookingResult?.error || 'Failed to complete booking' };
     }
+
+    const bookingId = bookingResult.booking_id;
 
     revalidatePath(`/events/${eventId}`);
 
@@ -210,7 +201,7 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
             react: BookingUserTemplate({
                 userName: userProfile.full_name || 'Explorer',
                 eventName: event.title || 'Event',
-                bookingId: booking.id,
+                bookingId: bookingId,
                 status: 'requested', // Explicitly Requested as per plan, even if DB says confirmed for now
                 eventDate: event.date,
                 location: event.location_name || event.city || undefined
@@ -236,7 +227,7 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
                 customerName: userProfile?.full_name || 'Guest',
                 quantity,
                 totalAmount,
-                bookingId: booking.id
+                bookingId: bookingId
             })
         });
     }
@@ -270,7 +261,7 @@ export async function createBooking(eventId: string, ticketId: string, quantity:
         }
     }
 
-    return { success: true, bookingId: booking.id };
+    return { success: true, bookingId: bookingId };
 }
 
 export async function getAllEventIdsForSitemap() {

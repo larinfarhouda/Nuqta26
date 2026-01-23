@@ -34,14 +34,20 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
         setIsFavorite(newState);
         setIsLoading(true);
 
-        const result = await toggleFavoriteEvent(event.id, isFavorite);
-        if (result?.error) {
-            setIsFavorite(!newState);
-            if (result.error === 'Unauthorized') {
-                router.push('/login');
+        try {
+            const result = await toggleFavoriteEvent(event.id, isFavorite);
+            if (result?.error) {
+                setIsFavorite(!newState);
+                if (result.error === 'Unauthorized') {
+                    router.push('/login');
+                }
             }
+        } catch (error) {
+            console.error('Favorite toggle error:', error);
+            setIsFavorite(!newState);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     return (
@@ -91,6 +97,7 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     {/* Favorite Button */}
                     <button
                         onClick={handleToggleFavorite}
+                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                         className="absolute top-2 right-2 md:top-3 md:right-3 z-10 p-2 md:p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all group/fav shadow-sm"
                     >
                         <Heart
@@ -121,7 +128,7 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                             <span className="truncate">
                                 {event.district && event.city
                                     ? `${event.district}, ${event.city}`
-                                    : (event.district || event.city || event.location_name || 'Istanbul')}
+                                    : (event.district || event.city || event.location_name || t('default_location'))}
                             </span>
                         </p>
                         <p className={`text-xs md:text-sm font-bold ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>

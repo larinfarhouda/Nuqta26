@@ -9,7 +9,7 @@ export default function VendorHero() {
     const t = useTranslations('VendorLanding.Hero');
     const tCommon = useTranslations('VendorHero');
     const [isLoaded, setIsLoaded] = useState(false);
-    const [chartBars, setChartBars] = useState([30, 50, 45, 80, 60, 40, 95, 70, 85, 90]);
+    const [chartBars, setChartBars] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
     useEffect(() => {
         setIsLoaded(true);

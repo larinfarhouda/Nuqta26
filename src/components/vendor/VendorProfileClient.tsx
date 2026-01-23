@@ -126,7 +126,11 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                 <div className="w-1 h-1 rounded-full bg-gray-600 hidden md:block" />
                                 <div className="flex items-center gap-1.5 text-amber-400">
                                     <Star className="w-4 h-4 fill-current" />
-                                    <span className="text-white font-bold">4.9 {t('elite_rating')}</span>
+                                    <span className="text-white font-bold">
+                                        {t.rich('elite_rating', {
+                                            rating: vendor.rating || '4.9'
+                                        })}
+                                    </span>
                                 </div>
                             </motion.div>
                         </div>
@@ -324,14 +328,17 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                         </a>
                     )}
 
-                    {/* Primary Action */}
-                    <a
-                        href={vendor.whatsapp_number ? `https://wa.me/${vendor.whatsapp_number}` : '#contact'}
-                        className={`${vendor.instagram || vendor.website ? 'col-span-2' : 'col-span-4'} flex items-center justify-center gap-2 h-12 bg-gray-900 text-white font-bold rounded-xl shadow-lg`}
-                    >
-                        <MessageCircle className="w-5 h-5" />
-                        <span>{t('inquire_whatsapp')}</span>
-                    </a>
+                    {/ * Primary Action * /}
+                    {vendor.whatsapp_number && (
+                        <a
+                            href={`https://wa.me/${vendor.whatsapp_number}`}
+                            target="_blank"
+                            className={`${vendor.instagram || vendor.website ? 'col-span-2' : 'col-span-4'} flex items-center justify-center gap-2 h-12 bg-gray-900 text-white font-bold rounded-xl shadow-lg`}
+                        >
+                            <MessageCircle className="w-5 h-5" />
+                            <span>{t('inquire_whatsapp')}</span>
+                        </a>
+                    )}
                 </div>
             </div>
 

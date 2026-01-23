@@ -15,15 +15,26 @@ export interface EventForStatus {
  * @returns 'expired' if event date is in the past, 'sold_out' if all tickets are sold, 'active' otherwise
  */
 export function getEventStatus(event: EventForStatus): EventStatus {
-    // Check if event date is in the past
-    const eventDate = new Date(event.date);
+    // Parse and validate date
+    let eventDate = new Date(event.date);
+
+    // Normalize date-only strings (YYYY-MM-DD) to local midnight
+    if (typeof event.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(event.date)) {
+        const [y, m, d] = event.date.split('-').map(Number);
+        eventDate = new Date(y, m - 1, d);
+    }
+
+    // Guard against invalid date strings
+    if (isNaN(eventDate.getTime())) {
+        return 'expired'; // Fallback for invalid data
+    }
+
     const today = new Date();
-
-    // Compare dates only (ignore time component)
     today.setHours(0, 0, 0, 0);
-    eventDate.setHours(0, 0, 0, 0);
+    const comparisonDate = new Date(eventDate);
+    comparisonDate.setHours(0, 0, 0, 0);
 
-    if (eventDate < today) {
+    if (comparisonDate < today) {
         return 'expired';
     }
 

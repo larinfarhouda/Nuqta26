@@ -56,6 +56,10 @@
         "upcomingEvents": "Upcoming Events",
         "searchResults": "Search Results",
         "eventsFound": "Events Found",
+        "clearAllFilters": "Clear all filters",
+        "noMatchesFound": "No matches found",
+        "noMatchesDescription": "We couldn't find any events matching your current filters. Try broadening your search!",
+        "resetDiscovery": "Reset Discovery",
         "joinNow": "Join Now",
         "login": "Login"
     },
@@ -70,6 +74,7 @@
         "for_vendors": "For Organizers"
     },
     "Auth": {
+        "error_generic": "An error occurred. Please try again.",
         "profile": "My Profile",
         "register": "Register",
         "login": "Login",
@@ -274,7 +279,7 @@
     "VendorProfile": {
         "back_to_discovery": "Back to discovery",
         "istanbul_hub": "Istanbul Hub",
-        "elite_rating": "4.95 Elite Rating",
+        "elite_rating": "{rating} Elite Rating",
         "inquire_whatsapp": "Inquire via WhatsApp",
         "view_gallery": "View Full Gallery",
         "our_mission": "Our Mission",
@@ -338,12 +343,17 @@
         "About": {
             "title": "About Nuqta",
             "subtitle": "Connecting the heart of Istanbul's Arab community.",
+            "subtitle_rich": "Connecting the heart of Istanbul's <highlight>Arab community</highlight>.",
             "mission_title": "Our Mission",
             "mission_desc": "Nuqta is the heartbeat of the Arab community in Istanbul. We are a platform dedicated to bridging cultures, fostering connections, and centralizing the vibrant events and services that make this city home to so many.",
             "story_title": "Our Story",
             "story_desc": "Since our inception, Nuqta has aimed to provide a trusted source for discovering workshops, galleries, bazaars, and community gatherings. We believe that by providing professional tools to organizers and a seamless discovery experience for users, we can help our community thrive together in Istanbul.",
             "name_title": "Why the name Nuqta?",
-            "name_desc": "In Arabic, 'Nuqta' (نقطة) means 'point' or 'dot'. We see ourselves as the meeting point — the central dot on the map where everyone comes together to start something new."
+            "join_members": "Join {count}+ members",
+            "name_desc": "In Arabic, 'Nuqta' (نقطة) means 'point' or 'dot'. We see ourselves as the meeting point — the central dot on the map where everyone comes together to start something new.",
+            "location": "Istanbul, Turkey",
+            "forCommunity": "For the community",
+            "error_loading": "Failed to load data"
         },
         "Contact": {
             "title": "Contact Us",
@@ -354,6 +364,9 @@
             "message_placeholder": "How can we help?",
             "submit_btn": "Send Message",
             "success_msg": "Thank you! We will get back to you soon.",
+            "badge": "Get in Touch",
+            "partner_cta": "Have a specific idea or partnership in mind? We'd love to hear from you. Expect a reply within 24 hours.",
+            "available_globally": "Available globally, serving locally.",
             "cards": {
                 "email": "Email",
                 "whatsapp": "WhatsApp",
@@ -558,7 +571,11 @@
                 "create_success": "Discount code created successfully",
                 "delete_success": "Discount code deleted successfully",
                 "toggle_success": "Discount code status updated",
+                "create_error": "Failed to create code",
+                "delete_error": "Failed to delete code",
+                "toggle_error": "Failed to update status",
                 "form": {
+                    "cancel": "Cancel",
                     "code_label": "Promo Code (e.g. SAVE20)",
                     "type_label": "Discount Type",
                     "value_label": "Discount Value",

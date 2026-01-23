@@ -17,6 +17,37 @@ export async function createDiscountCode(data: {
 
     if (!user) return { error: 'Unauthorized' };
 
+    // Validation
+    if (!data.code || data.code.trim().length === 0) {
+        return { error: 'Discount code is required' };
+    }
+
+    if (data.discount_value < 0) {
+        return { error: 'Discount value cannot be negative' };
+    }
+
+    if (data.discount_type === 'percentage' && data.discount_value > 100) {
+        return { error: 'Percentage discount cannot exceed 100%' };
+    }
+
+    if (data.min_purchase_amount !== undefined && data.min_purchase_amount < 0) {
+        return { error: 'Minimum purchase amount cannot be negative' };
+    }
+
+    if (data.max_uses !== undefined && data.max_uses < 1) {
+        return { error: 'Maximum uses must be at least 1' };
+    }
+
+    if (data.expiry_date) {
+        const expiry = new Date(data.expiry_date);
+        if (isNaN(expiry.getTime())) {
+            return { error: 'Invalid expiry date' };
+        }
+        if (expiry < new Date()) {
+            return { error: 'Expiry date must be in the future' };
+        }
+    }
+
     const { error } = await (supabase.from('discount_codes' as any) as any).insert({
         vendor_id: user.id,
         ...data,

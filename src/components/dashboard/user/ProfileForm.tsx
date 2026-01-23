@@ -7,7 +7,6 @@ import { useRouter } from '@/navigation';
 import { useForm } from 'react-hook-form';
 import LocationPicker from '@/components/ui/LocationPicker';
 import PhoneInput from '@/components/ui/PhoneInput';
-import { COUNTRIES } from '@/constants/locations';
 
 interface ProfileData {
     full_name: string | null;
@@ -156,9 +155,8 @@ export default function ProfileForm({
                         الموقع
                     </label>
                     <LocationPicker setValue={setValue} className="h-[250px]" />
-                    <div className="mt-2 flex gap-2 text-xs text-gray-500 font-medium">
-                        {/* Feedback for selected location (managed by RHF values implicitly) */}
-                        الموقع المحفوظ حالياً: {[initialData.district, initialData.city, initialData.country].filter(Boolean).join(', ') || 'لا يوجد'}
+                    <div className="mt-2 flex gap-2 text-xs text-gray-400 font-medium">
+                        الموقع المحدد: {[watch('district'), watch('city'), watch('country')].filter(Boolean).join(', ') || 'لا يوجد'}
                     </div>
                 </div>
 

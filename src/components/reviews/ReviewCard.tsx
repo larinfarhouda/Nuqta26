@@ -20,6 +20,7 @@ type ReviewCardProps = {
         };
         helpful_count?: number;
         not_helpful_count?: number;
+        user_voted?: boolean;
     };
     isOwner?: boolean;
     currentUserId?: string;
@@ -39,7 +40,7 @@ export default function ReviewCard({
     const [isDeleting, setIsDeleting] = useState(false);
     const [isFlagging, setIsFlagging] = useState(false);
     const [helpfulCount, setHelpfulCount] = useState(review.helpful_count || 0);
-    const [hasVoted, setHasVoted] = useState(false);
+    const [hasVoted, setHasVoted] = useState(review.user_voted || false);
 
     const handleDelete = async () => {
         if (!confirm(t('delete_confirm'))) return;
@@ -191,8 +192,8 @@ export default function ReviewCard({
                     onClick={handleHelpful}
                     disabled={isOwner}
                     className={`flex items-center gap-2 text-xs font-black uppercase tracking-wide transition-colors ${hasVoted
-                            ? 'text-primary'
-                            : 'text-gray-500 hover:text-primary'
+                        ? 'text-primary'
+                        : 'text-gray-500 hover:text-primary'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                     <ThumbsUp className={`w-4 h-4 ${hasVoted ? 'fill-primary' : ''}`} />

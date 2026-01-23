@@ -92,13 +92,17 @@ export async function updateBookingStatus(bookingId: string, status: 'confirmed'
 
     if (!user) return { error: 'Unauthorized' };
 
-    const { error } = await supabase
+    const { data: updatedRows, error } = await supabase
         .from('bookings')
         .update({ status })
         .eq('id', bookingId)
-        .eq('vendor_id', user.id);
+        .eq('vendor_id', user.id)
+        .select();
 
     if (error) return { error: error.message };
+    if (!updatedRows || updatedRows.length === 0) {
+        return { error: 'Booking not found or you do not have permission to update it' };
+    }
 
 
     // --- NOTIFICATIONS ---

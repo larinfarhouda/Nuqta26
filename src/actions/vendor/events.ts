@@ -50,14 +50,16 @@ export async function createEvent(formData: FormData) {
         }
     }
 
-    // 1.5 Generate Slug
+    // 1.5 Generate Slug with uniqueness check
     const { slugify } = await import('@/utils/slugify');
     let slug = slugify(rawData.title);
 
-    // Check for uniqueness
+    // Initial check
     const { data: existingSlug } = await supabase.from('events').select('slug').eq('slug', slug).maybeSingle();
     if (existingSlug) {
-        slug = `${slug}-${Date.now().toString().slice(-4)}`;
+        // Simple but multi-user safeish: Append random string
+        const randomStr = Math.random().toString(36).substring(2, 6);
+        slug = `${slug}-${randomStr}`;
     }
 
     // 2. Create Event

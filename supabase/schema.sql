@@ -18,10 +18,43 @@ create table if not exists profiles (
   updated_at timestamptz default now()
 );
 
--- RLS Suggestion:
--- alter table profiles enable row level security;
--- create policy "Public profiles are viewable by everyone" on profiles for select using (true);
--- create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
+-- Enable RLS
+alter table profiles enable row level security;
+
+-- Policies
+create policy "Public profiles are viewable by everyone" on profiles for select using (true);
+create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
+
+-- Trigger to sync email and handle profile creation
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, full_name, email, avatar_url)
+  values (new.id, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'avatar_url');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+create or replace function public.handle_user_update()
+returns trigger as $$
+begin
+  update public.profiles
+  set email = new.email,
+      full_name = coalesce(new.raw_user_meta_data->>'full_name', full_name),
+      avatar_url = coalesce(new.raw_user_meta_data->>'avatar_url', avatar_url),
+      updated_at = now()
+  where id = new.id;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_updated
+  after update on auth.users
+  for each row execute procedure public.handle_user_update();
 
 
 -- VENDORS
@@ -111,8 +144,11 @@ create table if not exists tickets (
   quantity int not null, -- Total available for this type
   sold int default 0,
   
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  constraint tickets_sold_check check (sold >= 0 and sold <= quantity)
 );
+
+create index if not exists idx_tickets_event_id on tickets(event_id);
 
 -- RLS Suggestion:
 -- alter table tickets enable row level security;
@@ -122,7 +158,6 @@ create table if not exists tickets (
 -- );
 
 
--- BOOKINGS
 create table if not exists bookings (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references profiles(id) on delete set null, -- User who booked
@@ -132,13 +167,18 @@ create table if not exists bookings (
   status text default 'confirmed', -- 'confirmed', 'cancelled', 'pending'
   total_amount numeric default 0,
   
-  -- Ideally linking to specific tickets:
-  -- ticket_id uuid references tickets(id), 
-  -- quantity int, 
-  -- OR if multiple ticket types per booking allowed, use a separate booking_items table.
-  -- Based on current code loops, it seems bookings might be 1:1 with ticket types or aggregated?
-  -- Assuming simple structure for now based on 'bookings' join in 'getVendorBookings'
-  
+  created_at timestamptz default now()
+);
+
+-- BOOKING ITEMS
+create table if not exists booking_items (
+  id uuid default uuid_generate_v4() primary key,
+  booking_id uuid references bookings(id) on delete cascade not null,
+  ticket_id uuid references tickets(id) on delete set null,
+  attendee_name text,
+  attendee_email text,
+  price_at_booking numeric,
+  status text default 'active', -- 'active', 'cancelled'
   created_at timestamptz default now()
 );
 
@@ -253,6 +293,7 @@ begin
   where
     e.status = 'published'
     and (p_category is null or c.slug = p_category or e.event_type = p_category)
+    -- Note: p_search may contain wildcards like % or _ which are intentionally supported for flexible matching
     and (p_search is null or e.title ilike '%' || p_search || '%')
     and (p_date_start is null or e.date >= p_date_start)
     and (p_date_end is null or e.date <= p_date_end)
@@ -269,8 +310,8 @@ begin
     )
   group by e.id, v.id, c.id
   having
-    (p_min_price is null or coalesce(min((select t.price from tickets t where t.event_id = e.id limit 1)), 0) >= p_min_price)
-    and (p_max_price is null or coalesce(min((select t.price from tickets t where t.event_id = e.id limit 1)), 0) <= p_max_price)
+    (p_min_price is null or coalesce((select min(t.price) from tickets t where t.event_id = e.id), 0) >= p_min_price)
+    and (p_max_price is null or coalesce((select min(t.price) from tickets t where t.event_id = e.id), 0) <= p_max_price)
   order by
     case when p_lat is not null then 
         case
@@ -288,5 +329,131 @@ begin
     end asc,
     e.date asc
   limit p_limit offset p_offset;
+end;
+$$;
+
+-- Batch RPC for Helpful Counts (v2 with user vote check)
+create or replace function get_reviews_helpful_counts(p_review_ids uuid[], p_user_id uuid default null)
+returns table (
+  review_id uuid, 
+  helpful_count bigint, 
+  not_helpful_count bigint,
+  user_voted boolean
+)
+as $$
+  select r.id as review_id, 
+         count(h.id) filter (where h.is_helpful = true) as helpful_count,
+         count(h.id) filter (where h.is_helpful = false) as not_helpful_count,
+         coalesce(bool_or(h.user_id = p_user_id and h.is_helpful = true), false) as user_voted
+  from unnest(p_review_ids) as r(id)
+  left join review_helpful h on h.review_id = r.id
+  group by r.id;
+$$ language sql stable;
+-- REVIEW FLAGS TABLE
+create table if not exists review_flags (
+  id uuid primary key default uuid_generate_v4(),
+  review_id uuid not null references event_reviews(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  reason text,
+  created_at timestamptz default now(),
+  unique(review_id, user_id)
+);
+
+-- Enable RLS on review_flags
+alter table review_flags enable row level security;
+
+-- Policy: Users can see their own flags
+create policy "Users can see own flags" on review_flags
+  for select using (auth.uid() = user_id);
+
+-- Policy: Users can flag once (insert)
+create policy "Users can flag reviews" on review_flags
+  for insert with check (auth.uid() = user_id);
+
+-- TRANSACTIONAL BOOKING RPC
+create or replace function place_booking(
+  p_event_id uuid,
+  p_ticket_id uuid,
+  p_quantity int,
+  p_user_id uuid,
+  p_total_amount numeric,
+  p_discount_amount numeric,
+  p_discount_code_id uuid default null
+)
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_booking_id uuid;
+  v_available int;
+  v_sold int;
+  v_capacity int;
+  v_current_total_sold int;
+  v_vendor_id uuid;
+  v_unit_price numeric;
+begin
+  -- 1. Check ticket availability & unit price
+  select quantity, sold, price into v_available, v_sold, v_unit_price from tickets where id = p_ticket_id for update;
+  if v_sold + p_quantity > v_available then
+    return jsonb_build_object('success', false, 'error', 'Not enough tickets available');
+  end if;
+
+  -- 2. Check event capacity
+  select vendor_id, capacity into v_vendor_id, v_capacity from events where id = p_event_id for update;
+  select coalesce(sum(sold), 0) into v_current_total_sold from tickets where event_id = p_event_id;
+  if v_current_total_sold + p_quantity > v_capacity then
+    return jsonb_build_object('success', false, 'error', 'Event capacity exceeded');
+  end if;
+
+  -- 3. Create booking
+  insert into bookings (
+    event_id, 
+    vendor_id, 
+    user_id, 
+    total_amount, 
+    status
+  ) values (
+    p_event_id,
+    v_vendor_id,
+    p_user_id,
+    p_total_amount,
+    case when p_total_amount > 0 then 'pending_payment' else 'confirmed' end
+  ) returning id into v_booking_id;
+
+  -- Update with additional fields if migrations already applied (softly)
+  -- Since we use text for status, we match the text.
+  -- Add discount info if columns exist
+  update bookings set 
+    discount_amount = p_discount_amount,
+    discount_code_id = p_discount_code_id
+  where id = v_booking_id;
+
+  -- 4. Create booking items
+  for i in 1..p_quantity loop
+    insert into booking_items (
+      booking_id,
+      ticket_id,
+      price_at_booking
+    ) values (
+      v_booking_id,
+      p_ticket_id,
+      v_unit_price
+    );
+  end loop;
+
+  -- 5. Update ticket sold count immediately if free
+  if p_total_amount = 0 then
+    update tickets set sold = sold + p_quantity where id = p_ticket_id;
+  end if;
+
+  -- 6. Atomically increment discount usage if applicable
+  if p_discount_code_id is not null then
+    update discount_codes 
+    set used_count = used_count + 1 
+    where id = p_discount_code_id;
+  end if;
+
+  return jsonb_build_object('success', true, 'booking_id', v_booking_id);
 end;
 $$;

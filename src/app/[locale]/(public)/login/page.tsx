@@ -74,7 +74,10 @@ export default function LoginPage() {
 
                 // Fallback to profiles table if metadata is missing
                 if (!role) {
-                    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+                    const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+                    if (profileError) {
+                        console.error('Failed to fetch user profile:', profileError.message);
+                    }
                     role = profile?.role;
                 }
 
@@ -92,6 +95,7 @@ export default function LoginPage() {
             }
 
         } catch (err: any) {
+            console.error('Login error:', err);
             const message = err.message || '';
             if (message.includes('Email not confirmed')) {
                 setError(t('error_email_not_confirmed'));
@@ -99,7 +103,7 @@ export default function LoginPage() {
             } else if (message.includes('Invalid login credentials')) {
                 setError(t('error_invalid_credentials'));
             } else {
-                setError(message || 'Failed to sign in');
+                setError(t('error_generic'));
             }
         } finally {
             setIsLoading(false);
@@ -121,8 +125,9 @@ export default function LoginPage() {
             setResendStatus('success');
             setError(t('resend_success'));
         } catch (err: any) {
+            console.error('Resend confirmation error:', err);
             setResendStatus('error');
-            setError(err.message || t('resend_error'));
+            setError(t('resend_error'));
         }
     };
 

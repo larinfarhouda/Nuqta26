@@ -100,11 +100,12 @@ export default function RegisterPage() {
             setSubmittedEmail(data.email);
 
         } catch (err: any) {
+            console.error('Registration error:', err);
             const message = err.message || '';
             if (message.includes('User already registered')) {
                 setError(t('error_user_already_registered'));
             } else {
-                setError(message);
+                setError(t('error_generic'));
             }
         } finally {
             setIsLoading(false);
@@ -112,15 +113,21 @@ export default function RegisterPage() {
     };
 
     const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
-        await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`, // Pass role to ensure upgrades
-                queryParams: {
-                    role: role // Use the currently selected role
-                }
-            },
-        });
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider,
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`,
+                    queryParams: {
+                        role: role
+                    }
+                },
+            });
+            if (error) throw error;
+        } catch (err: any) {
+            console.error('OAuth error:', err);
+            setError(t('error_generic'));
+        }
     };
 
     return (
@@ -395,7 +402,7 @@ export default function RegisterPage() {
                                                             className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
                                                         >
                                                             <option value="">{t('select_placeholder')}</option>
-                                                            {COUNTRIES[0].cities.map(city => (
+                                                            {COUNTRIES[0]?.cities?.map(city => (
                                                                 <option key={city.id} value={city.id}>
                                                                     {locale === 'ar' ? city.name_ar : city.name_en}
                                                                 </option>
