@@ -5,7 +5,12 @@ const BASE_URL = 'https://nuqta.ist';
 const locales = ['ar', 'en'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const events = await getAllEventIdsForSitemap();
+    let events: any[] = [];
+    try {
+        events = await getAllEventIdsForSitemap();
+    } catch (error) {
+        console.error('Sitemap generation error (events):', error);
+    }
 
     // Static pages
     const routes = [

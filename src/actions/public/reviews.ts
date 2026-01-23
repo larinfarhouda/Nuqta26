@@ -188,20 +188,24 @@ export async function getEventReviews(eventId: string, page = 1, limit = 20, sor
         return { success: false, error: 'Failed to fetch reviews' };
     }
 
-    // Get helpful counts for each review
-    const reviewsWithHelpful = await Promise.all(
-        (data || []).map(async (review) => {
-            const { data: helpfulData } = await supabase.rpc('get_review_helpful_count', {
-                p_review_id: review.id
-            });
+    // Get helpful counts for all reviews in a single call
+    const { data: { user } } = await supabase.auth.getUser();
+    const reviewIds = (data || []).map(r => r.id);
+    const { data: helpfulCounts } = await (supabase.rpc as any)('get_reviews_helpful_counts', {
+        p_review_ids: reviewIds,
+        p_user_id: user?.id
+    });
 
-            return {
-                ...review,
-                helpful_count: helpfulData?.[0]?.helpful_count || 0,
-                not_helpful_count: helpfulData?.[0]?.not_helpful_count || 0
-            };
-        })
+    const countsMap = new Map(
+        (helpfulCounts as any[] || []).map((c: any) => [c.review_id, c])
     );
+
+    const reviewsWithHelpful = (data || []).map(review => ({
+        ...review,
+        helpful_count: countsMap.get(review.id)?.helpful_count || 0,
+        not_helpful_count: countsMap.get(review.id)?.not_helpful_count || 0,
+        user_voted: countsMap.get(review.id)?.user_voted || false
+    }));
 
     return {
         success: true,
@@ -280,7 +284,7 @@ export async function markReviewHelpful(reviewId: string, isHelpful: boolean) {
 /**
  * Flag a review as inappropriate
  */
-export async function flagReview(reviewId: string) {
+export async function flagReview(reviewId: string, reason?: string) {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -289,17 +293,37 @@ export async function flagReview(reviewId: string) {
         return { success: false, error: 'You must be logged in to flag a review' };
     }
 
-    // Update the review to set is_flagged = true
-    // Note: Only admins should be able to unflag, so we don't need RLS check here
-    // But we should log who flagged it (could add a separate flagged_by table)
-    const { error } = await supabase
-        .from('event_reviews')
-        .update({ is_flagged: true })
-        .eq('id', reviewId);
+    // Optional: Rate limiting check (mock)
+    // if (await isFlaggingRateLimited(user.id)) return { success: false, error: 'Too many flags. Try again later.' };
 
-    if (error) {
-        console.error('Error flagging review:', error);
+    // Insert into flags table
+    const { error: flagError } = await (supabase
+        .from('review_flags' as any) as any)
+        .insert({
+            review_id: reviewId,
+            user_id: user.id,
+            reason: reason || null
+        });
+
+    if (flagError) {
+        if (flagError.code === '23505') { // unique violation
+            return { success: false, error: 'You have already flagged this review' };
+        }
+        console.error('Error flagging review:', flagError);
         return { success: false, error: 'Failed to flag review' };
+    }
+
+    // Count flags to see if we should auto-flag the review
+    const { count } = await (supabase
+        .from('review_flags' as any) as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('review_id', reviewId);
+
+    if ((count || 0) >= 3) {
+        await supabase
+            .from('event_reviews')
+            .update({ is_flagged: true })
+            .eq('id', reviewId);
     }
 
     return { success: true };
@@ -315,23 +339,25 @@ export async function getEventRatingSummary(eventId: string) {
         p_event_id: eventId
     });
 
+    const defaultSummary = {
+        average_rating: 0,
+        review_count: 0,
+        rating_1_count: 0,
+        rating_2_count: 0,
+        rating_3_count: 0,
+        rating_4_count: 0,
+        rating_5_count: 0
+    };
+
     if (error) {
         console.error('Error fetching rating summary:', error);
         return {
             success: false,
-            data: {
-                average_rating: 0,
-                review_count: 0,
-                rating_1_count: 0,
-                rating_2_count: 0,
-                rating_3_count: 0,
-                rating_4_count: 0,
-                rating_5_count: 0
-            }
+            data: defaultSummary
         };
     }
 
-    return { success: true, data: data?.[0] || {} };
+    return { success: true, data: data?.[0] || defaultSummary };
 }
 
 /**

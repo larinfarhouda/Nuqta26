@@ -28,8 +28,8 @@ const schema = z.object({
 
     // Location
     location_name: z.string().optional(),
-    location_lat: z.coerce.number().refine(val => val !== 0, "يرجى تحديد الموقع على الخريطة"),
-    location_long: z.coerce.number().refine(val => val !== 0, "يرجى تحديد الموقع على الخريطة"),
+    location_lat: z.number().nullable().refine(val => val !== null, "يرجى تحديد الموقع على الخريطة"),
+    location_long: z.number().nullable().refine(val => val !== null, "يرجى تحديد الموقع على الخريطة"),
     district: z.string().optional(),
     city: z.string().optional(),
     country: z.string().optional(),
@@ -81,6 +81,8 @@ interface Props {
 export default function EventForm({ event, vendorData, onClose, onSuccess }: Props) {
     const [submitting, setSubmitting] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(false);
+    const [categoryFetchError, setCategoryFetchError] = useState<string | null>(null);
 
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -91,9 +93,22 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
 
     useEffect(() => {
         const fetchCategories = async () => {
-            const supabase = createClient();
-            const { data } = await supabase.from('categories').select('*');
-            if (data) setCategories(data);
+            setCategoriesLoading(true);
+            setCategoryFetchError(null);
+            try {
+                const supabase = createClient();
+                const { data, error } = await supabase.from('categories').select('*');
+                if (error) {
+                    console.error('Failed to load categories:', error);
+                    setCategoryFetchError(error.message);
+                } else if (data) {
+                    setCategories(data);
+                }
+            } catch (err: any) {
+                setCategoryFetchError(err.message);
+            } finally {
+                setCategoriesLoading(false);
+            }
         };
         fetchCategories();
     }, []);
@@ -123,8 +138,8 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             district: '',
             city: '',
             country: '',
-            location_lat: 0,
-            location_long: 0,
+            location_lat: null as any,
+            location_long: null as any,
             capacity: 0,
             date: '',
             event_type: '',
@@ -140,9 +155,24 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setImageFile(file);
+
+            // Clean up old blob URL
+            if (previewUrl?.startsWith('blob:')) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
             setPreviewUrl(URL.createObjectURL(file));
         }
     };
+
+    // Cleanup blob URL on unmount
+    useEffect(() => {
+        return () => {
+            if (previewUrl?.startsWith('blob:')) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, []);
 
     const toggleDay = (day: string) => {
         const current = recurrenceDays;
@@ -173,8 +203,6 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
         } else {
             res = await createEvent(formData);
         }
-
-        console.log(res); // Debug
 
         setSubmitting(false);
         if (res.error) alert(res.error);
@@ -230,8 +258,8 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                             <div className="space-y-3">
                                 <label className="text-sm font-bold text-gray-700">نوع الفعالية</label>
                                 <div className="relative">
-                                    <select {...register('event_type')} className={`input-field appearance-none ${errors.event_type ? 'border-red-500' : ''}`}>
-                                        <option value="">اختر النوع</option>
+                                    <select {...register('event_type')} className={`input-field appearance-none ${errors.event_type ? 'border-red-500' : ''}`} disabled={categoriesLoading}>
+                                        <option value="">{categoriesLoading ? 'جاري التحميل...' : (categoryFetchError ? 'خطأ في تحميل التصنيفات' : 'اختر النوع')}</option>
                                         {categories.map((cat) => (
                                             <option key={cat.id} value={cat.id}>
                                                 {cat.name_ar || cat.name_en}

@@ -19,13 +19,13 @@ export default function BottomNav({ isLoggedIn, role }: { isLoggedIn: boolean; r
         {
             key: 'bookings',
             label: t('bookings'),
-            href: role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user',
+            href: !isLoggedIn ? '/login' : (role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user'),
             icon: Calendar
         },
         {
             key: 'favorites',
             label: t('favorites'),
-            href: role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user/favorites',
+            href: !isLoggedIn ? '/login' : (role === 'vendor' ? '/dashboard/vendor' : '/dashboard/user/favorites'),
             icon: Heart
         },
         {

@@ -8,6 +8,10 @@ import EventReminderTemplate from '@/components/emails/EventReminderTemplate';
 import AuthActionTemplate from '@/components/emails/AuthActionTemplate';
 
 export async function GET(request: Request) {
+    if (process.env.NODE_ENV === 'production') {
+        return new Response('Not Found', { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const template = searchParams.get('template');
 

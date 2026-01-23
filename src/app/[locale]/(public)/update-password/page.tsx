@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/utils/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +27,13 @@ export default function UpdatePasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
 
     const updatePasswordSchema = createUpdatePasswordSchema(t);
 
@@ -48,7 +55,7 @@ export default function UpdatePasswordPage() {
             setIsSuccess(true);
 
             // Redirect after a short delay
-            setTimeout(() => {
+            timeoutRef.current = setTimeout(() => {
                 router.push('/login');
             }, 3000);
 
@@ -97,13 +104,15 @@ export default function UpdatePasswordPage() {
 
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                    <label htmlFor="password" title={t('new_password')} className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                         <Lock className="w-3.5 h-3.5" />
                                         {t('new_password')}
                                     </label>
                                     <input
                                         {...register('password')}
+                                        id="password"
                                         type="password"
+                                        autoComplete="new-password"
                                         className={`w-full p-4 bg-gray-50 border ${errors.password ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
                                         placeholder="••••••••"
                                     />
@@ -111,13 +120,15 @@ export default function UpdatePasswordPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                    <label htmlFor="confirmPassword" title={t('confirm_password')} className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                         <Lock className="w-3.5 h-3.5" />
                                         {t('confirm_password')}
                                     </label>
                                     <input
                                         {...register('confirmPassword')}
+                                        id="confirmPassword"
                                         type="password"
+                                        autoComplete="new-password"
                                         className={`w-full p-4 bg-gray-50 border ${errors.confirmPassword ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
                                         placeholder="••••••••"
                                     />

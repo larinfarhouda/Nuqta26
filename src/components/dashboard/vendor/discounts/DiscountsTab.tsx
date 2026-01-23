@@ -58,48 +58,64 @@ export default function DiscountsTab({ showAlert }: Props) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
-
-        const res = await createDiscountCode({
-            ...formData,
-            event_id: formData.event_id || undefined,
-            min_purchase_amount: formData.min_purchase_amount || undefined,
-            max_uses: formData.max_uses || undefined,
-            expiry_date: formData.expiry_date || undefined
-        });
-
-        if (res.success) {
-            showAlert(t('create_success'), 'success');
-            setShowForm(false);
-            setFormData({
-                code: '',
-                discount_type: 'percentage',
-                discount_value: 0,
-                event_id: '',
-                min_purchase_amount: 0,
-                max_uses: 0,
-                expiry_date: ''
+        try {
+            const res = await createDiscountCode({
+                ...formData,
+                event_id: formData.event_id || undefined,
+                min_purchase_amount: formData.min_purchase_amount || undefined,
+                max_uses: formData.max_uses || undefined,
+                expiry_date: formData.expiry_date || undefined
             });
-            fetchData();
-        } else {
-            showAlert(res.error || 'Error', 'error');
+
+            if (res.success) {
+                showAlert(t('create_success'), 'success');
+                setShowForm(false);
+                setFormData({
+                    code: '',
+                    discount_type: 'percentage',
+                    discount_value: 0,
+                    event_id: '',
+                    min_purchase_amount: 0,
+                    max_uses: 0,
+                    expiry_date: ''
+                });
+                fetchData();
+            } else {
+                showAlert(res.error || t('create_error'), 'error');
+            }
+        } catch (err: any) {
+            showAlert(err.message || t('create_error'), 'error');
+        } finally {
+            setSubmitting(false);
         }
-        setSubmitting(false);
     };
 
     const handleDelete = async (id: string) => {
         if (!confirm(t('delete_confirm'))) return;
-        const res = await deleteDiscountCode(id);
-        if (res.success) {
-            showAlert(t('delete_success'), 'success');
-            fetchData();
+        try {
+            const res = await deleteDiscountCode(id);
+            if (res.success) {
+                showAlert(t('delete_success'), 'success');
+                fetchData();
+            } else {
+                showAlert(res.error || t('delete_error'), 'error');
+            }
+        } catch (err: any) {
+            showAlert(err.message || t('delete_error'), 'error');
         }
     };
 
     const handleToggle = async (id: string, current: boolean) => {
-        const res = await toggleDiscountCode(id, !current);
-        if (res.success) {
-            showAlert(t('toggle_success'), 'success');
-            fetchData();
+        try {
+            const res = await toggleDiscountCode(id, !current);
+            if (res.success) {
+                showAlert(t('toggle_success'), 'success');
+                fetchData();
+            } else {
+                showAlert(res.error || t('toggle_error'), 'error');
+            }
+        } catch (err: any) {
+            showAlert(err.message || t('toggle_error'), 'error');
         }
     };
 
@@ -216,7 +232,7 @@ export default function DiscountsTab({ showAlert }: Props) {
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setShowForm(false)} className="px-6 py-3 font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors">إلغاء</button>
+                                <button type="button" onClick={() => setShowForm(false)} className="px-6 py-3 font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-colors">{t('form.cancel')}</button>
                                 <button
                                     type="submit"
                                     disabled={submitting}

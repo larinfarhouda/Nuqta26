@@ -23,17 +23,28 @@ export default function LocalFilters({ districts }: LocalFiltersProps) {
             params.delete('location');
         } else {
             params.set('location', district);
+            // Clear geolocation params when selecting a district
+            params.delete('lat');
+            params.delete('lng');
+            params.delete('radius');
         }
         router.push(`?${params.toString()}`, { scroll: false });
     };
 
     const handleNearMe = () => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
         setIsLocating(true);
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const { latitude, longitude } = pos.coords;
                 const params = new URLSearchParams(searchParams.toString());
+
+                // Clear district when using geolocation
+                params.delete('location');
+
                 params.set('lat', latitude.toString());
                 params.set('lng', longitude.toString());
                 params.set('radius', '50'); // 50km default
@@ -42,8 +53,10 @@ export default function LocalFilters({ districts }: LocalFiltersProps) {
             },
             (err) => {
                 console.error(err);
+                alert('Could not get your location. Please check your permissions.');
                 setIsLocating(false);
-            }
+            },
+            { timeout: 10000, enableHighAccuracy: false }
         );
     };
 
@@ -64,6 +77,7 @@ export default function LocalFilters({ districts }: LocalFiltersProps) {
                 <select
                     value={currentDistrict || ''}
                     onChange={(e) => handleDistrictChange(e.target.value)}
+                    aria-label="Filter by neighborhood"
                     className="w-full pl-9 pr-8 py-3 bg-transparent rounded-xl text-sm font-bold text-gray-900 outline-none transition-colors cursor-pointer appearance-none hover:bg-gray-100"
                 >
                     <option value="">{t('search.all_neighborhoods')}</option>
@@ -82,6 +96,7 @@ export default function LocalFilters({ districts }: LocalFiltersProps) {
             <button
                 onClick={handleNearMe}
                 disabled={isLocating}
+                aria-label={isNearMeActive ? "Disable location search" : "Search events near me"}
                 className={cn(
                     "flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-bold transition-all border",
                     isNearMeActive

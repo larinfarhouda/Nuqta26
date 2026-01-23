@@ -63,6 +63,7 @@ export default function Categories() {
                 {/* Desktop Scroll Nav */}
                 <button
                     onClick={() => scroll('left')}
+                    aria-label="Scroll left"
                     className="absolute left-6 top-1/2 -translate-y-1/2 z-50 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex hover:bg-gray-50 active:scale-90"
                 >
                     <ChevronLeft className="w-5 h-5 text-gray-900" />
@@ -110,9 +111,9 @@ export default function Categories() {
                         );
                     })}
                 </div>
-
                 <button
                     onClick={() => scroll('right')}
+                    aria-label="Scroll right"
                     className="absolute right-6 top-1/2 -translate-y-1/2 z-50 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex hover:bg-gray-50 active:scale-90"
                 >
                     <ChevronRight className="w-5 h-5 text-gray-900" />

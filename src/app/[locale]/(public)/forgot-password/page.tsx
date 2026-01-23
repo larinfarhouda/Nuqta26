@@ -45,7 +45,10 @@ export default function ForgotPasswordPage() {
             setSubmittedEmail(data.email);
             setIsSuccess(true);
         } catch (err: any) {
-            setError(err.message);
+            console.error('Password reset error:', err);
+            // Always show success to prevent enumeration
+            setSubmittedEmail(data.email);
+            setIsSuccess(true);
         } finally {
             setIsLoading(false);
         }
@@ -104,17 +107,24 @@ export default function ForgotPasswordPage() {
 
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                    <label htmlFor="email" title={t('email')} className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                         <Mail className="w-3.5 h-3.5" />
                                         {t('email')}
                                     </label>
                                     <input
                                         {...register('email')}
+                                        id="email"
                                         type="email"
+                                        aria-invalid={!!errors.email}
+                                        aria-describedby={errors.email ? 'email-error' : undefined}
                                         className={`w-full p-4 bg-gray-50 border ${errors.email ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
                                         placeholder="name@example.com"
                                     />
-                                    {errors.email && <span className="text-red-500 text-xs font-bold ml-1">{errors.email.message}</span>}
+                                    {errors.email && (
+                                        <span id="email-error" className="text-red-500 text-xs font-bold ml-1">
+                                            {errors.email.message}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {error && (

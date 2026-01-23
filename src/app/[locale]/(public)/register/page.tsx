@@ -10,9 +10,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Building2, User, Mail, Lock, CheckCircle, ArrowRight, Sparkles, Facebook, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from '@/navigation';
-import LocationPicker from '@/components/ui/LocationPicker';
-import { Calendar, UserCircle, MapPin, Check } from 'lucide-react';
+import { Calendar, UserCircle, MapPin, Check, Globe } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import PhoneInput from '@/components/ui/PhoneInput';
+import { COUNTRIES } from '@/constants/locations';
 
 // Schemas
 const createUserSchema = (t: any) => z.object({
@@ -53,8 +54,11 @@ export default function RegisterPage() {
     const userSchema = createUserSchema(t);
     const vendorSchema = createVendorSchema(t);
 
-    const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<UserFormData & VendorFormData>({
+    const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<UserFormData & VendorFormData>({
         resolver: zodResolver(role === 'user' ? userSchema : vendorSchema) as any,
+        defaultValues: {
+            country: 'tr'
+        }
     });
 
     // Reset form when switching roles
@@ -83,7 +87,6 @@ export default function RegisterPage() {
                             gender: data.gender,
                             country: data.country,
                             city: data.city,
-                            district: data.district,
                             phone: data.phone,
                         })
                     },
@@ -97,22 +100,34 @@ export default function RegisterPage() {
             setSubmittedEmail(data.email);
 
         } catch (err: any) {
-            setError(err.message);
+            console.error('Registration error:', err);
+            const message = err.message || '';
+            if (message.includes('User already registered')) {
+                setError(t('error_user_already_registered'));
+            } else {
+                setError(t('error_generic'));
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
-        await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`, // Pass role to ensure upgrades
-                queryParams: {
-                    role: role // Use the currently selected role
-                }
-            },
-        });
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider,
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`,
+                    queryParams: {
+                        role: role
+                    }
+                },
+            });
+            if (error) throw error;
+        } catch (err: any) {
+            console.error('OAuth error:', err);
+            setError(t('error_generic'));
+        }
     };
 
     return (
@@ -369,25 +384,32 @@ export default function RegisterPage() {
                                                             <Phone className="w-3.5 h-3.5" />
                                                             {t('phone_label')}
                                                         </label>
-                                                        <input
-                                                            {...register('phone')}
-                                                            type="tel"
-                                                            className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white"
-                                                            placeholder="+90 555 123 45 67"
+                                                        <PhoneInput
+                                                            register={register}
+                                                            setValue={setValue}
+                                                            name="phone"
+                                                            error={errors.phone?.message as string}
                                                         />
                                                     </div>
 
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                                             <MapPin className="w-3.5 h-3.5" />
-                                                            {t('location_label')}
+                                                            {t('city')}
                                                         </label>
-                                                        <LocationPicker setValue={setValue} className="h-[200px]" />
-                                                        {/* Hidden inputs to ensure data is passed if not validating strictly via schema requirement yet, 
-                                                            but we marked them optional in schema so it's fine. 
-                                                            If we want validation, we should make them required in schema and use `setValue` with `shouldValidate`.
-                                                        */}
+                                                        <select
+                                                            {...register('city')}
+                                                            className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
+                                                        >
+                                                            <option value="">{t('select_placeholder')}</option>
+                                                            {COUNTRIES[0]?.cities?.map(city => (
+                                                                <option key={city.id} value={city.id}>
+                                                                    {locale === 'ar' ? city.name_ar : city.name_en}
+                                                                </option>
+                                                            ))}
+                                                        </select>
                                                     </div>
+                                                    <input type="hidden" {...register('country')} value="tr" />
                                                 </>
                                             )}
 

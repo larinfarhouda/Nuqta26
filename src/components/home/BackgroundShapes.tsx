@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 export default function BackgroundShapes() {
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -12,6 +12,9 @@ export default function BackgroundShapes() {
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    // Don't render until hydration is complete to avoid mismatch
+    if (isMobile === null) return <div className="absolute inset-0 bg-[#fffdfa]" />;
 
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -73,10 +76,10 @@ export default function BackgroundShapes() {
             </svg>
 
             {/* Subtle Texture Overlay */}
-            <div className="absolute inset-0 opacity-[0.07] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
+            <div className="absolute inset-0 opacity-[0.07] pointer-events-none bg-[url('/images/patterns/natural-paper.png')]" />
 
             {/* Grainy Noise Overlay for extra edge */}
-            <div className="absolute inset-0 opacity-[0.03] contrast-150 brightness-100 pointer-events-none mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/p6.png')]" />
+            <div className="absolute inset-0 opacity-[0.03] contrast-150 brightness-100 pointer-events-none mix-blend-multiply bg-[url('/images/patterns/p6.png')]" />
         </div>
     );
 }

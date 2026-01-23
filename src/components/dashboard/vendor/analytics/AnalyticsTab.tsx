@@ -9,21 +9,30 @@ export default function AnalyticsTab() {
     const [analytics, setAnalytics] = useState<any>(null);
     const [segmentation, setSegmentation] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const t = useTranslations('Dashboard.vendor.analytics');
 
     useEffect(() => {
         const load = async () => {
             setLoading(true);
-            const [a, s] = await Promise.all([getVendorAnalytics(), getSegmentationData()]);
-            setAnalytics(a);
-            setSegmentation(s);
-            setLoading(false);
+            setError(null);
+            try {
+                const [a, s] = await Promise.all([getVendorAnalytics(), getSegmentationData()]);
+                setAnalytics(a);
+                setSegmentation(s);
+            } catch (err: any) {
+                console.error('Analytics load error:', err);
+                setError(t('error_loading'));
+            } finally {
+                setLoading(false);
+            }
         };
         load();
     }, []);
 
-    if (loading) return <div className="text-center py-20">{t('loading_analysis')}</div>;
-    if (!analytics) return <div className="text-center py-20">{t('no_data')}</div>;
+    if (loading) return <div className="text-center py-20 animate-pulse">{t('loading_analysis')}</div>;
+    if (error) return <div className="text-center py-20 text-red-500 font-bold">{error}</div>;
+    if (!analytics) return <div className="text-center py-20 font-bold text-gray-400">{t('no_data')}</div>;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
@@ -65,19 +74,22 @@ export default function AnalyticsTab() {
                         <h4 className="font-bold text-gray-900">{t('favorite_types')}</h4>
                     </div>
                     <div className="space-y-4">
-                        {segmentation?.typeDistribution.map((item: any) => (
-                            <div key={item.name} className="flex items-center gap-4">
-                                <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
-                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-indigo-500 rounded-full"
-                                        style={{ width: `${(item.value / Math.max(...segmentation.typeDistribution.map((i: any) => i.value))) * 100}%` }}
-                                    />
+                        {segmentation?.typeDistribution?.length > 0 && segmentation.typeDistribution.map((item: any) => {
+                            const maxValue = Math.max(...segmentation.typeDistribution.map((i: any) => i.value), 1);
+                            return (
+                                <div key={item.name} className="flex items-center gap-4">
+                                    <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
+                                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                                            style={{ width: `${(item.value / maxValue) * 100}%` }}
+                                        />
+                                    </div>
+                                    <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
                                 </div>
-                                <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
-                            </div>
-                        ))}
-                        {segmentation?.typeDistribution.length === 0 && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
+                            );
+                        })}
+                        {(!segmentation?.typeDistribution || segmentation.typeDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
                     </div>
                 </div>
 
@@ -112,20 +124,24 @@ export default function AnalyticsTab() {
                         <h4 className="font-bold text-gray-900">{t('gender_dist')}</h4>
                     </div>
                     <div className="space-y-4">
-                        {segmentation?.genderDistribution.map((item: any) => (
-                            <div key={item.name} className="flex items-center gap-4">
-                                <div className="w-20 text-xs font-bold text-gray-500">
-                                    {item.name === 'Male' ? t('gender.male') : item.name === 'Female' ? t('gender.female') : t('gender.unknown')}
+                        {segmentation?.genderDistribution?.map((item: any) => {
+                            const totalVal = segmentation.genderDistribution.reduce((a: any, b: any) => a + b.value, 0) || 1;
+                            return (
+                                <div key={item.name} className="flex items-center gap-4">
+                                    <div className="w-20 text-xs font-bold text-gray-500">
+                                        {item.name === 'Male' ? t('gender.male') : item.name === 'Female' ? t('gender.female') : t('gender.unknown')}
+                                    </div>
+                                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ${item.name === 'Male' ? 'bg-blue-500' : item.name === 'Female' ? 'bg-pink-500' : 'bg-gray-400'
+                                                }`}
+                                            style={{ width: `${(item.value / totalVal) * 100}%` }}
+                                        />
+                                    </div>
+                                    <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
                                 </div>
-                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full ${item.name === 'Male' ? 'bg-blue-500' : 'bg-pink-500'}`}
-                                        style={{ width: `${(item.value / (segmentation.genderDistribution.reduce((a: any, b: any) => a + b.value, 0) || 1)) * 100}%` }}
-                                    />
-                                </div>
-                                <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {(!segmentation?.genderDistribution || segmentation.genderDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
                     </div>
                 </div>
@@ -137,18 +153,21 @@ export default function AnalyticsTab() {
                         <h4 className="font-bold text-gray-900">{t('age_dist')}</h4>
                     </div>
                     <div className="space-y-4">
-                        {segmentation?.ageDistribution.map((item: any) => (
-                            <div key={item.name} className="flex items-center gap-4">
-                                <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
-                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-emerald-500 rounded-full"
-                                        style={{ width: `${(item.value / (Math.max(...segmentation.ageDistribution.map((i: any) => i.value)) || 1)) * 100}%` }}
-                                    />
+                        {segmentation?.ageDistribution?.map((item: any) => {
+                            const maxAgeValue = Math.max(...segmentation.ageDistribution.map((i: any) => i.value), 1);
+                            return (
+                                <div key={item.name} className="flex items-center gap-4">
+                                    <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
+                                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                                            style={{ width: `${(item.value / maxAgeValue) * 100}%` }}
+                                        />
+                                    </div>
+                                    <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
                                 </div>
-                                <div className="w-10 text-xs font-bold text-gray-900 text-left">{item.value}</div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {(!segmentation?.ageDistribution || segmentation.ageDistribution.length === 0) && <p className="text-sm text-gray-400 text-center">{t('no_enough_data')}</p>}
                     </div>
                 </div>

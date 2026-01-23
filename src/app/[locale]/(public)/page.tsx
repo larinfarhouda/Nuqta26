@@ -135,7 +135,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
                                     className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-primary transition-colors group"
                                 >
                                     <span className="bg-gray-100 p-1 rounded-md group-hover:bg-primary/10 transition-colors">✕</span>
-                                    <span>Clear all filters</span>
+                                    <span>{t('clearAllFilters')}</span>
                                 </Link>
                             )}
                         </div>
@@ -151,12 +151,12 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
                             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                                 <Search className="w-8 h-8 text-gray-300" />
                             </div>
-                            <h3 className="text-2xl font-black text-gray-900 mb-2">No matches found</h3>
+                            <h3 className="text-2xl font-black text-gray-900 mb-2">{t('noMatchesFound')}</h3>
                             <p className="text-gray-500 max-w-sm mx-auto text-lg leading-relaxed">
-                                We couldn't find any events matching your current filters. Try broadening your search!
+                                {t('noMatchesDescription')}
                             </p>
                             <Link href="/" className="mt-8 inline-block px-10 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-primary transition-all shadow-xl shadow-gray-200">
-                                Reset Discovery
+                                {t('resetDiscovery')}
                             </Link>
                         </div>
                     ) : (

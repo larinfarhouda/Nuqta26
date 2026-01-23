@@ -12,6 +12,7 @@ export default function LogoutButton({ className, variant = 'nav' }: { className
 
     const handleLogout = async () => {
         await signOut();
+        router.refresh();
         router.push('/login');
     };
 

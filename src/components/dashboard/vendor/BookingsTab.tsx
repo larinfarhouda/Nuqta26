@@ -25,9 +25,14 @@ export default function BookingsTab() {
 
     const loadBookings = async () => {
         setLoading(true);
-        const data = await getVendorBookings();
-        setBookings(data);
-        setLoading(false);
+        try {
+            const data = await getVendorBookings();
+            setBookings(data);
+        } catch (error) {
+            console.error('Failed to load bookings:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -36,11 +41,20 @@ export default function BookingsTab() {
 
     const handleStatusUpdate = async (id: string, newStatus: 'confirmed' | 'cancelled') => {
         setUpdating(id);
-        const res = await updateBookingStatus(id, newStatus);
-        if (res.success) {
-            setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+        try {
+            const res = await updateBookingStatus(id, newStatus);
+            if (res.success) {
+                setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+            } else {
+                console.error('Failed to update booking status:', res.error);
+                alert(res.error || 'Failed to update status');
+            }
+        } catch (error: any) {
+            console.error('Error updating booking status:', error);
+            alert(error.message || 'An error occurred');
+        } finally {
+            setUpdating(null);
         }
-        setUpdating(null);
     };
 
     const filtered = bookings.filter(b => {
@@ -196,6 +210,7 @@ export default function BookingsTab() {
                                     <a
                                         href={selectedReceipt}
                                         target="_blank"
+                                        rel="noopener noreferrer"
                                         className="btn-primary flex items-center gap-2"
                                     >
                                         <ExternalLink className="w-4 h-4" /> {t('open_pdf')}

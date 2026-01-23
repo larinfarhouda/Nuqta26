@@ -36,16 +36,16 @@ export default function AboutPage() {
                             transition={{ delay: 0.1 }}
                             className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.1] tracking-tight"
                         >
-                            {t('subtitle').split(' ').map((word, i) => (
-                                <span key={i} className={i > 3 ? "text-primary italic relative inline-block" : "inline-block"}>
-                                    {word}&nbsp;
-                                    {i > 3 && (
+                            {t.rich('subtitle_rich', {
+                                highlight: (chunks) => (
+                                    <span className="text-primary italic relative inline-block">
+                                        {chunks}
                                         <svg className="absolute -bottom-2 left-0 w-full h-2 text-secondary/60" viewBox="0 0 100 10" preserveAspectRatio="none">
                                             <path d="M0 5 Q 25 0, 50 5 T 100 5" stroke="currentColor" strokeWidth="4" fill="transparent" />
                                         </svg>
-                                    )}
-                                </span>
-                            ))}
+                                    </span>
+                                )
+                            })}
                         </motion.h1>
                     </div>
                 </div>
@@ -72,13 +72,16 @@ export default function AboutPage() {
                             </p>
                             <div className="flex items-center gap-6 pt-4">
                                 <div className="flex -space-x-3">
-                                    {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-gray-200 overflow-hidden">
-                                            <img src={`https://i.pravatar.cc/100?u=${i}`} alt="User" />
+                                    {['A', 'M', 'S', 'H'].map((initial, i) => (
+                                        <div key={i} className={`w-12 h-12 rounded-full border-4 border-white flex items-center justify-center text-white font-bold text-sm shadow-sm ${['bg-primary', 'bg-secondary', 'bg-accent', 'bg-emerald-500'][i]
+                                            }`}>
+                                            {initial}
                                         </div>
                                     ))}
                                 </div>
-                                <p className="text-sm font-bold text-gray-400">Join 15,000+ members</p>
+                                <p className="text-sm font-bold text-gray-400">
+                                    {t('join_members', { count: '15,000' })}
+                                </p>
                             </div>
                         </div>
                         <div className="relative aspect-square rounded-[2.5rem] overflow-hidden group shadow-inner">
@@ -95,7 +98,7 @@ export default function AboutPage() {
                         viewport={{ once: true }}
                         className="bg-secondary/10 rounded-[4rem] p-12 md:p-24 relative overflow-hidden"
                     >
-                        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-20" />
+                        <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/patterns/natural-paper.png')] opacity-20" />
                         <div className="max-w-3xl mx-auto text-center space-y-8 relative z-10">
                             <div className="w-16 h-16 rounded-3xl bg-white shadow-xl flex items-center justify-center text-primary mx-auto rotate-3">
                                 <History className="w-8 h-8" />
@@ -130,11 +133,11 @@ export default function AboutPage() {
                             <div className="flex gap-4 pt-4">
                                 <div className="flex items-center gap-2 text-sm font-bold text-primary">
                                     <MapPin className="w-4 h-4" />
-                                    <span>Istanbul, Turkey</span>
+                                    <span>{t('location')}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm font-bold text-secondary-dark text-amber-600">
+                                <div className="flex items-center gap-2 text-sm font-bold text-amber-600">
                                     <Users className="w-4 h-4" />
-                                    <span>For the community</span>
+                                    <span>{t('forCommunity')}</span>
                                 </div>
                             </div>
                         </div>

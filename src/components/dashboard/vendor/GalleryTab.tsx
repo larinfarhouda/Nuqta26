@@ -10,12 +10,26 @@ export default function GalleryTab({ vendorId, showAlert }: any) {
     const t = useTranslations('Dashboard.vendor.gallery');
     const [gallery, setGallery] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         if (vendorId) {
             const load = async () => {
-                const { data } = await supabase.from('vendor_gallery').select('*').eq('vendor_id', vendorId).order('created_at', { ascending: false });
-                if (data) setGallery(data);
+                setLoading(true);
+                setLoadError(null);
+                try {
+                    const { data, error } = await supabase.from('vendor_gallery').select('*').eq('vendor_id', vendorId).order('created_at', { ascending: false });
+                    if (error) {
+                        setLoadError(error.message);
+                    } else if (data) {
+                        setGallery(data);
+                    }
+                } catch (err: any) {
+                    setLoadError(err.message);
+                } finally {
+                    setLoading(false);
+                }
             };
             load();
         }
@@ -24,9 +38,24 @@ export default function GalleryTab({ vendorId, showAlert }: any) {
 
     const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
-        setUploading(true);
         const file = e.target.files[0];
-        const fileName = `${vendorId}/gallery-${Date.now()}.jpg`;
+
+        // Validate type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            showAlert(t("error_invalid_type"), 'error');
+            return;
+        }
+
+        // Validate size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert(t("error_file_too_large"), 'error');
+            return;
+        }
+
+        setUploading(true);
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `${vendorId}/gallery-${Date.now()}.${ext}`;
 
         try {
             const { error: uploadError } = await supabase.storage.from('vendor-public').upload(fileName, file, { cacheControl: '3600' });
@@ -67,6 +96,19 @@ export default function GalleryTab({ vendorId, showAlert }: any) {
         }
     };
 
+    if (loading) return (
+        <div className="flex justify-center items-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+    );
+
+    if (loadError) return (
+        <div className="flex flex-col items-center justify-center h-64 text-center">
+            <p className="text-red-500 font-bold mb-2">{t("load_error")}</p>
+            <button onClick={() => window.location.reload()} className="text-sm text-primary hover:underline">{t("retry")}</button>
+        </div>
+    );
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
             <div className="flex justify-between items-center">
@@ -80,9 +122,9 @@ export default function GalleryTab({ vendorId, showAlert }: any) {
                 </div>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                {gallery.map(img => (
+                {gallery.map((img, index) => (
                     <div key={img.id} className="aspect-square rounded-2xl overflow-hidden relative group shadow-sm">
-                        <img src={img.image_url} className="w-full h-full object-cover" />
+                        <img src={img.image_url} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover" />
                         <button
                             onClick={() => handleDelete(img.id, img.image_url)}
                             className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full lg:opacity-0 group-hover:opacity-100 transition-opacity shadow-md"

@@ -6,6 +6,7 @@ import { Loader2, Save, User, MapPin, Calendar, UserCircle, Phone } from 'lucide
 import { useRouter } from '@/navigation';
 import { useForm } from 'react-hook-form';
 import LocationPicker from '@/components/ui/LocationPicker';
+import PhoneInput from '@/components/ui/PhoneInput';
 
 interface ProfileData {
     full_name: string | null;
@@ -18,19 +19,7 @@ interface ProfileData {
     phone?: string | null;
 }
 
-// Common country codes
-const COUNTRY_CODES = [
-    { code: '+90', country: 'TR', label: 'Turkey (+90)' },
-    { code: '+966', country: 'SA', label: 'Saudi Arabia (+966)' },
-    { code: '+971', country: 'AE', label: 'UAE (+971)' },
-    { code: '+1', country: 'US', label: 'USA (+1)' },
-    { code: '+44', country: 'GB', label: 'UK (+44)' },
-    { code: '+20', country: 'EG', label: 'Egypt (+20)' },
-    { code: '+965', country: 'KW', label: 'Kuwait (+965)' },
-    { code: '+974', country: 'QA', label: 'Qatar (+974)' },
-    { code: '+973', country: 'BH', label: 'Bahrain (+973)' },
-    { code: '+968', country: 'OM', label: 'Oman (+968)' },
-];
+// COUNTRY_CODES moved to PhoneInput.tsx
 
 export default function ProfileForm({
     initialData
@@ -41,14 +30,7 @@ export default function ProfileForm({
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const router = useRouter();
 
-    // Split initial phone into code and number if possible, default to +90
-    const initialPhone = initialData.phone || '';
-    const initialCode = COUNTRY_CODES.find(c => initialPhone.startsWith(c.code))?.code || '+90';
-    const initialNumber = initialPhone.startsWith(initialCode) ? initialPhone.slice(initialCode.length).trim() : initialPhone;
-
-    const [countryCode, setCountryCode] = useState(initialCode);
-
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProfileData>({
+    const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ProfileData>({
         defaultValues: {
             full_name: initialData.full_name || '',
             email: initialData.email,
@@ -57,7 +39,7 @@ export default function ProfileForm({
             country: initialData.country,
             city: initialData.city,
             district: initialData.district,
-            phone: initialNumber // storing just the number part in the form
+            phone: initialData.phone
         }
     });
 
@@ -66,11 +48,9 @@ export default function ProfileForm({
         setMessage(null);
 
         try {
-            // Ensure age is a number or null
             const payload = {
                 ...data,
                 age: data.age ? Number(data.age) : null,
-                phone: `${countryCode}${data.phone?.trim()}` // Combine code and number
             };
 
             const result = await updateUserProfile(payload);
@@ -128,25 +108,14 @@ export default function ProfileForm({
                         <Phone className="w-4 h-4 text-gray-500" />
                         رقم الهاتف
                     </label>
-                    <div className="flex gap-2" dir="ltr">
-                        <select
-                            value={countryCode}
-                            onChange={(e) => setCountryCode(e.target.value)}
-                            className="px-2 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 bg-gray-50 font-medium text-gray-700 w-24"
-                        >
-                            {COUNTRY_CODES.map((c) => (
-                                <option key={c.code} value={c.code}>
-                                    {c.code}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            {...register('phone')}
-                            type="tel"
-                            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium"
-                            placeholder="555 123 45 67"
-                        />
-                    </div>
+                    <PhoneInput
+                        register={register}
+                        setValue={setValue}
+                        name="phone"
+                        initialValue={initialData.phone}
+                        error={errors.phone?.message as string}
+                        className="text-left"
+                    />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -186,9 +155,8 @@ export default function ProfileForm({
                         الموقع
                     </label>
                     <LocationPicker setValue={setValue} className="h-[250px]" />
-                    <div className="mt-2 flex gap-2 text-xs text-gray-500 font-medium">
-                        {/* Feedback for selected location (managed by RHF values implicitly) */}
-                        الموقع المحفوظ حالياً: {[initialData.district, initialData.city, initialData.country].filter(Boolean).join(', ') || 'لا يوجد'}
+                    <div className="mt-2 flex gap-2 text-xs text-gray-400 font-medium">
+                        الموقع المحدد: {[watch('district'), watch('city'), watch('country')].filter(Boolean).join(', ') || 'لا يوجد'}
                     </div>
                 </div>
 

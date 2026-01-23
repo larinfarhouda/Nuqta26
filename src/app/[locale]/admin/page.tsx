@@ -8,39 +8,91 @@ export default function AdminDashboard() {
     const supabase = createClient();
     const [vendors, setVendors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [authorized, setAuthorized] = useState(false);
+    const [processingVendorId, setProcessingVendorId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchPendingVendors();
+        checkAdminAccess();
     }, []);
 
-    const fetchPendingVendors = async () => {
+    const checkAdminAccess = async () => {
         setLoading(true);
-        const { data } = await supabase
-            .from('vendors')
-            .select('*, profiles(email: id)') // In real joining, we might need to join on id if profiles has email, but email is in auth.users.
-            // Actually profiles doesn't have email. We might need a function to get emails or just show business name.
-            .eq('status', 'pending');
+        const { data: { user } } = await supabase.auth.getUser();
 
-        setVendors(data || []);
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role !== 'admin') {
+            window.location.href = '/';
+            return;
+        }
+
+        setAuthorized(true);
+        await fetchPendingVendors();
         setLoading(false);
     };
 
-    const handleApprove = async (id: string) => {
-        const { error } = await supabase
-            .from('vendors')
-            .update({ status: 'approved', is_verified: true })
-            .eq('id', id);
+    const fetchPendingVendors = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('vendors')
+                .select('*, profiles(email: id)')
+                .eq('status', 'pending');
 
-        if (!error) fetchPendingVendors();
+            if (error) throw error;
+            setVendors(data || []);
+        } catch (error) {
+            console.error('Failed to fetch pending vendors:', error);
+            alert('Failed to load pending vendors.');
+        }
     };
 
-    const handleReject = async (id: string) => {
-        const { error } = await supabase
-            .from('vendors')
-            .update({ status: 'suspended' }) // Or rejected
-            .eq('id', id);
+    const handleApprove = async (id: string, name: string) => {
+        if (!window.confirm(`Are you sure you want to approve "${name}"?`)) return;
 
-        if (!error) fetchPendingVendors();
+        setProcessingVendorId(id);
+        try {
+            const { error } = await supabase
+                .from('vendors')
+                .update({ status: 'approved', is_verified: true })
+                .eq('id', id);
+
+            if (error) throw error;
+            await fetchPendingVendors();
+        } catch (error: any) {
+            console.error('Error approving vendor:', error);
+            alert('Error approving vendor: ' + error.message);
+        } finally {
+            setProcessingVendorId(null);
+        }
+    };
+
+    const handleReject = async (id: string, name: string) => {
+        if (!window.confirm(`Are you sure you want to REJECT "${name}"? This will suspend their account.`)) return;
+
+        setProcessingVendorId(id);
+        try {
+            const { error } = await supabase
+                .from('vendors')
+                .update({ status: 'suspended' })
+                .eq('id', id);
+
+            if (error) throw error;
+            await fetchPendingVendors();
+        } catch (error: any) {
+            console.error('Error rejecting vendor:', error);
+            alert('Error rejecting vendor: ' + error.message);
+        } finally {
+            setProcessingVendorId(null);
+        }
     };
 
     const getDocUrl = (path: string) => {
@@ -58,7 +110,7 @@ export default function AdminDashboard() {
         if (data?.signedUrl) window.open(data.signedUrl, '_blank');
     };
 
-    if (loading) return <Loader2 className="animate-spin" />;
+    if (loading || !authorized) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin" /></div>;
 
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -92,18 +144,20 @@ export default function AdminDashboard() {
 
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => handleReject(vendor.id)}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                    onClick={() => handleReject(vendor.id, vendor.business_name)}
+                                    disabled={processingVendorId === vendor.id}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
                                     title="Reject"
                                 >
-                                    <X className="w-5 h-5" />
+                                    {processingVendorId === vendor.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <X className="w-5 h-5" />}
                                 </button>
                                 <button
-                                    onClick={() => handleApprove(vendor.id)}
-                                    className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                    onClick={() => handleApprove(vendor.id, vendor.business_name)}
+                                    disabled={processingVendorId === vendor.id}
+                                    className="p-2 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
                                     title="Approve"
                                 >
-                                    <Check className="w-5 h-5" />
+                                    {processingVendorId === vendor.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                                 </button>
                             </div>
                         </div>

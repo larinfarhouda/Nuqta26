@@ -58,7 +58,7 @@ export default async function UserDashboardLayout({
                             <span className="text-sm font-bold text-gray-500 leading-tight">{user.email}</span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white">
-                            {user.email?.[0].toUpperCase()}
+                            {user.email?.[0]?.toUpperCase() ?? 'U'}
                         </div>
                         {/* Hide logout button on desktop as it's in the sidebar */}
                         <div className="lg:hidden">
