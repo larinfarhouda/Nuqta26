@@ -57,6 +57,7 @@
     "searchResults": "نتائج البحث",
     "eventsFound": "فعالية وجدت",
     "clearAllFilters": "مسح كل الفلاتر",
+    "filters": "الفلاتر",
     "noMatchesFound": "لم يتم العثور على نتائج",
     "noMatchesDescription": "لم نتمكن من العثور على أي فعاليات تطابق عوامل التصفية الحالية. جرب توسيع نطاق البحث!",
     "resetDiscovery": "إعادة تعيين الاستكشاف",

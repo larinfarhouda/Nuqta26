@@ -108,8 +108,8 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                     {/* Type Badge - Positioned at bottom on mobile (only show if not expired/sold out) */}
                     {!isExpired && !isSoldOut && (
                         <div className="absolute bottom-2 left-2 md:top-3 md:left-3 md:bottom-auto px-2.5 py-1.5 md:px-3 md:py-1.5 bg-white/95 backdrop-blur-md rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm flex items-center gap-1 md:gap-1.5">
-                            <span className="text-sm md:text-sm">{event.category_icon || '✨'}</span>
-                            <span className="inline">{event.category_name_en || event.category || 'Event'}</span>
+                            <span className="text-sm md:text-sm">{event.category_icon || event.category?.icon || '✨'}</span>
+                            <span className="inline">{event.category_name_en || event.category?.name_en || event.category?.name_ar || 'Event'}</span>
                         </div>
                     )}
                 </div>

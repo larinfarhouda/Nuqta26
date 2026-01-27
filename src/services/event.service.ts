@@ -56,6 +56,7 @@ export class EventService {
             location_lat: eventData.location_lat,
             location_long: eventData.location_long,
             category_id: eventData.category_id,
+            vendor_id: eventData.vendor_id,
             tickets: eventData.tickets || [],
             vendor: eventData.vendors ? {
                 business_name: eventData.vendors.business_name,

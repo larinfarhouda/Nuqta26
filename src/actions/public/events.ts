@@ -148,7 +148,7 @@ export async function createBooking(
         }
 
         // Get vendor ID
-        const vendorId = (event as any).vendor_id || (event.vendor as any)?.id;
+        const vendorId = event.vendor_id;
         if (!vendorId) {
             return { error: 'Vendor not found' };
         }
@@ -163,7 +163,7 @@ export async function createBooking(
                 total_amount: totalAmount,
                 discount_amount: discountAmount,
                 discount_code_id: discountCodeId,
-                status: 'pending'
+                status: 'pending_payment'
             })
             .select()
             .single();
@@ -173,15 +173,16 @@ export async function createBooking(
             return { error: bookingError.message };
         }
 
-        // Create booking items
+        // Create booking items (one per ticket)
+        const bookingItems = Array.from({ length: quantity }, () => ({
+            booking_id: booking.id,
+            ticket_id: ticketId,
+            price_at_booking: ticket.price
+        }));
+
         const { error: itemError } = await supabase
             .from('booking_items')
-            .insert({
-                booking_id: booking.id,
-                ticket_id: ticketId,
-                quantity,
-                price: ticket.price
-            });
+            .insert(bookingItems);
 
         if (itemError) {
             // Rollback booking

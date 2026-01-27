@@ -28,11 +28,10 @@ export default async function VendorProfilePage({
     // Fetch vendor's events
     const { data: events } = await supabase
         .from('events')
-        .select('*')
+        .select('*, category:categories(*)')
         .eq('vendor_id', id)
         .eq('status', 'published')
-        .order('date', { ascending: true })
-        .limit(6);
+        .order('date', { ascending: true });
 
     const whatsappLink = vendor.whatsapp_number ? `https://wa.me/${vendor.whatsapp_number}` : '#';
 

@@ -49,7 +49,7 @@ export class BookingRepository extends BaseRepository {
     async findByUserId(userId: string) {
         const { data, error } = await this.client
             .from('bookings')
-            .select('*, event:events(*, vendors(business_name, company_logo, bank_name, bank_account_name, bank_iban))')
+            .select('*, event:events(*, vendor:vendors(business_name, company_logo, bank_name, bank_account_name, bank_iban))')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
 

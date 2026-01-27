@@ -256,10 +256,13 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-                            <Link href={event.vendors?.slug ? `/v/${event.vendors.slug}` : `/vendor/${event.vendor_id}`} className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left text-gray-900 group/vendor cursor-pointer">
+                            <Link
+                                href={event.vendor?.slug ? `/v/${event.vendor.slug}` : `/vendor/${event.vendor_id}`}
+                                className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left text-gray-900 group/vendor cursor-pointer hover:opacity-80 transition-opacity"
+                            >
                                 <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white transition-transform group-hover/vendor:scale-105">
                                     <Image
-                                        src={event.vendors?.company_logo || '/images/logo_nav.png'}
+                                        src={event.vendor?.company_logo || '/images/logo_nav.png'}
                                         alt="Vendor"
                                         fill
                                         className="object-cover"
@@ -267,7 +270,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{t('elite_organizer')}</p>
-                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2 group-hover/vendor:text-primary transition-colors">{event.vendors?.business_name || t('default_partner')}</h3>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2 group-hover/vendor:text-primary transition-colors">{event.vendor?.business_name || t('default_partner')}</h3>
                                     <div className="flex items-center justify-center sm:justify-start gap-4">
                                         <div className="flex items-center gap-1.5 text-amber-500">
                                             <Star className="w-4 h-4 fill-current" />
@@ -282,9 +285,9 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                                 </div>
                             </Link>
 
-                            {event.vendors?.whatsapp_number && (
+                            {event.vendor?.whatsapp_number && (
                                 <a
-                                    href={`https://wa.me/${event.vendors.whatsapp_number}`}
+                                    href={`https://wa.me/${event.vendor.whatsapp_number}`}
                                     target="_blank"
                                     className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-2xl shadow-gray-900/20 hover:bg-primary transition-all active:scale-95 text-xs uppercase tracking-widest"
                                 >

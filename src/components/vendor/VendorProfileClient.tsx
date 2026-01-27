@@ -1,18 +1,30 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MapPin, MessageCircle, Star, Instagram, Globe, CheckCircle, Image as ImageIcon, Calendar, ArrowRight, Share2 } from 'lucide-react';
 import EventCard from '@/components/events/EventCard';
 import { Link } from '@/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import VendorEventFilters from '@/components/vendor/VendorEventFilters';
+import { calculateDistance } from '@/utils/distance';
 
 export default function VendorProfileClient({ vendor }: { vendor: any }) {
     const t = useTranslations('VendorProfile');
     const tVendor = useTranslations('Vendor');
+    const locale = useLocale();
     const [activeTab, setActiveTab] = useState<'events' | 'gallery' | 'about'>('events');
     const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+
+    // Filter states
+    const [filters, setFilters] = useState({
+        search: '',
+        category: '',
+        district: '',
+        userLat: undefined as number | undefined,
+        userLng: undefined as number | undefined,
+    });
 
     // Refs for scroll handling
     const heroRef = useRef<HTMLDivElement>(null);
@@ -39,6 +51,72 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
         }
         setActiveTab(id as any);
     };
+
+    // Filter events based on current filters
+    const filteredEvents = useMemo(() => {
+        if (!vendor.events || vendor.events.length === 0) return [];
+
+        let result = vendor.events.filter((event: any) => {
+            // Search filter
+            if (filters.search) {
+                const searchLower = filters.search.toLowerCase();
+                const titleMatch = event.title?.toLowerCase().includes(searchLower);
+                const descMatch = event.description?.toLowerCase().includes(searchLower);
+                if (!titleMatch && !descMatch) return false;
+            }
+
+            // Category filter
+            if (filters.category && event.category_id) {
+                // Need to check if event's category slug matches
+                if (event.category?.slug !== filters.category) return false;
+            }
+
+            // District filter
+            if (filters.district && event.district !== filters.district) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // Sort by distance if user location is available
+        if (filters.userLat && filters.userLng) {
+            result = result
+                .map((event: any) => {
+                    // Calculate distance if event has location
+                    if (event.location_lat && event.location_long) {
+                        const distance = calculateDistance(
+                            filters.userLat!,
+                            filters.userLng!,
+                            event.location_lat,
+                            event.location_long
+                        );
+                        return { ...event, _distance: distance };
+                    }
+                    // Events without location go to the end
+                    return { ...event, _distance: Infinity };
+                })
+                .sort((a: any, b: any) => a._distance - b._distance);
+        }
+
+        return result;
+    }, [vendor.events, filters]);
+
+    const handleFilterChange = useCallback((newFilters: {
+        search: string;
+        category: string;
+        district: string;
+        userLat?: number;
+        userLng?: number;
+    }) => {
+        setFilters({
+            search: newFilters.search,
+            category: newFilters.category,
+            district: newFilters.district,
+            userLat: newFilters.userLat,
+            userLng: newFilters.userLng,
+        });
+    }, []);
 
     const hasEvents = vendor.events && vendor.events.length > 0;
     const hasGallery = vendor.gallery && vendor.gallery.length > 0;
@@ -92,7 +170,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                             >
                                 <span className="px-3 py-1 bg-white/10 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-full border border-white/20 flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    {vendor.category || tVendor('cat_cultural')}
+                                    {vendor.category?.name_en || vendor.category?.name_ar || tVendor('cat_cultural')}
                                 </span>
                                 {vendor.status === 'approved' && (
                                     <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-500/30">
@@ -210,21 +288,58 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                         )}
                     </div>
 
-                    {hasEvents ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                            {vendor.events.map((event: any, i: number) => (
-                                <motion.div
-                                    key={event.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="h-full"
-                                >
-                                    <EventCard event={event} isFavoriteInitial={false} />
-                                </motion.div>
-                            ))}
+                    {/* Filters Section */}
+                    {hasEvents && (
+                        <div className="mb-8 md:mb-12">
+                            <VendorEventFilters onFilterChange={handleFilterChange} />
                         </div>
+                    )}
+
+                    {hasEvents ? (
+                        <>
+                            {/* Show filtered count if filters are active */}
+                            {(filters.search || filters.category || filters.district) && (
+                                <div className="mb-6 text-sm text-gray-600">
+                                    <span className="font-bold">
+                                        {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'} found
+                                    </span>
+                                    {filteredEvents.length < vendor.events.length && (
+                                        <span className="text-gray-400 ml-2">
+                                            (out of {vendor.events.length} total)
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            {filteredEvents.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                                    {filteredEvents.map((event: any, i: number) => (
+                                        <motion.div
+                                            key={event.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="h-full"
+                                        >
+                                            <EventCard event={event} isFavoriteInitial={false} />
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-[2rem] p-12 text-center border-2 border-dashed border-gray-200">
+                                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                                    <h3 className="text-lg font-bold text-gray-900">No events match your filters</h3>
+                                    <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+                                    <button
+                                        onClick={() => setFilters({ search: '', category: '', district: '', userLat: undefined, userLng: undefined })}
+                                        className="mt-4 px-6 py-2 bg-primary text-white rounded-full font-bold text-sm hover:bg-primary/90 transition-colors"
+                                    >
+                                        Clear filters
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="bg-white rounded-[2rem] p-12 text-center border-2 border-dashed border-gray-200">
                             <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -313,33 +428,58 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
 
             </div>
 
-            {/* 4. Mobile Sticky Bottom Bar */}
-            <div className="fixed bottom-0 inset-x-0 p-4 bg-white border-t border-gray-200 md:hidden z-50 pb-safe">
-                <div className="grid grid-cols-4 gap-3">
-                    {/* Secondary Actions */}
-                    {vendor.instagram && (
-                        <a href={`https://instagram.com/${vendor.instagram}`} target="_blank" className="col-span-1 flex items-center justify-center h-12 bg-gray-100 rounded-xl text-gray-900">
-                            <Instagram className="w-5 h-5" />
-                        </a>
-                    )}
-                    {vendor.website && (
-                        <a href={vendor.website} target="_blank" className="col-span-1 flex items-center justify-center h-12 bg-gray-100 rounded-xl text-gray-900">
-                            <Globe className="w-5 h-5" />
-                        </a>
-                    )}
+            {/* 4. Mobile Sticky Bottom Bar - Higher z-index to appear above global nav */}
+            <div className="fixed bottom-0 inset-x-0 p-3 md:p-4 bg-white/95 backdrop-blur-lg border-t border-gray-200 md:hidden z-[60] pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+                {/* Check if vendor has any contact info */}
+                {(vendor.whatsapp_number || vendor.instagram || vendor.website) ? (
+                    <div className="flex items-center gap-2">
+                        {/* Instagram Button */}
+                        {vendor.instagram && (
+                            <a
+                                href={`https://instagram.com/${vendor.instagram}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 flex items-center justify-center h-12 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-xl active:scale-95 transition-transform shadow-md"
+                                title="Instagram"
+                            >
+                                <Instagram className="w-5 h-5" />
+                            </a>
+                        )}
 
-                    {/* Primary Action */}
-                    {vendor.whatsapp_number && (
-                        <a
-                            href={`https://wa.me/${vendor.whatsapp_number}`}
-                            target="_blank"
-                            className={`${vendor.instagram || vendor.website ? 'col-span-2' : 'col-span-4'} flex items-center justify-center gap-2 h-12 bg-gray-900 text-white font-bold rounded-xl shadow-lg`}
-                        >
-                            <MessageCircle className="w-5 h-5" />
-                            <span>{t('inquire_whatsapp')}</span>
-                        </a>
-                    )}
-                </div>
+                        {/* Website Button */}
+                        {vendor.website && (
+                            <a
+                                href={vendor.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 flex items-center justify-center h-12 bg-gray-100 text-gray-900 rounded-xl active:scale-95 transition-transform border-2 border-gray-200"
+                                title="Website"
+                            >
+                                <Globe className="w-5 h-5" />
+                            </a>
+                        )}
+
+                        {/* WhatsApp Button - Primary */}
+                        {vendor.whatsapp_number && (
+                            <a
+                                href={`https://wa.me/${vendor.whatsapp_number}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`flex items-center justify-center gap-2 h-12 bg-primary text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform ${(vendor.instagram || vendor.website) ? 'flex-[2]' : 'flex-[3]'}`}
+                            >
+                                <MessageCircle className="w-5 h-5" />
+                                <span className="text-sm">{t('inquire_whatsapp')}</span>
+                            </a>
+                        )}
+                    </div>
+                ) : (
+                    /* Fallback if no contact info */
+                    <div className="text-center py-2">
+                        <p className="text-xs text-gray-500 font-medium">
+                            {locale === 'ar' ? 'لم يتم توفير معلومات الاتصال' : 'No contact information available'}
+                        </p>
+                    </div>
+                )}
             </div>
 
         </div>

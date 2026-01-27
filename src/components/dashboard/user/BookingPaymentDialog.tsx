@@ -114,14 +114,14 @@ export default function BookingPaymentDialog({ booking }: { booking: any }) {
                                             <div className="space-y-3">
                                                 <div>
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('bank_name')}</p>
-                                                    <p className="font-bold text-gray-900">{booking.event?.vendors?.bank_name || 'N/A'}</p>
+                                                    <p className="font-bold text-gray-900">{booking.event?.vendor?.bank_name || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('account_holder')}</p>
                                                     <div className="flex justify-between items-center">
-                                                        <p className="font-bold text-gray-900">{booking.event?.vendors?.bank_account_name || 'N/A'}</p>
+                                                        <p className="font-bold text-gray-900">{booking.event?.vendor?.bank_account_name || 'N/A'}</p>
                                                         <button
-                                                            onClick={() => copyToClipboard(booking.event?.vendors?.bank_account_name, 'name')}
+                                                            onClick={() => copyToClipboard(booking.event?.vendor?.bank_account_name, 'name')}
                                                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                                                             title="Copy Name"
                                                         >
@@ -133,10 +133,10 @@ export default function BookingPaymentDialog({ booking }: { booking: any }) {
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('iban')}</p>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <p className="font-bold text-gray-900 break-all bg-white p-2 rounded-lg border border-gray-200 select-all font-mono flex-1">
-                                                            {booking.event?.vendors?.bank_iban || 'N/A'}
+                                                            {booking.event?.vendor?.bank_iban || 'N/A'}
                                                         </p>
                                                         <button
-                                                            onClick={() => copyToClipboard(booking.event?.vendors?.bank_iban, 'iban')}
+                                                            onClick={() => copyToClipboard(booking.event?.vendor?.bank_iban, 'iban')}
                                                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200"
                                                             title="Copy IBAN"
                                                         >

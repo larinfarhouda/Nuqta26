@@ -86,7 +86,8 @@ export async function getUserFavoriteIds() {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user) throw new UnauthorizedError();
+        // Return empty array for unauthenticated users (public pages)
+        if (!user) return [];
 
         const factory = new ServiceFactory(supabase);
         const userService = factory.getUserService();

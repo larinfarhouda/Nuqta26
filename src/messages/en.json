@@ -57,6 +57,7 @@
         "searchResults": "Search Results",
         "eventsFound": "Events Found",
         "clearAllFilters": "Clear all filters",
+        "filters": "Filters",
         "noMatchesFound": "No matches found",
         "noMatchesDescription": "We couldn't find any events matching your current filters. Try broadening your search!",
         "resetDiscovery": "Reset Discovery",

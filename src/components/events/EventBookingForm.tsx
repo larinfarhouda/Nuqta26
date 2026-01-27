@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createBooking } from '@/actions/public/events';
 import { validateDiscountCode } from '@/actions/public/discounts';
-import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock } from 'lucide-react';
+import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
@@ -21,6 +21,14 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     const [discountCode, setDiscountCode] = useState('');
     const [appliedDiscount, setAppliedDiscount] = useState<{ id: string, amount: number, code: string } | null>(null);
     const [validatingCode, setValidatingCode] = useState(false);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+
+    const copyToClipboard = (text: string, field: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        setCopiedField(field);
+        setTimeout(() => setCopiedField(null), 2000);
+    };
 
     const activeTicket = tickets.find(t => t.id === selectedTicket);
     const basePrice = activeTicket ? activeTicket.price * quantity : 0;
@@ -181,15 +189,37 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     <div className="space-y-3">
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('bank_name')}</p>
-                            <p className="font-bold text-gray-900">{event.vendors?.bank_name || 'N/A'}</p>
+                            <p className="font-bold text-gray-900">{event.vendor?.bank_name || 'N/A'}</p>
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('account_holder')}</p>
-                            <p className="font-bold text-gray-900">{event.vendors?.bank_account_name || 'N/A'}</p>
+                            <div className="flex justify-between items-center gap-2">
+                                <p className="font-bold text-gray-900 flex-1">{event.vendor?.bank_account_name || 'N/A'}</p>
+                                <button
+                                    onClick={() => copyToClipboard(event.vendor?.bank_account_name, 'name')}
+                                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+                                    title="Copy Account Name"
+                                    disabled={!event.vendor?.bank_account_name}
+                                >
+                                    {copiedField === 'name' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('iban')}</p>
-                            <p className="font-bold text-gray-900 break-all bg-white p-2 rounded-lg border border-gray-200 mt-1 select-all">{event.vendors?.bank_iban || 'N/A'}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <p className="font-bold text-gray-900 break-all bg-white p-2 rounded-lg border border-gray-200 select-all font-mono flex-1">
+                                    {event.vendor?.bank_iban || 'N/A'}
+                                </p>
+                                <button
+                                    onClick={() => copyToClipboard(event.vendor?.bank_iban, 'iban')}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200 shrink-0"
+                                    title="Copy IBAN"
+                                    disabled={!event.vendor?.bank_iban}
+                                >
+                                    {copiedField === 'iban' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
