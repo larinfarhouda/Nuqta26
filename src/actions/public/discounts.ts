@@ -18,27 +18,27 @@ export async function validateDiscountCode(
         .single();
 
     if (error || !discount) {
-        return { error: 'Invalid discount code' };
+        return { error: 'invalid_code' };
     }
 
     // Check if it belongs to this event (if event_id is set)
     if (discount.event_id && discount.event_id !== eventId) {
-        return { error: 'This code is not valid for this event' };
+        return { error: 'invalid_for_event' };
     }
 
     // Check expiry
     if (discount.expiry_date && new Date(discount.expiry_date) < new Date()) {
-        return { error: 'Discount code has expired' };
+        return { error: 'code_expired' };
     }
 
     // Check max uses
     if (discount.max_uses && discount.used_count >= discount.max_uses) {
-        return { error: 'Discount code has reached its maximum uses' };
+        return { error: 'code_usage_limit' };
     }
 
     // Check min purchase amount
     if (totalAmount < discount.min_purchase_amount) {
-        return { error: `Minimum purchase of ${discount.min_purchase_amount} ₺ required` };
+        return { error: 'min_purchase_not_met', requiredAmount: discount.min_purchase_amount };
     }
 
     let discountAmount = 0;

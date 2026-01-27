@@ -2,8 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, MessageCircle, Star, Instagram, Globe, CheckCircle, Image as ImageIcon, Calendar, ArrowRight, Share2, Map as MapIcon, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MapPin, MessageCircle, Star, Instagram, Globe, CheckCircle, Image as ImageIcon, Calendar, ArrowRight, Share2 } from 'lucide-react';
 import EventCard from '@/components/events/EventCard';
 import { Link } from '@/navigation';
 import { useState, useRef, useEffect } from 'react';
@@ -328,7 +328,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                         </a>
                     )}
 
-                    {/ * Primary Action * /}
+                    {/* Primary Action */}
                     {vendor.whatsapp_number && (
                         <a
                             href={`https://wa.me/${vendor.whatsapp_number}`}

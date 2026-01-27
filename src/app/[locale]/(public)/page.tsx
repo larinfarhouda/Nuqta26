@@ -48,7 +48,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
     const events = await getPublicEvents({
         search,
         location,
-        date,
+        date: date as 'today' | 'tomorrow' | 'weekend' | 'week' | undefined,
         category,
         minPrice,
         maxPrice,

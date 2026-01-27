@@ -2,133 +2,165 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { ServiceFactory } from '@/services/service-factory';
+import { logger } from '@/lib/logger/logger';
+import { UnauthorizedError } from '@/lib/errors/app-error';
 
+/**
+ * Toggle favorite event
+ */
 export async function toggleFavoriteEvent(eventId: string, isFavorite: boolean) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: 'Unauthorized' };
+        if (!user) return { error: 'Unauthorized' };
 
-    if (isFavorite) {
-        // Remove favorite
-        const { error } = await supabase
-            .from('favorite_events')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('event_id', eventId);
+        const factory = new ServiceFactory(supabase);
+        const userService = factory.getUserService();
 
-        if (error) return { error: error.message };
-    } else {
-        // Add favorite
-        const { error } = await supabase
-            .from('favorite_events')
-            .insert({ user_id: user.id, event_id: eventId });
+        await userService.toggleFavorite(user.id, eventId);
 
-        if (error) return { error: error.message };
+        revalidatePath('/dashboard/user/favorites');
+        revalidatePath(`/events/${eventId}`);
+        logger.info('Favorite toggled', { userId: user.id, eventId, isFavorite: !isFavorite });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to toggle favorite', { error, eventId });
+        return { error: error instanceof Error ? error.message : 'Failed to toggle favorite' };
     }
-
-    revalidatePath('/dashboard/user/favorites');
-    revalidatePath(`/events/${eventId}`);
-    return { success: true };
 }
 
+/**
+ * Get user favorites
+ */
 export async function getUserFavorites() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+        if (!user) throw new UnauthorizedError();
 
-    const { data, error } = await supabase
-        .from('favorite_events')
-        .select('event:events(*, vendors(business_name, company_logo))')
-        .eq('user_id', user.id);
+        const factory = new ServiceFactory(supabase);
+        const userService = factory.getUserService();
 
-    if (error) return [];
+        const favorites = await userService.getFavorites(user.id);
+        logger.info('User favorites fetched', { userId: user.id, count: favorites.length });
 
-    // Flatten the structure to return just a list of events
-    return data.map((item: any) => item.event);
+        return favorites.map((item: any) => item.event);
+    } catch (error) {
+        logger.error('Failed to get favorites', { error });
+        return [];
+    }
 }
 
+/**
+ * Get user bookings
+ */
 export async function getUserBookings() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+        if (!user) throw new UnauthorizedError();
 
-    const { data, error } = await supabase
-        .from('bookings')
-        .select('*, event:events(*, vendors(business_name, company_logo))')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        const factory = new ServiceFactory(supabase);
+        const bookingService = factory.getBookingService();
 
-    if (error) return [];
+        const bookings = await bookingService.getUserBookings(user.id);
+        logger.info('User bookings fetched', { userId: user.id, count: bookings.length });
 
-    return data;
+        return bookings;
+    } catch (error) {
+        logger.error('Failed to get user bookings', { error });
+        return [];
+    }
 }
 
-
+/**
+ * Get user favorite IDs
+ */
 export async function getUserFavoriteIds() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+        if (!user) throw new UnauthorizedError();
 
-    const { data, error } = await supabase
-        .from('favorite_events')
-        .select('event_id')
-        .eq('user_id', user.id);
+        const factory = new ServiceFactory(supabase);
+        const userService = factory.getUserService();
 
-    if (error) return [];
+        const favoriteIds = await userService.getFavoriteIds(user.id);
+        logger.info('User favorite IDs fetched', { userId: user.id, count: favoriteIds.length });
 
-    return data.map((item: any) => item.event_id);
+        return favoriteIds;
+    } catch (error) {
+        logger.error('Failed to get favorite IDs', { error });
+        return [];
+    }
 }
 
+/**
+ * Check if event is favorite
+ */
 export async function isEventFavorite(eventId: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+        if (!user) return false;
 
-    const { data } = await supabase
-        .from('favorite_events')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('event_id', eventId)
-        .single();
+        const factory = new ServiceFactory(supabase);
+        const userRepo = (factory as any).userRepo;
 
-    return !!data;
+        const isFav = await userRepo.isFavorite(user.id, eventId);
+        return isFav;
+    } catch (error) {
+        logger.error('Failed to check favorite status', { error, eventId });
+        return false;
+    }
 }
 
+/**
+ * Update user profile
+ */
 export async function updateUserProfile(data: {
-    full_name: string | null, // Allow null if form allows it, but form requires it. Keeping strict string if required.
-    age?: number | null,
-    gender?: string | null,
-    country?: string | null,
-    city?: string | null,
-    district?: string | null,
-    phone?: string | null
+    full_name: string | null;
+    age?: number | null;
+    gender?: string | null;
+    country?: string | null;
+    city?: string | null;
+    district?: string | null;
+    phone?: string | null;
 }) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: 'Unauthorized' };
+        if (!user) return { error: 'Unauthorized' };
 
-    // Filter out undefined values
-    const updates: any = { full_name: data.full_name };
-    if (data.age !== undefined) updates.age = data.age;
-    if (data.gender !== undefined) updates.gender = data.gender;
-    if (data.country !== undefined) updates.country = data.country;
-    if (data.city !== undefined) updates.city = data.city;
-    if (data.district !== undefined) updates.district = data.district;
-    if (data.phone !== undefined) updates.phone = data.phone;
+        // Filter out undefined values
+        const updates: any = {};
+        if (data.full_name !== undefined) updates.full_name = data.full_name;
+        if (data.age !== undefined) updates.age = data.age;
+        if (data.gender !== undefined) updates.gender = data.gender;
+        if (data.country !== undefined) updates.country = data.country;
+        if (data.city !== undefined) updates.city = data.city;
+        if (data.district !== undefined) updates.district = data.district;
+        if (data.phone !== undefined) updates.phone = data.phone;
 
-    const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
+        const factory = new ServiceFactory(supabase);
+        const userService = factory.getUserService();
 
-    if (error) return { error: error.message };
+        await userService.updateProfile(user.id, updates);
 
-    revalidatePath('/dashboard/user/profile');
-    return { success: true };
+        revalidatePath('/dashboard/user/profile');
+        logger.info('User profile updated', { userId: user.id });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to update profile', { error });
+        return { error: error instanceof Error ? error.message : 'Failed to update profile' };
+    }
 }

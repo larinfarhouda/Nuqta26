@@ -1,8 +1,22 @@
--- Enable UUID extension
+-- Superbase Consolidated Schema
+-- This file represents the ideal structure of the database.
+-- It consolidates all previous migrations and the existing schema.sql.
+
+-- -----------------------------------------------------------------------------
+-- 1. EXTENSIONS
+-- -----------------------------------------------------------------------------
 create extension if not exists "uuid-ossp";
 
--- USERS & PROFILES
--- Suggestion: Link this to auth.users via a trigger to auto-create profile on signup
+-- -----------------------------------------------------------------------------
+-- 2. ENUMS & TYPES (Optional, usually we use text with check constraints)
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- 3. TABLES
+-- -----------------------------------------------------------------------------
+
+-- 3.1 PROFILES
+-- Link to auth.users.
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
@@ -17,15 +31,267 @@ create table if not exists profiles (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
-
--- Enable RLS
+-- RLS: Enabled
 alter table profiles enable row level security;
+-- Policies defined below.
 
--- Policies
+-- 3.2 VENDORS
+-- Represents event organizers/vendors.
+create table if not exists vendors (
+  id uuid primary key references auth.users(id) on delete cascade,
+  business_name text not null,
+  company_logo text,
+  cover_image text, -- From migration: add_vendor_cover
+  phone text,
+  slug text unique, -- From migration: add_vendor_slugs
+  
+  -- Bank Details (From migration: add_bank_transfer_fields)
+  bank_name text,
+  bank_account_name text,
+  bank_iban text,
+
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists vendors_slug_idx on vendors (slug);
+-- RLS: Should be enabled.
+alter table vendors enable row level security;
+
+-- 3.3 CATEGORIES
+create table if not exists categories (
+  id uuid default uuid_generate_v4() primary key,
+  slug text not null unique,
+  name_en text not null,
+  name_ar text,
+  icon text,
+  created_at timestamptz default now()
+);
+-- RLS: Should be enabled to allow public read, admin write.
+alter table categories enable row level security;
+
+-- 3.4 EVENTS
+create table if not exists events (
+  id uuid default uuid_generate_v4() primary key,
+  vendor_id uuid references vendors(id) on delete cascade not null, -- FK: Link to Vendor
+  category_id uuid references categories(id) on delete set null,    -- FK: Link to Category
+  
+  title text not null,
+  slug text unique,
+  description text,
+  image_url text,
+  
+  -- Date & Time
+  date timestamptz not null,
+  end_date timestamptz,
+  
+  -- Recurrence
+  is_recurring boolean default false,
+  recurrence_type text, -- 'daily', 'weekly', etc.
+  recurrence_days jsonb, -- e.g. ["Monday", "Wednesday"]
+  recurrence_end_date timestamptz,
+  
+  -- Location
+  location_name text,
+  location_lat float,
+  location_long float,
+  district text,
+  city text,
+  country text,
+  
+  capacity int,
+  status text default 'draft', -- 'draft', 'published', 'cancelled'
+  event_type text,
+  
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+-- RLS: Enabled. Public read (published), Vendor write (own events).
+alter table events enable row level security;
+
+-- 3.5 TICKETS
+create table if not exists tickets (
+  id uuid default uuid_generate_v4() primary key,
+  event_id uuid references events(id) on delete cascade not null, -- FK: Link to Event
+  name text not null,
+  price numeric not null default 0,
+  quantity int not null,
+  sold int default 0,
+  
+  created_at timestamptz default now(),
+  constraint tickets_sold_check check (sold >= 0 and sold <= quantity)
+);
+create index if not exists idx_tickets_event_id on tickets(event_id);
+-- RLS: Enabled. Public read, Vendor write (own).
+alter table tickets enable row level security;
+
+-- 3.6 DISCOUNT CODES (From migration: add_discounts)
+create table if not exists discount_codes (
+  id uuid default gen_random_uuid() primary key,
+  vendor_id uuid references vendors(id) on delete cascade not null, -- FK: Link to Vendor
+  event_id uuid references events(id) on delete cascade,            -- FK: Specific event (optional)
+  code text not null,
+  discount_type text check (discount_type in ('percentage', 'fixed')) not null,
+  discount_value numeric not null,
+  min_purchase_amount numeric default 0,
+  max_uses int,
+  used_count int default 0,
+  is_active boolean default true,
+  expiry_date timestamptz,
+  created_at timestamptz default now(),
+  unique(vendor_id, code)
+);
+-- RLS: Enabled. Vendor manage own, Public view active.
+alter table discount_codes enable row level security;
+
+-- 3.7 BULK DISCOUNTS (From migration: add_discounts)
+create table if not exists bulk_discounts (
+  id uuid default gen_random_uuid() primary key,
+  event_id uuid references events(id) on delete cascade not null, -- FK: Link to Event
+  min_quantity int not null,
+  discount_type text check (discount_type in ('percentage', 'fixed')) not null,
+  discount_value numeric not null,
+  created_at timestamptz default now()
+);
+-- RLS: Enabled. Vendor manage own, Public view.
+alter table bulk_discounts enable row level security;
+
+-- 3.8 BOOKINGS
+create table if not exists bookings (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references profiles(id) on delete set null,  -- FK: Link to User
+  event_id uuid references events(id) on delete restrict,   -- FK: Link to Event
+  vendor_id uuid references vendors(id) on delete restrict, -- FK: Link to Vendor (denormalized)
+  
+  discount_code_id uuid references discount_codes(id) on delete set null, -- FK: Link to Discount
+  
+  status text default 'confirmed', -- 'confirmed', 'cancelled', 'pending_payment', 'payment_submitted'
+  total_amount numeric default 0,
+  discount_amount numeric default 0,
+  
+  -- Payment Details (From migration: add_bank_transfer_fields)
+  payment_method text default 'bank_transfer',
+  payment_proof_url text,
+  payment_note text,
+  
+  created_at timestamptz default now()
+);
+-- RLS: Enabled. User view own, Vendor view own events' bookings.
+alter table bookings enable row level security;
+
+-- 3.9 BOOKING ITEMS
+create table if not exists booking_items (
+  id uuid default uuid_generate_v4() primary key,
+  booking_id uuid references bookings(id) on delete cascade not null, -- FK: Link to Booking
+  ticket_id uuid references tickets(id) on delete set null,           -- FK: Link to Ticket
+  attendee_name text,
+  attendee_email text,
+  price_at_booking numeric,
+  status text default 'active',
+  created_at timestamptz default now()
+);
+-- RLS: Implicitly managed via booking access usually, or explicit RLS.
+
+-- 3.10 FAVORITE EVENTS
+create table if not exists favorite_events (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references profiles(id) on delete cascade not null, -- FK: Link to User
+  event_id uuid references events(id) on delete cascade not null,  -- FK: Link to Event
+  created_at timestamptz default now(),
+  unique(user_id, event_id)
+);
+-- RLS: Enabled. User manage own.
+alter table favorite_events enable row level security;
+
+-- 3.11 EVENT REVIEWS (From migration: add_event_reviews)
+create table if not exists event_reviews (
+  id uuid default gen_random_uuid() primary key,
+  event_id uuid references events(id) on delete cascade not null, -- FK: Link to Event
+  user_id uuid references profiles(id) on delete set null,        -- FK: Link to User
+  booking_id uuid references bookings(id) on delete set null,     -- FK: Link to Booking (verified purchase)
+  rating int not null check (rating >= 1 and rating <= 5),
+  comment text,
+  is_flagged boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(event_id, user_id)
+);
+create index idx_event_reviews_event_id on event_reviews(event_id);
+create index idx_event_reviews_user_id on event_reviews(user_id);
+-- RLS: Enabled. Public view (non-flagged), Users insert (if attended), Users update/delete own.
+alter table event_reviews enable row level security;
+
+-- 3.12 REVIEW HELPFUL (From migration: add_event_reviews)
+create table if not exists review_helpful (
+  id uuid default gen_random_uuid() primary key,
+  review_id uuid references event_reviews(id) on delete cascade not null, -- FK: Link to Review
+  user_id uuid references profiles(id) on delete cascade not null,        -- FK: Link to User
+  is_helpful boolean not null,
+  created_at timestamptz default now(),
+  unique(review_id, user_id)
+);
+-- RLS: Enabled. Public view, Auth users vote.
+alter table review_helpful enable row level security;
+
+-- 3.13 REVIEW FLAGS (From migration: add_event_reviews / schema)
+create table if not exists review_flags (
+  id uuid primary key default uuid_generate_v4(),
+  review_id uuid not null references event_reviews(id) on delete cascade, -- FK: Link to Review
+  user_id uuid not null references profiles(id) on delete cascade,        -- FK: Link to User
+  reason text,
+  created_at timestamptz default now(),
+  unique(review_id, user_id)
+);
+-- RLS: Enabled. User view own, User insert own.
+alter table review_flags enable row level security;
+
+-- -----------------------------------------------------------------------------
+-- 4. STORAGE
+-- -----------------------------------------------------------------------------
+-- Bucket: booking-receipts
+insert into storage.buckets (id, name, public)
+values ('booking-receipts', 'booking-receipts', true)
+on conflict (id) do nothing;
+-- RLS for storage should be handled in Supabase dashboard or via policies below.
+
+-- -----------------------------------------------------------------------------
+-- 5. RLS POLICIES (Consolidated Suggestions)
+-- -----------------------------------------------------------------------------
+
+-- Profiles
 create policy "Public profiles are viewable by everyone" on profiles for select using (true);
 create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
 
--- Trigger to sync email and handle profile creation
+-- Vendors
+create policy "Vendors are viewable by everyone" on vendors for select using (true);
+create policy "Vendors can update own profile" on vendors for update using (auth.uid() = id);
+
+-- Categories
+create policy "Categories are viewable by everyone" on categories for select using (true);
+
+-- Events
+create policy "Published events are viewable by everyone" on events for select using (status = 'published');
+create policy "Vendors can manage own events" on events for all using (auth.uid() = vendor_id);
+
+-- Tickets
+create policy "Tickets are viewable by everyone" on tickets for select using (true);
+create policy "Vendors can manage own event tickets" on tickets for all using (
+  exists (select 1 from events where events.id = tickets.event_id and events.vendor_id = auth.uid())
+);
+
+-- Bookings
+create policy "Users can view own bookings" on bookings for select using (auth.uid() = user_id);
+create policy "Vendors can view bookings for their events" on bookings for select using (auth.uid() = vendor_id);
+
+-- Reviews
+create policy "Reviews are publicly viewable" on event_reviews for select using (true);
+create policy "Users can update own reviews" on event_reviews for update using (auth.uid() = user_id);
+-- Note: Insert policy is complex (validation of attendance), see Functions section or migration.
+
+-- -----------------------------------------------------------------------------
+-- 6. FUNCTIONS & TRIGGERS
+-- -----------------------------------------------------------------------------
+
+-- 6.1 Profile Management triggers
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -56,161 +322,13 @@ create trigger on_auth_user_updated
   after update on auth.users
   for each row execute procedure public.handle_user_update();
 
-
--- VENDORS
--- Represents event organizers/vendors. 
--- Suggestion: Link to auth.users similar to profiles, or handle via separate registration flow.
-create table if not exists vendors (
-  id uuid primary key references auth.users(id) on delete cascade,
-  business_name text not null,
-  company_logo text,
-  phone text,
-  -- Add other business details from registration if needed (e.g., tax_id, address)
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
--- RLS Suggestion:
--- alter table vendors enable row level security;
--- create policy "Vendors are viewable by everyone" on vendors for select using (true);
--- create policy "Vendors can update own profile" on vendors for update using (auth.uid() = id);
-
-
--- CATEGORIES
-create table if not exists categories (
-  id uuid default uuid_generate_v4() primary key,
-  slug text not null unique,
-  name_en text not null,
-  name_ar text,
-  icon text,
-  created_at timestamptz default now()
-);
-
--- RLS Suggestion:
--- alter table categories enable row level security;
--- create policy "Categories are viewable by everyone" on categories for select using (true);
--- create policy "Only admins can insert/update categories" on categories for all using (auth.role() = 'service_role');
-
-
--- EVENTS
-create table if not exists events (
-  id uuid default uuid_generate_v4() primary key,
-  vendor_id uuid references vendors(id) on delete cascade not null,
-  category_id uuid references categories(id) on delete set null,
-  
-  title text not null,
-  slug text unique,
-  description text,
-  image_url text,
-  
-  -- Date & Time
-  date timestamptz not null,
-  end_date timestamptz,
-  
-  -- Recurrence
-  is_recurring boolean default false,
-  recurrence_type text, -- 'daily', 'weekly', etc.
-  recurrence_days jsonb, -- e.g. ["Monday", "Wednesday"]
-  recurrence_end_date timestamptz,
-  
-  -- Location (Denormalized for search performance, or use PostGIS)
-  location_name text,
-  location_lat float,
-  location_long float,
-  district text,
-  city text,
-  country text,
-  
-  capacity int,
-  status text default 'draft', -- 'draft', 'published', 'cancelled'
-  event_type text, -- Deprecated in favor of category_id/slug? Kept for backward compatibility if needed.
-  
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
--- RLS Suggestion:
--- alter table events enable row level security;
--- create policy "Published events are viewable by everyone" on events for select using (status = 'published');
--- create policy "Vendors can manage own events" on events for all using (auth.uid() = vendor_id);
-
-
--- TICKETS
-create table if not exists tickets (
-  id uuid default uuid_generate_v4() primary key,
-  event_id uuid references events(id) on delete cascade not null,
-  name text not null, -- e.g. "General Admission", "VIP"
-  price numeric not null default 0,
-  quantity int not null, -- Total available for this type
-  sold int default 0,
-  
-  created_at timestamptz default now(),
-  constraint tickets_sold_check check (sold >= 0 and sold <= quantity)
-);
-
-create index if not exists idx_tickets_event_id on tickets(event_id);
-
--- RLS Suggestion:
--- alter table tickets enable row level security;
--- create policy "Tickets are viewable by everyone" on tickets for select using (true);
--- create policy "Vendors can manage own event tickets" on tickets for all using (
---   exists (select 1 from events where events.id = tickets.event_id and events.vendor_id = auth.uid())
--- );
-
-
-create table if not exists bookings (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references profiles(id) on delete set null, -- User who booked
-  event_id uuid references events(id) on delete restrict, -- Event booked
-  vendor_id uuid references vendors(id) on delete restrict, -- Vendor (denormalized for easier querying by vendor)
-  
-  status text default 'confirmed', -- 'confirmed', 'cancelled', 'pending'
-  total_amount numeric default 0,
-  
-  created_at timestamptz default now()
-);
-
--- BOOKING ITEMS
-create table if not exists booking_items (
-  id uuid default uuid_generate_v4() primary key,
-  booking_id uuid references bookings(id) on delete cascade not null,
-  ticket_id uuid references tickets(id) on delete set null,
-  attendee_name text,
-  attendee_email text,
-  price_at_booking numeric,
-  status text default 'active', -- 'active', 'cancelled'
-  created_at timestamptz default now()
-);
-
--- RLS Suggestion:
--- alter table bookings enable row level security;
--- create policy "Users can view own bookings" on bookings for select using (auth.uid() = user_id);
--- create policy "Vendors can view bookings for their events" on bookings for select using (auth.uid() = vendor_id);
-
-
--- FAVORITE EVENTS
-create table if not exists favorite_events (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references profiles(id) on delete cascade not null,
-  event_id uuid references events(id) on delete cascade not null,
-  created_at timestamptz default now(),
-  unique(user_id, event_id)
-);
-
--- RLS Suggestion:
--- alter table favorite_events enable row level security;
--- create policy "Users can manage own favorites" on favorite_events for all using (auth.uid() = user_id);
-
-
--- FUNCTIONS
-
--- Advanced Event Search Function
--- Calculates distance (Haversine), filters by category, date, price, etc.
+-- 6.2 Advanced Event Search (get_events_pro)
+-- Consolidates location search, filtering, and joining data.
 create or replace function get_events_pro(
   p_lat float default null,
   p_long float default null,
   p_radius_km float default null,
-  p_category text default null, -- can be category slug
+  p_category text default null,
   p_min_price float default null,
   p_max_price float default null,
   p_search text default null,
@@ -293,7 +411,6 @@ begin
   where
     e.status = 'published'
     and (p_category is null or c.slug = p_category or e.event_type = p_category)
-    -- Note: p_search may contain wildcards like % or _ which are intentionally supported for flexible matching
     and (p_search is null or e.title ilike '%' || p_search || '%')
     and (p_date_start is null or e.date >= p_date_start)
     and (p_date_end is null or e.date <= p_date_end)
@@ -332,45 +449,8 @@ begin
 end;
 $$;
 
--- Batch RPC for Helpful Counts (v2 with user vote check)
-create or replace function get_reviews_helpful_counts(p_review_ids uuid[], p_user_id uuid default null)
-returns table (
-  review_id uuid, 
-  helpful_count bigint, 
-  not_helpful_count bigint,
-  user_voted boolean
-)
-as $$
-  select r.id as review_id, 
-         count(h.id) filter (where h.is_helpful = true) as helpful_count,
-         count(h.id) filter (where h.is_helpful = false) as not_helpful_count,
-         coalesce(bool_or(h.user_id = p_user_id and h.is_helpful = true), false) as user_voted
-  from unnest(p_review_ids) as r(id)
-  left join review_helpful h on h.review_id = r.id
-  group by r.id;
-$$ language sql stable;
--- REVIEW FLAGS TABLE
-create table if not exists review_flags (
-  id uuid primary key default uuid_generate_v4(),
-  review_id uuid not null references event_reviews(id) on delete cascade,
-  user_id uuid not null references profiles(id) on delete cascade,
-  reason text,
-  created_at timestamptz default now(),
-  unique(review_id, user_id)
-);
-
--- Enable RLS on review_flags
-alter table review_flags enable row level security;
-
--- Policy: Users can see their own flags
-create policy "Users can see own flags" on review_flags
-  for select using (auth.uid() = user_id);
-
--- Policy: Users can flag once (insert)
-create policy "Users can flag reviews" on review_flags
-  for insert with check (auth.uid() = user_id);
-
--- TRANSACTIONAL BOOKING RPC
+-- 6.3 Transactional Booking (place_booking)
+-- Handles inventory check, booking creation, and discount application atomically.
 create or replace function place_booking(
   p_event_id uuid,
   p_ticket_id uuid,
@@ -412,22 +492,18 @@ begin
     vendor_id, 
     user_id, 
     total_amount, 
-    status
+    status,
+    discount_amount,
+    discount_code_id
   ) values (
     p_event_id,
     v_vendor_id,
     p_user_id,
     p_total_amount,
-    case when p_total_amount > 0 then 'pending_payment' else 'confirmed' end
+    case when p_total_amount > 0 then 'pending_payment' else 'confirmed' end,
+    p_discount_amount,
+    p_discount_code_id
   ) returning id into v_booking_id;
-
-  -- Update with additional fields if migrations already applied (softly)
-  -- Since we use text for status, we match the text.
-  -- Add discount info if columns exist
-  update bookings set 
-    discount_amount = p_discount_amount,
-    discount_code_id = p_discount_code_id
-  where id = v_booking_id;
 
   -- 4. Create booking items
   for i in 1..p_quantity loop
@@ -455,5 +531,68 @@ begin
   end if;
 
   return jsonb_build_object('success', true, 'booking_id', v_booking_id);
+end;
+$$;
+
+-- 6.4 Review Helper Functions
+create or replace function get_event_rating_summary(p_event_id uuid)
+returns table (
+  average_rating numeric,
+  review_count bigint,
+  rating_1_count bigint,
+  rating_2_count bigint,
+  rating_3_count bigint,
+  rating_4_count bigint,
+  rating_5_count bigint
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    round(avg(rating)::numeric, 2) as average_rating,
+    count(*)::bigint as review_count,
+    count(*) filter (where rating = 1)::bigint as rating_1_count,
+    count(*) filter (where rating = 2)::bigint as rating_2_count,
+    count(*) filter (where rating = 3)::bigint as rating_3_count,
+    count(*) filter (where rating = 4)::bigint as rating_4_count,
+    count(*) filter (where rating = 5)::bigint as rating_5_count
+  from event_reviews
+  where event_id = p_event_id;
+end;
+$$;
+
+create or replace function can_user_review_event(p_user_id uuid, p_event_id uuid)
+returns boolean
+language plpgsql
+as $$
+declare
+  has_attended boolean;
+  already_reviewed boolean;
+  event_passed boolean;
+begin
+  -- Check if user has a confirmed booking
+  select exists (
+    select 1 from bookings
+    where user_id = p_user_id
+      and event_id = p_event_id
+      and status = 'confirmed'
+  ) into has_attended;
+  
+  -- Check if user already reviewed
+  select exists (
+    select 1 from event_reviews
+    where user_id = p_user_id
+      and event_id = p_event_id
+  ) into already_reviewed;
+  
+  -- Check if event has passed
+  select exists (
+    select 1 from events
+    where id = p_event_id
+      and date < now()
+  ) into event_passed;
+  
+  return has_attended and not already_reviewed and event_passed;
 end;
 $$;

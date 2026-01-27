@@ -21,13 +21,13 @@ export default function BookingVendorTemplate({
 }: BookingVendorTemplateProps) {
     return (
         <EmailLayout preview={`New Booking: ${eventName}`} locale="en">
-            <Section className="bg-teal-50 rounded-3xl p-4 md:p-8 border border-teal-100">
+            <Section className="bg-teal-50 rounded-3xl p-4 border border-teal-100">
                 <Heading className="text-xl font-bold mb-4 text-teal-800">
                     New Booking Request 🚀
                 </Heading>
 
                 <Text className="text-teal-900 text-base mb-6 leading-relaxed">
-                    Hi {vendorName}, you have a new booking for <strong>{eventName}</strong>!
+                    Hi {vendorName}, you have a new booking for <strong>{eventName}</strong> that needs your confirmation!
                 </Text>
 
                 <Hr className="border-teal-200 my-6" />
@@ -45,10 +45,10 @@ export default function BookingVendorTemplate({
 
                 <Section className="mt-8 text-center">
                     <Button
-                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.com'}/dashboard/vendor/bookings`}
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist'}/dashboard/vendor/bookings`}
                         className="bg-teal-600 text-white font-bold py-3 px-6 rounded-xl block w-full text-center no-underline"
                     >
-                        Manage Bookings
+                        Review & Confirm Booking
                     </Button>
                 </Section>
 

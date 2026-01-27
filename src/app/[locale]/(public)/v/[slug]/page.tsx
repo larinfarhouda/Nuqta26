@@ -37,7 +37,7 @@ export default async function VendorProfilePage({ params }: { params: any }) {
         name: vendor.business_name,
         image: vendor.company_logo,
         description: vendor.description_ar,
-        url: `https://nuqta.com/v/${slug}`,
+        url: `https://nuqta.ist/v/${slug}`,
         telephone: vendor.whatsapp_number,
         address: {
             '@type': 'PostalAddress',

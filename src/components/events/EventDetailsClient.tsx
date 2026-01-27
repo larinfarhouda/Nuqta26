@@ -225,6 +225,18 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100">
+                                    <Clock className="w-5 h-5 text-primary" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('time')}</span>
+                                    <span className="text-sm font-black text-gray-900 capitalize" dir="ltr">
+                                        {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100">
                                     <MapPin className="w-5 h-5 text-primary" />
                                 </div>
                                 <div className="flex flex-col">

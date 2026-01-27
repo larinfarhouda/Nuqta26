@@ -12,7 +12,7 @@ export const EmailLayout = ({ children, locale = 'en', preview }: EmailLayoutPro
     const dir = isRtl ? 'rtl' : 'ltr';
 
     // TODO: Replace with your actual production URL where the logo is hosted
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
     const logoUrl = `${baseUrl}/nuqta_logo_transparent.png`;
 
     return (

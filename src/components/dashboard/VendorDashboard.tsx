@@ -9,6 +9,7 @@ import {
 import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
+import { getPendingBookingsCount } from '@/actions/vendor/bookings';
 
 // Dynamic imports for tab components  
 const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
@@ -75,6 +76,7 @@ export default function VendorDashboard() {
     const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>('LOADING');
     const [vendorData, setVendorData] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS'>('ANALYTICS');
+    const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
 
     // Alert State
     const [alertState, setAlertState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
@@ -107,6 +109,10 @@ export default function VendorDashboard() {
                 if (city) inferredDistrict = city.id;
             }
             setVendorData({ ...data, district: inferredDistrict });
+
+            // Fetch pending bookings count
+            getPendingBookingsCount().then(count => setPendingBookingsCount(count));
+
             setStep('DASHBOARD');
         } else {
             setStep('DETAILS');
@@ -169,6 +175,11 @@ export default function VendorDashboard() {
                             >
                                 <tab.icon className="w-5 h-5" />
                                 {tab.label}
+                                {tab.id === 'BOOKINGS' && pendingBookingsCount > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded-full animate-bounce">
+                                        {pendingBookingsCount}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>

@@ -131,8 +131,12 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                                     : (event.district || event.city || event.location_name || t('default_location'))}
                             </span>
                         </p>
-                        <p className={`text-xs md:text-sm font-bold ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
-                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        <p className={`text-xs md:text-sm font-bold ${isExpired ? 'text-red-400' : 'text-gray-400'} flex items-center gap-1.5 flex-row-reverse justify-start`}>
+                            <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                            <span dir="ltr">
+                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            </span>
                         </p>
                     </div>
 

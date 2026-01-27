@@ -261,7 +261,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                                     <select {...register('event_type')} className={`input-field appearance-none ${errors.event_type ? 'border-red-500' : ''}`} disabled={categoriesLoading}>
                                         <option value="">{categoriesLoading ? 'جاري التحميل...' : (categoryFetchError ? 'خطأ في تحميل التصنيفات' : 'اختر النوع')}</option>
                                         {categories.map((cat) => (
-                                            <option key={cat.id} value={cat.id}>
+                                            <option key={cat.id} value={cat.slug}>
                                                 {cat.name_ar || cat.name_en}
                                             </option>
                                         ))}

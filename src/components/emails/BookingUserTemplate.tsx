@@ -39,7 +39,7 @@ export default function BookingUserTemplate({
 
     return (
         <EmailLayout preview={`${statusText[status]}: ${eventName}`} locale="en">
-            <Section className="bg-white rounded-3xl p-4 md:p-8">
+            <Section className="bg-white rounded-3xl p-4">
                 <Heading className="text-xl font-bold mb-4" style={{ color: statusColor[status] }}>
                     {statusText[status]}
                 </Heading>
@@ -79,7 +79,7 @@ export default function BookingUserTemplate({
             </Section>
 
             <Section className="mt-8 text-center">
-                <Link href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.com'}/dashboard/bookings/${bookingId}`} className="text-gray-500 text-sm hover:text-gray-900 underline">
+                <Link href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist'}/dashboard/bookings/${bookingId}`} className="text-gray-500 text-sm underline">
                     View Booking Details
                 </Link>
             </Section>

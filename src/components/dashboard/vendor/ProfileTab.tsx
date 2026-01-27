@@ -203,7 +203,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase">{t('profile_link')}</label>
                             <div className="bg-gray-50 rounded-xl p-1 flex items-center text-sm border border-gray-200">
-                                <span className="text-gray-400 font-medium px-3 select-none">nuqta.com/v/</span>
+                                <span className="text-gray-400 font-medium px-3 select-none">nuqta.ist/v/</span>
                                 <input
                                     {...register('slug')}
                                     className="flex-1 bg-transparent border-none outline-none text-gray-900 font-mono focus:ring-0 p-2"

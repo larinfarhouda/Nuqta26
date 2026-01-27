@@ -2,141 +2,119 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { sendEmail } from '@/utils/mail';
-import BookingUserTemplate from '@/components/emails/BookingUserTemplate';
+import { ServiceFactory } from '@/services/service-factory';
+import { logger } from '@/lib/logger/logger';
+import { UnauthorizedError } from '@/lib/errors/app-error';
 
+/**
+ * Get vendor bookings
+ */
 export async function getVendorBookings() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+        if (!user) throw new UnauthorizedError();
 
-    const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-            *,
-            events (title, event_type),
-            profiles:user_id (full_name, email, avatar_url)
-        `)
-        .eq('vendor_id', user.id)
-        .order('created_at', { ascending: false });
+        const factory = new ServiceFactory(supabase);
+        const bookingService = factory.getBookingService();
 
-    if (error) {
-        console.error('Error fetching bookings:', error);
+        const bookings = await bookingService.getVendorBookings(user.id);
+        logger.info('Vendor bookings fetched', { vendorId: user.id, count: bookings.length });
+
+        return bookings;
+    } catch (error) {
+        logger.error('Failed to get vendor bookings', { error });
         return [];
     }
-
-    return data;
 }
 
+/**
+ * Get vendor customers
+ */
 export async function getVendorCustomers() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+        if (!user) throw new UnauthorizedError();
 
-    // Fetch confirmed bookings to analyze customers
-    const { data: bookings, error } = await supabase
-        .from('bookings')
-        .select(`
-            user_id,
-            total_amount,
-            created_at,
-            events (event_type),
-            profiles:user_id (full_name, email, avatar_url)
-        `)
-        .eq('vendor_id', user.id)
-        .eq('status', 'confirmed');
+        const factory = new ServiceFactory(supabase);
+        const bookingService = factory.getBookingService();
 
-    if (error) return [];
+        const customers = await bookingService.getVendorCustomers(user.id);
+        logger.info('Vendor customers fetched', { vendorId: user.id, count: customers.length });
 
-    // Aggregate data by User
-    const customerMap = new Map();
+        return customers;
+    } catch (error) {
+        logger.error('Failed to get vendor customers', { error });
+        return [];
+    }
+}
 
-    bookings.forEach((booking: any) => {
-        if (!booking.user_id) return; // Skip guest bookings for now if any
+/**
+ * Update booking status
+ */
+export async function updateBookingStatus(
+    bookingId: string,
+    status: 'confirmed' | 'cancelled'
+) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!customerMap.has(booking.user_id)) {
-            customerMap.set(booking.user_id, {
-                id: booking.user_id,
-                name: booking.profiles?.full_name || 'Guest',
-                email: booking.profiles?.email || 'No Email',
-                avatar: booking.profiles?.avatar_url,
-                total_spent: 0,
-                bookings_count: 0,
-                last_booking: booking.created_at,
-                types_preferred: new Set()
+        if (!user) return { error: 'Unauthorized' };
+
+        const factory = new ServiceFactory(supabase);
+        const bookingService = factory.getBookingService();
+        const notificationService = factory.getNotificationService();
+
+        // Update status
+        await bookingService.updateBookingStatus(bookingId, user.id, status);
+
+        // Get booking details for notification
+        const bookingDetails = await bookingService.getBookingDetails(bookingId);
+
+        // Send notification
+        if (bookingDetails && (bookingDetails as any).profiles) {
+            await notificationService.sendBookingStatusUpdate({
+                customerEmail: (bookingDetails as any).profiles.email || '',
+                customerName: (bookingDetails as any).profiles.full_name || 'Customer',
+                eventTitle: (bookingDetails as any).events?.title || 'Event',
+                bookingId,
+                status
             });
         }
 
-        const customer = customerMap.get(booking.user_id);
-        customer.total_spent += booking.total_amount || 0;
-        customer.bookings_count += 1;
-        if (new Date(booking.created_at) > new Date(customer.last_booking)) {
-            customer.last_booking = booking.created_at;
-        }
-        if (booking.events?.event_type) {
-            customer.types_preferred.add(booking.events.event_type);
-        }
-    });
+        revalidatePath('/dashboard/vendor');
+        logger.info('Booking status updated', { bookingId, status });
 
-    return Array.from(customerMap.values()).map(c => ({
-        ...c,
-        types_preferred: Array.from(c.types_preferred)
-    }));
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to update booking status', { error, bookingId, status });
+        return { error: error instanceof Error ? error.message : 'Failed to update booking' };
+    }
 }
 
-export async function updateBookingStatus(bookingId: string, status: 'confirmed' | 'cancelled') {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+/**
+ * Get pending bookings count
+ */
+export async function getPendingBookingsCount() {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: 'Unauthorized' };
+        if (!user) return 0;
 
-    const { data: updatedRows, error } = await supabase
-        .from('bookings')
-        .update({ status })
-        .eq('id', bookingId)
-        .eq('vendor_id', user.id)
-        .select();
+        const factory = new ServiceFactory(supabase);
+        const bookingService = factory.getBookingService();
 
-    if (error) return { error: error.message };
-    if (!updatedRows || updatedRows.length === 0) {
-        return { error: 'Booking not found or you do not have permission to update it' };
+        const count = await bookingService.getPendingCount(user.id);
+        logger.info('Pending bookings count fetched', { vendorId: user.id, count });
+
+        return count;
+    } catch (error) {
+        logger.error('Failed to get pending bookings count', { error });
+        return 0;
     }
-
-
-    // --- NOTIFICATIONS ---
-    // Fetch Booking Details with Event and User info for email
-    const { data: booking } = await supabase
-        .from('bookings')
-        .select(`
-            *,
-            events (title, date, location_name, city),
-            profiles:user_id (email, full_name)
-        `)
-        .eq('id', bookingId)
-        .single();
-
-    // Cast to any to avoid strict type errors for now
-    const bookingData = booking as any;
-
-    if (bookingData && bookingData.profiles?.email) {
-        await sendEmail({
-            to: bookingData.profiles.email,
-            subject: status === 'confirmed'
-                ? `Booking Confirmed! Get ready for ${bookingData.events?.title}`
-                : `Update on your booking for ${bookingData.events?.title}`,
-            react: BookingUserTemplate({
-                userName: bookingData.profiles.full_name || 'Explorer',
-                eventName: bookingData.events?.title || 'Event',
-                bookingId: bookingId,
-                status: status,
-                eventDate: bookingData.events?.date,
-                location: bookingData.events?.location_name || bookingData.events?.city
-            })
-        });
-    }
-
-    revalidatePath('/dashboard/vendor');
-    return { success: true };
 }

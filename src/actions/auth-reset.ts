@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { redirect } from 'next/navigation';
 
 export async function resetPasswordForEmail(email: string) {
     const supabase = await createClient();

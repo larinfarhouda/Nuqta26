@@ -16,19 +16,36 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
         return { success: false, error: 'Missing API Key' };
     }
 
+    const fromEmail = 'Nuqta <no-reply@nuqta.ist>';
+
+    // Log attempt in development
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[Email Debug] Attempting to send email to: ${to}`);
+        console.log(`[Email Debug] Subject: ${subject}`);
+        console.log(`[Email Debug] From: ${fromEmail}`);
+    }
+
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'Nuqta <onboarding@resend.dev>', // Update this when you have a verified domain
+        // Timeout after 10 seconds to prevent hanging
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Email sending timed out')), 10000)
+        );
+
+        const emailPromise = resend.emails.send({
+            from: fromEmail,
             to,
             subject,
             react,
         });
+
+        const { data, error } = await Promise.race([emailPromise, timeoutPromise]) as any;
 
         if (error) {
             console.error('Error sending email:', error);
             return { success: false, error };
         }
 
+        console.log(`[Email Debug] Email sent successfully to ${to} (ID: ${data?.id})`);
         return { success: true, data };
     } catch (error) {
         console.error('Resend Exception:', error);

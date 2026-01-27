@@ -19,10 +19,10 @@ export async function GET(request: Request) {
 
     switch (template) {
         case 'welcome-en':
-            component = <WelcomeTemplate name="Ali" actionUrl="https://nuqta.com" locale="en" />;
+            component = <WelcomeTemplate name="Ali" actionUrl="https://nuqta.ist" locale="en" />;
             break;
         case 'welcome-ar':
-            component = <WelcomeTemplate name="علي" actionUrl="https://nuqta.com" locale="ar" />;
+            component = <WelcomeTemplate name="علي" actionUrl="https://nuqta.ist" locale="ar" />;
             break;
         case 'notification':
             component = <NotificationTemplate heading="Action Required" bodyText="Please verify your phone number to continue using Nuqta services." actionLabel="Verify Phone" actionUrl="#" />;
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
                 location="Harbiye Open Air Theatre"
                 locationUrl="https://maps.google.com"
                 bookingId="BK-7829-XJ"
-                ticketUrl="https://nuqta.com/dashboard/bookings/BK-7829-XJ"
+                ticketUrl="https://nuqta.ist/dashboard/bookings/BK-7829-XJ"
                 locale="en"
             />;
             break;
@@ -64,24 +64,24 @@ export async function GET(request: Request) {
                 location="مسرح حربية المفتوح"
                 locationUrl="https://maps.google.com"
                 bookingId="BK-7829-XJ"
-                ticketUrl="https://nuqta.com/dashboard/bookings/BK-7829-XJ"
+                ticketUrl="https://nuqta.ist/dashboard/bookings/BK-7829-XJ"
                 locale="ar"
             />;
             break;
         case 'auth-confirm':
-            component = <AuthActionTemplate actionType="confirm-signup" actionUrl="https://nuqta.com/auth/confirm?token=xyz" />;
+            component = <AuthActionTemplate actionType="confirm-signup" actionUrl="https://nuqta.ist/auth/confirm?token=xyz" />;
             break;
         case 'auth-reset':
-            component = <AuthActionTemplate actionType="reset-password" actionUrl="https://nuqta.com/auth/reset?token=xyz" />;
+            component = <AuthActionTemplate actionType="reset-password" actionUrl="https://nuqta.ist/auth/reset?token=xyz" />;
             break;
         case 'auth-magic':
-            component = <AuthActionTemplate actionType="magic-link" actionUrl="https://nuqta.com/auth/magic?token=xyz" />;
+            component = <AuthActionTemplate actionType="magic-link" actionUrl="https://nuqta.ist/auth/magic?token=xyz" />;
             break;
         case 'auth-invite':
-            component = <AuthActionTemplate actionType="invite-user" actionUrl="https://nuqta.com/auth/invite?token=xyz" />;
+            component = <AuthActionTemplate actionType="invite-user" actionUrl="https://nuqta.ist/auth/invite?token=xyz" />;
             break;
         case 'auth-change-email':
-            component = <AuthActionTemplate actionType="change-email" actionUrl="https://nuqta.com/auth/change?token=xyz" />;
+            component = <AuthActionTemplate actionType="change-email" actionUrl="https://nuqta.ist/auth/change?token=xyz" />;
             break;
         default:
             return new Response('Template not found', { status: 404 });

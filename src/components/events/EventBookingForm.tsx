@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createBooking } from '@/actions/public/events';
 import { validateDiscountCode } from '@/actions/public/discounts';
-import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag } from 'lucide-react';
+import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
@@ -69,7 +69,11 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     code: discountCode
                 });
             } else {
-                setErrorMsg(res.error || t('invalid_code'));
+                if (res.error === 'min_purchase_not_met' && res.requiredAmount) {
+                    setErrorMsg(t('min_purchase_not_met', { amount: res.requiredAmount }));
+                } else {
+                    setErrorMsg(t(res.error || 'invalid_code'));
+                }
             }
         } catch (err) {
             setErrorMsg(t('generic_error'));
@@ -254,13 +258,32 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                 <span className="text-xs font-black uppercase tracking-widest">{t('high_demand', { count: 12 })}</span>
             </div>
 
-            <div className="flex justify-between items-baseline mb-10">
+            <div className="flex justify-between items-baseline mb-6">
                 <div className="space-y-1">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('starting_price')}</p>
                     <p className="text-4xl font-black text-gray-900">
                         {activeTicket?.price > 0 ? `${activeTicket.price} ₺` : t('free')}
                         <span className="text-sm font-bold text-gray-400 ml-2 tracking-normal">{t('per_person')}</span>
                     </p>
+                </div>
+            </div>
+
+            {/* Date & Time Info */}
+            <div className="mb-8 flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 text-primary">
+                    <Calendar className="w-6 h-6" />
+                </div>
+                <div>
+                    <h4 className="font-bold text-gray-900 text-sm mb-1">
+                        {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </h4>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span dir="ltr">
+                            {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -323,7 +346,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                             onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
                             onKeyDown={(e) => e.key === 'Enter' && handleApplyDiscount()}
                             placeholder="SAVE20"
-                            className="input-field py-3"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-gray-400"
                             disabled={appliedDiscount !== null}
                         />
                         <button
@@ -343,22 +366,63 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     )}
                 </div>
 
+                {/* Payment Method Selection */}
+                <div className="space-y-4">
+                    <label className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-primary" />
+                        {t('select_payment_method')}
+                    </label>
+                    <div className="grid gap-3">
+                        {/* Bank Transfer (Active) */}
+                        <div className="relative overflow-hidden rounded-2xl border-2 border-primary bg-primary/5 p-4 flex items-center justify-between cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-primary">
+                                    <TrendingUp className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="font-black text-gray-900 text-sm">{t('bank_transfer')}</p>
+                                    <p className="text-[10px] font-bold text-gray-500">{t('bank_transfer_desc')}</p>
+                                </div>
+                            </div>
+                            <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">
+                                <CheckCircle className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        {/* Online Payment (Disabled) */}
+                        <div className="relative overflow-hidden rounded-2xl border-2 border-gray-100 bg-gray-50 p-4 flex items-center justify-between opacity-60 grayscale cursor-not-allowed">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-gray-400">
+                                    <Tag className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="font-black text-gray-900 text-sm">{t('online_payment')}</p>
+                                    <p className="text-[10px] font-bold text-gray-500">{t('credit_card')}</p>
+                                </div>
+                            </div>
+                            <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                {t('coming_soon')}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Summary & Call to Action */}
                 <div className="pt-8 space-y-4">
                     <div className="space-y-2 px-2">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Base Price</span>
+                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">{t('base_price')}</span>
                             <span className="text-gray-900 font-bold">{basePrice} ₺</span>
                         </div>
                         {bulkDiscountAmount > 0 && (
                             <div className="flex justify-between items-center text-emerald-600">
-                                <span className="font-bold uppercase tracking-widest text-[10px]">Bulk Discount</span>
+                                <span className="font-bold uppercase tracking-widest text-[10px]">{t('bulk_discount')}</span>
                                 <span className="font-bold">-{bulkDiscountAmount} ₺</span>
                             </div>
                         )}
                         {appliedDiscount && (
                             <div className="flex justify-between items-center text-emerald-600">
-                                <span className="font-bold uppercase tracking-widest text-[10px]">Promo Code</span>
+                                <span className="font-bold uppercase tracking-widest text-[10px]">{t('promo_code')}</span>
                                 <span className="font-bold">-{appliedDiscount.amount} ₺</span>
                             </div>
                         )}
@@ -384,7 +448,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                         className="w-full relative py-6 bg-gray-900 text-white rounded-3xl font-black text-xl hover:bg-primary transition-all shadow-2xl shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-3 group overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-white/5 skew-x-[-20deg] translate-x-[-100%] group-hover:translate-x-[150%] transition-transform duration-1000" />
-                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <span>{t('confirm_experience')}</span>}
+                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <span>{t('book_now')}</span>}
                         {!loading && <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />}
                     </button>
 

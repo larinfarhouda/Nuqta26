@@ -17,7 +17,7 @@ export default function EventSoldOutTemplate({
 }: EventSoldOutTemplateProps) {
     return (
         <EmailLayout preview={`🎉 Event Sold Out: ${eventName}`} locale="en">
-            <Section className="bg-purple-50 rounded-3xl p-4 md:p-8 border border-purple-100">
+            <Section className="bg-purple-50 rounded-3xl p-4 border border-purple-100">
                 <Heading className="text-2xl font-black mb-4 text-purple-900">
                     Congratulations! 🎉
                 </Heading>
@@ -32,7 +32,7 @@ export default function EventSoldOutTemplate({
 
                 <Section className="mt-8 text-center">
                     <Button
-                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.com'}/dashboard/vendor/events/${eventId}`}
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist'}/dashboard/vendor/events/${eventId}`}
                         className="bg-purple-600 text-white font-bold py-3 px-6 rounded-xl block w-full text-center no-underline"
                     >
                         View Event Stats

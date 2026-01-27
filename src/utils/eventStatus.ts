@@ -34,7 +34,7 @@ export function getEventStatus(event: EventForStatus): EventStatus {
     const comparisonDate = new Date(eventDate);
     comparisonDate.setHours(0, 0, 0, 0);
 
-    if (comparisonDate < today) {
+    if (comparisonDate <= today) {
         return 'expired';
     }
 
