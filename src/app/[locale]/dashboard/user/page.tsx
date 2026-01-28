@@ -3,6 +3,7 @@ import { Calendar, MapPin, Ticket } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/navigation';
 import BookingPaymentDialog from '@/components/dashboard/user/BookingPaymentDialog';
+import DeleteBookingButton from '@/components/dashboard/user/DeleteBookingButton';
 
 import { getTranslations } from 'next-intl/server';
 
@@ -88,8 +89,13 @@ export default async function UserOverviewPage({
                                         {t('booking_id')}: <span className="font-mono">{booking.id.slice(0, 8)}</span>
                                     </div>
                                     <div className="ml-auto flex items-center gap-4">
-                                        {booking.status === 'pending_payment' && (
-                                            <BookingPaymentDialog booking={booking} />
+                                        {(booking.status === 'pending_payment' || booking.status === 'payment_submitted') && (
+                                            <>
+                                                {booking.status === 'pending_payment' && (
+                                                    <BookingPaymentDialog booking={booking} />
+                                                )}
+                                                <DeleteBookingButton bookingId={booking.id} />
+                                            </>
                                         )}
                                         <Link href={`/events/${booking.event_id}`} className="text-sm font-bold text-primary hover:underline">
                                             {t('view_details')}

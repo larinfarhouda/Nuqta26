@@ -24,7 +24,20 @@ export class BookingService {
      */
     async getVendorBookings(vendorId: string) {
         logger.info('BookingService: Fetching vendor bookings', { vendorId });
-        return await this.bookingRepo.findByVendorId(vendorId);
+        const bookings = await this.bookingRepo.findByVendorId(vendorId);
+
+        // Fetch booking items count for each booking
+        const bookingsWithCounts = await Promise.all(
+            bookings.map(async (booking: any) => {
+                const itemsCount = await this.bookingRepo.getBookingItemsCount(booking.id);
+                return {
+                    ...booking,
+                    booking_items_count: itemsCount
+                };
+            })
+        );
+
+        return bookingsWithCounts;
     }
 
     /**
@@ -187,5 +200,23 @@ export class BookingService {
             count: filteredBookings.length,
             average: filteredBookings.length > 0 ? total / filteredBookings.length : 0
         };
+    }
+
+    /**
+     * Delete unpaid booking (user action)
+     * Only allows deletion of bookings with status 'pending_payment' or 'payment_submitted'
+     */
+    async deleteUnpaidBooking(bookingId: string, userId: string): Promise<boolean> {
+        logger.info('BookingService: Deleting unpaid booking', { bookingId, userId });
+
+        const success = await this.bookingRepo.deleteUnpaidBooking(bookingId, userId);
+
+        if (success) {
+            logger.info('Unpaid booking deleted successfully', { bookingId, userId });
+        } else {
+            logger.warn('Failed to delete unpaid booking', { bookingId, userId });
+        }
+
+        return success;
     }
 }

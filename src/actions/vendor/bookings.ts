@@ -16,15 +16,18 @@ export async function getVendorBookings() {
 
         if (!user) throw new UnauthorizedError();
 
+
         const factory = new ServiceFactory(supabase);
         const bookingService = factory.getBookingService();
 
         const bookings = await bookingService.getVendorBookings(user.id);
         logger.info('Vendor bookings fetched', { vendorId: user.id, count: bookings.length });
 
+
         return bookings;
     } catch (error) {
         logger.error('Failed to get vendor bookings', { error });
+
         return [];
     }
 }

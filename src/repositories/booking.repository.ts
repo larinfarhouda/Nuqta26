@@ -30,17 +30,47 @@ export class BookingRepository extends BaseRepository {
      * Get vendor bookings with related data
      */
     async findByVendorId(vendorId: string) {
-        const { data, error } = await this.client
+        // First, get all bookings for the vendor
+        const { data: bookings, error } = await this.client
             .from('bookings')
-            .select(`
-        *,
-        events (title, event_type)
-      `)
+            .select('*')
             .eq('vendor_id', vendorId)
             .order('created_at', { ascending: false });
 
-        if (error) this.handleError(error, 'BookingRepository.findByVendorId');
-        return data || [];
+        if (error) {
+            this.handleError(error, 'BookingRepository.findByVendorId');
+            return [];
+        }
+
+        if (!bookings || bookings.length === 0) {
+            return [];
+        }
+
+        // Enrich each booking with event and profile data
+        const enrichedBookings = await Promise.all(
+            bookings.map(async (booking: any) => {
+                const [eventData, profileData] = await Promise.all([
+                    this.client
+                        .from('events')
+                        .select('title, event_type')
+                        .eq('id', booking.event_id)
+                        .single(),
+                    this.client
+                        .from('profiles')
+                        .select('full_name, email, phone')
+                        .eq('id', booking.user_id)
+                        .single()
+                ]);
+
+                return {
+                    ...booking,
+                    events: eventData.data,
+                    profiles: profileData.data
+                };
+            })
+        );
+
+        return enrichedBookings;
     }
 
     /**
@@ -86,7 +116,7 @@ export class BookingRepository extends BaseRepository {
             .select(`
         *,
         events (title, date, location_name, city),
-        profiles:user_id (full_name, email)
+        profiles!user_id (full_name, email)
       `)
             .eq('id', id)
             .single();
@@ -166,5 +196,38 @@ export class BookingRepository extends BaseRepository {
         // return data;
 
         throw new Error('createWithTransaction RPC not implemented yet - use standard create');
+    }
+
+    /**
+     * Delete unpaid booking
+     * Only allows deletion of bookings with status 'pending_payment' or 'payment_submitted'
+     */
+    async deleteUnpaidBooking(bookingId: string, userId: string): Promise<boolean> {
+        const { error } = await this.client
+            .from('bookings')
+            .delete()
+            .eq('id', bookingId)
+            .eq('user_id', userId)
+            .in('status', ['pending_payment', 'payment_submitted']);
+
+        if (error) {
+            this.handleError(error, 'BookingRepository.deleteUnpaidBooking');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get booking items count for a booking
+     */
+    async getBookingItemsCount(bookingId: string): Promise<number> {
+        const { count, error } = await this.client
+            .from('booking_items')
+            .select('*', { count: 'exact', head: true })
+            .eq('booking_id', bookingId);
+
+        if (error) this.handleError(error, 'BookingRepository.getBookingItemsCount');
+        return count || 0;
     }
 }

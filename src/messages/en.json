@@ -427,7 +427,11 @@
                 "cancelled": "Cancelled",
                 "pending_payment": "Pending Payment",
                 "payment_submitted": "Payment Submitted"
-            }
+            },
+            "delete_booking": "Delete Booking",
+            "deleting": "Deleting...",
+            "confirm_delete_booking": "Are you sure you want to delete this booking? This action cannot be undone.",
+            "delete_failed": "Failed to delete booking"
         },
         "vendor": {
             "title": "Vendor Dashboard",

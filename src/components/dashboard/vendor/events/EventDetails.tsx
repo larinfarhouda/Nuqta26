@@ -39,7 +39,7 @@ export default function EventDetails({ event, onBack }: { event: any, onBack: ()
     // Use the fetched bookings to calculate real-time sold count
     const totalSold = bookings
         .filter(b => b.status !== 'cancelled')
-        .reduce((acc, b) => acc + (b.quantity || 1), 0); // Default to 1 if quantity missing
+        .reduce((acc, b) => acc + (b.booking_items_count || 0), 0);
     // Let's use the bookings list for revenue
     const revenue = bookings
         .filter(b => b.status !== 'cancelled')
@@ -163,7 +163,7 @@ export default function EventDetails({ event, onBack }: { event: any, onBack: ()
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 font-medium text-gray-900">
-                                            {booking.booking_items?.[0]?.count || 1}
+                                            {booking.booking_items_count || 0}
                                         </td>
                                         <td className="px-6 py-4 font-black text-gray-900">
                                             {booking.total_amount} ₺

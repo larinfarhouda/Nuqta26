@@ -1,8 +1,14 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { ServiceFactory } from '@/services/service-factory';
+import { logger } from '@/lib/logger/logger';
 import { revalidatePath } from 'next/cache';
+import { UnauthorizedError } from '@/lib/errors/app-error';
 
+/**
+ * Create discount code
+ */
 export async function createDiscountCode(data: {
     code: string;
     discount_type: 'percentage' | 'fixed';
@@ -12,106 +18,124 @@ export async function createDiscountCode(data: {
     max_uses?: number;
     expiry_date?: string;
 }) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: 'Unauthorized' };
+        if (!user) throw new UnauthorizedError();
 
-    // Validation
-    if (!data.code || data.code.trim().length === 0) {
-        return { error: 'Discount code is required' };
+        const factory = new ServiceFactory(supabase);
+        const discountService = factory.getDiscountService();
+
+        await discountService.createDiscount({
+            vendorId: user.id,
+            code: data.code,
+            discountType: data.discount_type,
+            discountValue: data.discount_value,
+            eventId: data.event_id,
+            minPurchaseAmount: data.min_purchase_amount,
+            maxUses: data.max_uses,
+            expiryDate: data.expiry_date
+        });
+
+        revalidatePath('/dashboard/vendor');
+        logger.info('Discount code created', { vendorId: user.id, code: data.code });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to create discount code', { error, code: data.code });
+        return { error: error instanceof Error ? error.message : 'Failed to create discount code' };
     }
-
-    if (data.discount_value < 0) {
-        return { error: 'Discount value cannot be negative' };
-    }
-
-    if (data.discount_type === 'percentage' && data.discount_value > 100) {
-        return { error: 'Percentage discount cannot exceed 100%' };
-    }
-
-    if (data.min_purchase_amount !== undefined && data.min_purchase_amount < 0) {
-        return { error: 'Minimum purchase amount cannot be negative' };
-    }
-
-    if (data.max_uses !== undefined && data.max_uses < 1) {
-        return { error: 'Maximum uses must be at least 1' };
-    }
-
-    if (data.expiry_date) {
-        const expiry = new Date(data.expiry_date);
-        if (isNaN(expiry.getTime())) {
-            return { error: 'Invalid expiry date' };
-        }
-        if (expiry < new Date()) {
-            return { error: 'Expiry date must be in the future' };
-        }
-    }
-
-    const { error } = await (supabase.from('discount_codes' as any) as any).insert({
-        vendor_id: user.id,
-        ...data,
-        code: data.code.toUpperCase().trim()
-    });
-
-    if (error) return { error: error.message };
-
-    revalidatePath('/dashboard/vendor');
-    return { success: true };
 }
 
+/**
+ * Get vendor discount codes with event details
+ */
 export async function getVendorDiscountCodes() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+        if (!user) return [];
 
-    const { data, error } = await (supabase.from('discount_codes' as any) as any)
-        .select(`
-            *,
-            events (title)
-        `)
-        .eq('vendor_id', user.id)
-        .order('created_at', { ascending: false });
+        const factory = new ServiceFactory(supabase);
+        const discountService = factory.getDiscountService();
 
-    if (error) {
-        console.error('Error fetching discount codes:', error);
+        const codes = await discountService.getVendorDiscounts(user.id);
+
+        // Fetch event titles for event-specific discounts
+        const codesWithEvents = await Promise.all(
+            codes.map(async (code) => {
+                if (code.event_id) {
+                    const { data: event } = await supabase
+                        .from('events')
+                        .select('title')
+                        .eq('id', code.event_id)
+                        .single();
+
+                    return {
+                        ...code,
+                        events: event ? { title: event.title } : null
+                    };
+                }
+                return { ...code, events: null };
+            })
+        );
+
+        logger.info('Vendor discount codes fetched', { vendorId: user.id, count: codes.length });
+        return codesWithEvents;
+    } catch (error) {
+        logger.error('Failed to get vendor discount codes', { error });
         return [];
     }
-
-    return data;
 }
 
+/**
+ * Delete discount code
+ */
 export async function deleteDiscountCode(id: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: 'Unauthorized' };
+        if (!user) throw new UnauthorizedError();
 
-    const { error } = await (supabase.from('discount_codes' as any) as any)
-        .delete()
-        .eq('id', id)
-        .eq('vendor_id', user.id);
+        const factory = new ServiceFactory(supabase);
+        const discountService = factory.getDiscountService();
 
-    if (error) return { error: error.message };
+        await discountService.deleteDiscount(id, user.id);
 
-    revalidatePath('/dashboard/vendor');
-    return { success: true };
+        revalidatePath('/dashboard/vendor');
+        logger.info('Discount code deleted', { vendorId: user.id, discountId: id });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to delete discount code', { error, discountId: id });
+        return { error: error instanceof Error ? error.message : 'Failed to delete discount code' };
+    }
 }
 
+/**
+ * Toggle discount code active status
+ */
 export async function toggleDiscountCode(id: string, isActive: boolean) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return { error: 'Unauthorized' };
+        if (!user) throw new UnauthorizedError();
 
-    const { error } = await (supabase.from('discount_codes' as any) as any)
-        .update({ is_active: isActive })
-        .eq('id', id)
-        .eq('vendor_id', user.id);
+        const factory = new ServiceFactory(supabase);
+        const discountService = factory.getDiscountService();
 
-    if (error) return { error: error.message };
+        await discountService.updateDiscount(id, user.id, { isActive });
 
-    revalidatePath('/dashboard/vendor');
-    return { success: true };
+        revalidatePath('/dashboard/vendor');
+        logger.info('Discount code toggled', { vendorId: user.id, discountId: id, isActive });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to toggle discount code', { error, discountId: id });
+        return { error: error instanceof Error ? error.message : 'Failed to toggle discount code' };
+    }
 }

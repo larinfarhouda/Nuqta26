@@ -424,7 +424,11 @@
         "cancelled": "ملغي",
         "pending_payment": "بانتظار الدفع",
         "payment_submitted": "جاري المراجعة"
-      }
+      },
+      "delete_booking": "حذف الحجز",
+      "deleting": "جاري الحذف...",
+      "confirm_delete_booking": "هل أنت متأكد من حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.",
+      "delete_failed": "فشل حذف الحجز"
     },
     "vendor": {
       "title": "لوحة تحكم البائع",

@@ -9,6 +9,7 @@ import { Loader2, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { createClient } from '@/utils/supabase/client';
+import { BulkDiscountInput } from '@/types/dto/discount.dto';
 
 // Sub-components
 import ImageUploader from './components/ImageUploader';
@@ -88,8 +89,8 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(event?.image_url || null);
 
-    // Bulk Discounts State
-    const [bulkDiscounts, setBulkDiscounts] = useState<any[]>(event?.bulk_discounts || []);
+    // Bulk Discounts State (with id added for UI management)
+    const [bulkDiscounts, setBulkDiscounts] = useState<(BulkDiscountInput & { id?: string })[]>(event?.bulk_discounts || []);
 
     useEffect(() => {
         const fetchCategories = async () => {

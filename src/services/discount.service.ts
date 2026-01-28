@@ -250,4 +250,83 @@ export class DiscountService {
         await this.discountRepo.delete(discountId, vendorId);
         logger.info('Discount deleted successfully', { discountId });
     }
+
+    /**
+     * Create bulk discounts for an event
+     * Used during event creation/editing
+     */
+    async createBulkDiscountsForEvent(
+        eventId: string,
+        discounts: Array<{
+            min_quantity: number;
+            discount_type: 'percentage' | 'fixed';
+            discount_value: number;
+        }>
+    ) {
+        logger.info('DiscountService: Creating bulk discounts for event', {
+            eventId,
+            count: discounts.length
+        });
+
+        // Validate all discounts first
+        for (const discount of discounts) {
+            if (discount.min_quantity < 2) {
+                throw new ValidationError('Bulk discount minimum quantity must be at least 2');
+            }
+            if (discount.discount_value <= 0) {
+                throw new ValidationError('Discount value must be positive');
+            }
+            if (discount.discount_type === 'percentage' && discount.discount_value > 100) {
+                throw new ValidationError('Percentage discount cannot exceed 100%');
+            }
+        }
+
+        // Create all bulk discounts
+        for (const discount of discounts) {
+            await this.discountRepo.createBulkDiscount({
+                event_id: eventId,
+                min_quantity: discount.min_quantity,
+                discount_type: discount.discount_type,
+                discount_value: discount.discount_value
+            });
+        }
+
+        logger.info('Bulk discounts created successfully', { eventId, count: discounts.length });
+    }
+
+    /**
+     * Update bulk discounts for an event
+     * Deletes existing and creates new ones
+     */
+    async updateBulkDiscountsForEvent(
+        eventId: string,
+        discounts: Array<{
+            min_quantity: number;
+            discount_type: 'percentage' | 'fixed';
+            discount_value: number;
+        }>
+    ) {
+        logger.info('DiscountService: Updating bulk discounts for event', {
+            eventId,
+            count: discounts.length
+        });
+
+        // Delete existing bulk discounts for this event
+        await this.discountRepo.deleteBulkDiscountsByEventId(eventId);
+
+        // Create new bulk discounts
+        if (discounts.length > 0) {
+            await this.createBulkDiscountsForEvent(eventId, discounts);
+        }
+
+        logger.info('Bulk discounts updated successfully', { eventId });
+    }
+
+    /**
+     * Get bulk discounts for an event
+     */
+    async getBulkDiscountsForEvent(eventId: string) {
+        logger.info('DiscountService: Getting bulk discounts for event', { eventId });
+        return await this.discountRepo.findBulkDiscountsByEventId(eventId);
+    }
 }

@@ -15,6 +15,7 @@ import {
     toggleDiscountCode
 } from '@/actions/vendor/discounts';
 import { getVendorEvents } from '@/actions/vendor/events';
+import { DiscountCodeWithEvent, CreateDiscountCodeInput } from '@/types/dto/discount.dto';
 
 interface Props {
     showAlert: (message: string, type: 'success' | 'error') => void;
@@ -23,14 +24,14 @@ interface Props {
 export default function DiscountsTab({ showAlert }: Props) {
     const t = useTranslations('Dashboard.vendor.discounts');
 
-    const [codes, setCodes] = useState<any[]>([]);
-    const [events, setEvents] = useState<any[]>([]);
+    const [codes, setCodes] = useState<DiscountCodeWithEvent[]>([]);
+    const [events, setEvents] = useState<any[]>([]); // Keep as any - event type is complex
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
 
     // Form State
     const [submitting, setSubmitting] = useState(false);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CreateDiscountCodeInput>({
         code: '',
         discount_type: 'percentage' as 'percentage' | 'fixed',
         discount_value: 0,

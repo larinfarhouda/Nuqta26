@@ -165,3 +165,33 @@ export async function updateUserProfile(data: {
         return { error: error instanceof Error ? error.message : 'Failed to update profile' };
     }
 }
+
+/**
+ * Delete unpaid booking
+ * Only allows deletion of bookings with status 'pending_payment' or 'payment_submitted'
+ */
+export async function deleteUnpaidBooking(bookingId: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) return { error: 'Unauthorized' };
+
+        const factory = new ServiceFactory(supabase);
+        const bookingService = factory.getBookingService();
+
+        const success = await bookingService.deleteUnpaidBooking(bookingId, user.id);
+
+        if (!success) {
+            return { error: 'Failed to delete booking. Make sure it is unpaid.' };
+        }
+
+        revalidatePath('/dashboard/user');
+        logger.info('Unpaid booking deleted', { userId: user.id, bookingId });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to delete unpaid booking', { error, bookingId });
+        return { error: error instanceof Error ? error.message : 'Failed to delete booking' };
+    }
+}

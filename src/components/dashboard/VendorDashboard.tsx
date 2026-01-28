@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {
     Loader2, BarChart3,
@@ -71,8 +72,10 @@ const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | n
 export default function VendorDashboard() {
     const supabase = createClient();
     const t = useTranslations('Dashboard');
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
-    // Core State
+    // Core State - Start with ANALYTICS to match server rendering
     const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>('LOADING');
     const [vendorData, setVendorData] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS'>('ANALYTICS');
@@ -87,6 +90,23 @@ export default function VendorDashboard() {
         setAlertState({ show: true, message, type });
         if (type === 'success') setTimeout(() => setAlertState(prev => ({ ...prev, show: false })), 3000);
     };
+
+    // Update URL when tab changes
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId as any);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tabId.toLowerCase());
+        router.push(url.pathname + url.search, { scroll: false });
+    };
+
+    // Sync tab with URL parameter on mount (client-side only)
+    useEffect(() => {
+        const tab = searchParams.get('tab')?.toUpperCase();
+        const validTabs = ['ANALYTICS', 'EVENTS', 'CUSTOMERS', 'BOOKINGS', 'PROFILE', 'GALLERY', 'DISCOUNTS'];
+        if (tab && validTabs.includes(tab)) {
+            setActiveTab(tab as any);
+        }
+    }, [searchParams]);
 
     // Load Vendor Data
     useEffect(() => {
@@ -167,7 +187,7 @@ export default function VendorDashboard() {
                         ].map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => handleTabChange(tab.id)}
                                 className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === tab.id
                                     ? 'bg-primary text-white shadow-md md:shadow-lg shadow-primary/20'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
@@ -249,7 +269,7 @@ export default function VendorDashboard() {
                                     </a>
                                 ) : (
                                     <button
-                                        onClick={() => setActiveTab('PROFILE')}
+                                        onClick={() => handleTabChange('PROFILE')}
                                         className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-sm shadow-sm hover:bg-primary/20 hover:-translate-y-0.5 transition-all"
                                     >
                                         <Sparkles className="w-4 h-4" />
@@ -257,7 +277,7 @@ export default function VendorDashboard() {
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => setActiveTab('PROFILE')}
+                                    onClick={() => handleTabChange('PROFILE')}
                                     className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl font-bold text-sm shadow-lg hover:bg-gray-800 hover:-translate-y-0.5 transition-all"
                                 >
                                     <Settings className="w-4 h-4" />

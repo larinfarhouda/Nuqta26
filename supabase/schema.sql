@@ -281,6 +281,7 @@ create policy "Vendors can manage own event tickets" on tickets for all using (
 -- Bookings
 create policy "Users can view own bookings" on bookings for select using (auth.uid() = user_id);
 create policy "Vendors can view bookings for their events" on bookings for select using (auth.uid() = vendor_id);
+create policy "Users can delete own unpaid bookings" on bookings for delete using (auth.uid() = user_id and status in ('pending_payment', 'payment_submitted'));
 
 -- Reviews
 create policy "Reviews are publicly viewable" on event_reviews for select using (true);

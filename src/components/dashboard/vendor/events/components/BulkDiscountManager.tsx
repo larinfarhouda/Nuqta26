@@ -1,17 +1,16 @@
 'use client';
 
 import { Tag, Plus, Trash2, Percent, DollarSign } from 'lucide-react';
+import { BulkDiscountInput } from '@/types/dto/discount.dto';
 
-interface BulkDiscount {
+// Extend the DTO with id for local state management
+interface BulkDiscountWithId extends BulkDiscountInput {
     id: string;
-    min_quantity: number;
-    discount_type: 'percentage' | 'fixed';
-    discount_value: number;
 }
 
 interface Props {
-    discounts: BulkDiscount[];
-    setDiscounts: (discounts: BulkDiscount[]) => void;
+    discounts: BulkDiscountWithId[];
+    setDiscounts: (discounts: BulkDiscountWithId[]) => void;
 }
 
 export default function BulkDiscountManager({ discounts, setDiscounts }: Props) {
@@ -26,9 +25,10 @@ export default function BulkDiscountManager({ discounts, setDiscounts }: Props) 
         setDiscounts(discounts.filter((d) => d.id !== id));
     };
 
-    const updateDiscount = (id: string, data: Partial<BulkDiscount>) => {
+    const updateDiscount = (id: string, data: Partial<BulkDiscountWithId>) => {
         setDiscounts(discounts.map(d => d.id === id ? { ...d, ...data } : d));
     };
+
 
     return (
         <div className="space-y-4">

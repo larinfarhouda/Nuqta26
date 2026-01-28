@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Calendar, DollarSign, PieChart } from 'lucide-react';
 import { getVendorAnalytics, getSegmentationData } from '@/actions/vendor/analytics';
+import { VendorAnalyticsDTO, SegmentationDataDTO } from '@/types/dto/analytics.dto';
 import { useTranslations } from 'next-intl';
 
 export default function AnalyticsTab() {
-    const [analytics, setAnalytics] = useState<any>(null);
-    const [segmentation, setSegmentation] = useState<any>(null);
+    const [analytics, setAnalytics] = useState<VendorAnalyticsDTO | null>(null);
+    const [segmentation, setSegmentation] = useState<SegmentationDataDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const t = useTranslations('Dashboard.vendor.analytics');

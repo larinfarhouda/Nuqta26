@@ -96,27 +96,21 @@ export async function createEvent(formData: FormData) {
             }
         }
 
-        // Create bulk discounts
+        // Create bulk discounts using DiscountService
         const bulkDiscountsJson = formData.get('bulk_discounts') as string;
         if (bulkDiscountsJson) {
             try {
                 const bulkDiscounts = JSON.parse(bulkDiscountsJson);
                 if (Array.isArray(bulkDiscounts) && bulkDiscounts.length > 0) {
                     const discountService = factory.getDiscountService();
-                    for (const d of bulkDiscounts) {
-                        await discountService.createDiscount({
-                            vendorId: vendor.id,
-                            code: `BULK_${event.id}_${d.min_quantity}`,
-                            discountType: d.discount_type,
-                            discountValue: parseFloat(d.discount_value),
-                            eventId: event.id
-                        });
-                    }
+                    await discountService.createBulkDiscountsForEvent(event.id, bulkDiscounts);
+                    logger.info('Bulk discounts created for event', { eventId: event.id, count: bulkDiscounts.length });
                 }
             } catch (e) {
-                logger.error('Error parsing bulk discounts JSON', { error: e });
+                logger.error('Error creating bulk discounts', { error: e, eventId: event.id });
             }
         }
+
 
         revalidatePath('/dashboard/vendor');
         logger.info('Event created successfully', { eventId: event.id });
@@ -209,29 +203,18 @@ export async function updateEvent(eventId: string, formData: FormData) {
             }
         }
 
-        // Handle bulk discounts
+        // Handle bulk discounts using DiscountService
         const bulkDiscountsJson = formData.get('bulk_discounts') as string;
         if (bulkDiscountsJson) {
             try {
                 const bulkDiscounts = JSON.parse(bulkDiscountsJson);
                 if (Array.isArray(bulkDiscounts)) {
-                    // Delete existing
-                    await (supabase.from('bulk_discounts' as any) as any).delete().eq('event_id', eventId);
-
-                    // Insert new
-                    const bulkInserts = bulkDiscounts.map((d: any) => ({
-                        event_id: eventId,
-                        min_quantity: parseInt(d.min_quantity),
-                        discount_type: d.discount_type,
-                        discount_value: parseFloat(d.discount_value)
-                    }));
-
-                    if (bulkInserts.length > 0) {
-                        await (supabase.from('bulk_discounts' as any) as any).insert(bulkInserts);
-                    }
+                    const discountService = factory.getDiscountService();
+                    await discountService.updateBulkDiscountsForEvent(eventId, bulkDiscounts);
+                    logger.info('Bulk discounts updated for event', { eventId, count: bulkDiscounts.length });
                 }
             } catch (e) {
-                logger.error('Error parsing bulk discounts for update', { error: e });
+                logger.error('Error updating bulk discounts', { error: e, eventId });
             }
         }
 
