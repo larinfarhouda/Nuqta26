@@ -75,7 +75,7 @@ export default function AnalyticsTab() {
                         <h4 className="font-bold text-gray-900">{t('favorite_types')}</h4>
                     </div>
                     <div className="space-y-4">
-                        {segmentation?.typeDistribution?.length > 0 && segmentation.typeDistribution.map((item: any) => {
+                        {segmentation?.typeDistribution?.map((item: any) => {
                             const maxValue = Math.max(...(segmentation.typeDistribution?.map((i: any) => i.value) || []), 1);
                             return (
                                 <div key={item.name} className="flex items-center gap-4">
