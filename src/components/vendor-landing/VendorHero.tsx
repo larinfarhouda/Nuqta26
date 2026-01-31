@@ -21,7 +21,7 @@ export default function VendorHero() {
     }, []);
 
     return (
-        <div className="relative overflow-hidden bg-[#fffcf9] pt-20 md:pt-24 lg:pt-32 pb-12 md:pb-16 lg:pb-24">
+        <div className="relative overflow-hidden bg-[#fffcf9] pt-24 md:pt-32 lg:pt-40 pb-12 md:pb-16 lg:pb-24">
             {/* Rich Ambient Background Elements - Reduced on mobile */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute -top-[10%] -right-[5%] w-[40%] md:w-[50%] aspect-square bg-primary/10 rounded-full blur-[80px] md:blur-[120px] opacity-40 md:opacity-60" />

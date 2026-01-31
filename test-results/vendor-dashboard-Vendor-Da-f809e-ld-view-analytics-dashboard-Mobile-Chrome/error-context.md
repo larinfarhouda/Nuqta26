@@ -1,0 +1,112 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img "Nuqta Logo" [ref=e7]
+          - generic [ref=e8]:
+            - generic [ref=e9]: Nuqta
+            - generic [ref=e10]: بوابة المنظمين
+        - generic [ref=e12]:
+          - generic [ref=e14] [cursor=pointer]: R
+          - button "تسجيل خروج" [ref=e15]:
+            - img [ref=e16]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - generic [ref=e23]:
+          - button "لوحة القيادة" [ref=e24]:
+            - img [ref=e25]
+            - text: لوحة القيادة
+          - button "الفعاليات" [ref=e27]:
+            - img [ref=e28]
+            - text: الفعاليات
+          - button "الحجوزات" [ref=e30]:
+            - img [ref=e31]
+            - text: الحجوزات
+          - button "العملاء" [ref=e34]:
+            - img [ref=e35]
+            - text: العملاء
+          - button "المعرض" [ref=e40]:
+            - img [ref=e41]
+            - text: المعرض
+          - button "الخصومات" [ref=e45]:
+            - img [ref=e46]
+            - text: الخصومات
+          - button "الإعدادات" [ref=e49]:
+            - img [ref=e50]
+            - text: الإعدادات
+        - generic [ref=e54]:
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e58]: و
+              - generic [ref=e59]:
+                - heading "ورشات ميرا" [level=1] [ref=e60]
+                - paragraph [ref=e61]: لوحة تحكم البائع
+            - generic [ref=e62]:
+              - button "أنشئ صفحتي" [ref=e63]:
+                - img [ref=e64]
+                - generic [ref=e67]: أنشئ صفحتي
+              - button "الإعدادات" [ref=e68]:
+                - img [ref=e69]
+                - generic [ref=e72]: الإعدادات
+          - generic [ref=e73]:
+            - generic [ref=e74]:
+              - heading "الإحصائيات والتحليلات" [level=3] [ref=e75]
+              - paragraph [ref=e76]: نظرة عامة على أداء فعالياتك
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - img [ref=e79]
+                - generic [ref=e81]: "0"
+                - generic [ref=e82]: إجمالي المبيعات (ر.س)
+              - generic [ref=e83]:
+                - img [ref=e84]
+                - generic [ref=e89]: "0"
+                - generic [ref=e90]: التذاكر المباعة
+              - generic [ref=e91]:
+                - img [ref=e92]
+                - generic [ref=e94]: "0"
+                - generic [ref=e95]: الفعاليات الكلية
+              - generic [ref=e96]:
+                - img [ref=e97]
+                - generic [ref=e100]: "0"
+                - generic [ref=e101]: مبيعات آخر ٣٠ يوم
+            - generic [ref=e102]:
+              - generic [ref=e103]:
+                - generic [ref=e104]:
+                  - img [ref=e105]
+                  - heading "أنواع الفعاليات المفضلة" [level=4] [ref=e108]
+                - paragraph [ref=e110]: لا توجد بيانات كافية
+              - generic [ref=e111]:
+                - generic [ref=e112]:
+                  - img [ref=e113]
+                  - heading "ولاء العملاء" [level=4] [ref=e118]
+                - generic [ref=e119]:
+                  - generic [ref=e120]:
+                    - generic [ref=e121]: "0"
+                    - generic [ref=e122]: مرة واحدة
+                  - generic [ref=e123]:
+                    - generic [ref=e124]: "0"
+                    - generic [ref=e125]: متكرر
+                  - generic [ref=e126]:
+                    - generic [ref=e127]: "0"
+                    - generic [ref=e128]: مخلص (VIP)
+                - generic [ref=e129]:
+                  - generic [ref=e130]: "نصيحة:"
+                  - text: ركز على العملاء "المتكررين" وقدم لهم عروضاً خاصة لتحويلهم إلى عملاء "VIP" لزيادة المبيعات طويلة الأمد.
+              - generic [ref=e131]:
+                - generic [ref=e132]:
+                  - img [ref=e133]
+                  - heading "توزيع الجنس" [level=4] [ref=e138]
+                - paragraph [ref=e140]: لا توجد بيانات كافية
+              - generic [ref=e141]:
+                - generic [ref=e142]:
+                  - img [ref=e143]
+                  - heading "الفئات العمرية" [level=4] [ref=e148]
+                - paragraph [ref=e150]: لا توجد بيانات كافية
+  - button "Open Next.js Dev Tools" [ref=e156] [cursor=pointer]:
+    - img [ref=e157]
+  - alert [ref=e160]
+```

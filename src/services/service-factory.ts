@@ -121,4 +121,18 @@ export class ServiceFactory {
     getNotificationService(): NotificationService {
         return new NotificationService();
     }
+
+    /**
+     * Get BookingRepository
+     */
+    getBookingRepository(): BookingRepository {
+        return this.bookingRepo;
+    }
+
+    /**
+     * Get EventRepository
+     */
+    getEventRepository(): EventRepository {
+        return this.eventRepo;
+    }
 }

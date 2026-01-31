@@ -455,12 +455,19 @@ export type Database = {
           country: string | null
           created_at: string | null
           district: string | null
+          email: string | null
           favorites: string[] | null
           full_name: string | null
           gender: string | null
           id: string
+          is_founder_pricing: boolean | null
           phone: string | null
+          platform_signup_date: string | null
           role: string | null
+          subscription_expires_at: string | null
+          subscription_starts_at: string | null
+          subscription_status: string | null
+          subscription_tier: string | null
         }
         Insert: {
           age?: number | null
@@ -469,12 +476,19 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           district?: string | null
+          email?: string | null
           favorites?: string[] | null
           full_name?: string | null
           gender?: string | null
           id: string
+          is_founder_pricing?: boolean | null
           phone?: string | null
+          platform_signup_date?: string | null
           role?: string | null
+          subscription_expires_at?: string | null
+          subscription_starts_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
         }
         Update: {
           age?: number | null
@@ -483,14 +497,60 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           district?: string | null
+          email?: string | null
           favorites?: string[] | null
           full_name?: string | null
           gender?: string | null
           id?: string
+          is_founder_pricing?: boolean | null
           phone?: string | null
+          platform_signup_date?: string | null
           role?: string | null
+          subscription_expires_at?: string | null
+          subscription_starts_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
         }
         Relationships: []
+      }
+      review_flags: {
+        Row: {
+          created_at: string | null
+          id: string
+          reason: string | null
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_flags_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "event_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_helpful: {
         Row: {
@@ -751,6 +811,18 @@ export type Database = {
       increment_ticket_sold: {
         Args: { quantity: number; ticket_id: string }
         Returns: undefined
+      }
+      place_booking: {
+        Args: {
+          p_discount_amount: number
+          p_discount_code_id?: string
+          p_event_id: string
+          p_quantity: number
+          p_ticket_id: string
+          p_total_amount: number
+          p_user_id: string
+        }
+        Returns: Json
       }
     }
     Enums: {

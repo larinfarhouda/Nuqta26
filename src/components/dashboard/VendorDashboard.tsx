@@ -11,6 +11,7 @@ import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { getPendingBookingsCount } from '@/actions/vendor/bookings';
+import SubscriptionBadge from './vendor/SubscriptionBadge';
 
 // Dynamic imports for tab components  
 const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
@@ -69,17 +70,44 @@ const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | n
     );
 };
 
-export default function VendorDashboard() {
+interface VendorDashboardProps {
+    initialVendorData?: any;
+    initialPendingBookingsCount?: number;
+    initialActiveEventsCount?: number;
+}
+
+export default function VendorDashboard({
+    initialVendorData,
+    initialPendingBookingsCount = 0,
+    initialActiveEventsCount = 0
+}: VendorDashboardProps = {}) {
     const supabase = createClient();
     const t = useTranslations('Dashboard');
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    // Core State - Start with ANALYTICS to match server rendering
-    const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>('LOADING');
-    const [vendorData, setVendorData] = useState<any>(null);
+    // Core State - Use server-provided data for instant rendering
+    const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>(
+        initialVendorData ? 'DASHBOARD' : 'LOADING'
+    );
+    const [vendorData, setVendorData] = useState<any>(() => {
+        if (initialVendorData) {
+            // Process district inference immediately
+            let inferredDistrict = null;
+            if (initialVendorData.location_lat && initialVendorData.location_long) {
+                const city = CITIES['tr'].find(c =>
+                    Math.abs(c.lat - initialVendorData.location_lat!) < 0.001 &&
+                    Math.abs(c.lng - initialVendorData.location_long!) < 0.001
+                );
+                if (city) inferredDistrict = city.id;
+            }
+            return { ...initialVendorData, district: inferredDistrict };
+        }
+        return null;
+    });
     const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS'>('ANALYTICS');
-    const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
+    const [pendingBookingsCount, setPendingBookingsCount] = useState(initialPendingBookingsCount);
+    const [activeEventsCount, setActiveEventsCount] = useState(initialActiveEventsCount);
 
     // Alert State
     const [alertState, setAlertState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
@@ -108,30 +136,45 @@ export default function VendorDashboard() {
         }
     }, [searchParams]);
 
-    // Load Vendor Data
+    // Load Vendor Data only if not provided by server
     useEffect(() => {
-        checkVendorStatus();
-    }, []);
+        if (!initialVendorData) {
+            checkVendorStatus();
+        }
+    }, [initialVendorData]);
 
     const checkVendorStatus = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data } = await supabase.from('vendors').select('*').eq('id', user.id).single();
+        // Parallel query execution for faster loading
+        const now = new Date().toISOString();
+        const [
+            { data: vendorData },
+            pendingCount,
+            { count: eventsCount }
+        ] = await Promise.all([
+            supabase.from('vendors').select('*').eq('id', user.id).single(),
+            getPendingBookingsCount(),
+            supabase
+                .from('events')
+                .select('id', { count: 'exact', head: true })
+                .eq('vendor_id', user.id)
+                .gte('date', now)
+        ]);
 
-        if (data) {
+        if (vendorData) {
             let inferredDistrict = null;
-            if (data.location_lat && data.location_long) {
+            if (vendorData.location_lat && vendorData.location_long) {
                 const city = CITIES['tr'].find(c =>
-                    Math.abs(c.lat - data.location_lat!) < 0.001 &&
-                    Math.abs(c.lng - data.location_long!) < 0.001
+                    Math.abs(c.lat - vendorData.location_lat!) < 0.001 &&
+                    Math.abs(c.lng - vendorData.location_long!) < 0.001
                 );
                 if (city) inferredDistrict = city.id;
             }
-            setVendorData({ ...data, district: inferredDistrict });
-
-            // Fetch pending bookings count
-            getPendingBookingsCount().then(count => setPendingBookingsCount(count));
+            setVendorData({ ...vendorData, district: inferredDistrict });
+            setPendingBookingsCount(pendingCount);
+            setActiveEventsCount(eventsCount || 0);
 
             setStep('DASHBOARD');
         } else {
@@ -284,6 +327,14 @@ export default function VendorDashboard() {
                                     <span>{t('vendor.tabs.settings')}</span>
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Subscription Tier Badge */}
+                        <div className="mb-8">
+                            <SubscriptionBadge
+                                vendorId={vendorData?.id}
+                                activeEventsCount={activeEventsCount}
+                            />
                         </div>
 
                         {activeTab === 'ANALYTICS' && <AnalyticsTab />}

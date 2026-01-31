@@ -114,7 +114,7 @@ export class EventService {
             ...input,
             vendor_id: vendorId,
             slug,
-            status: 'draft'
+            status: 'published'
         });
 
         logger.info('Event created successfully', { eventId: event.id, slug });

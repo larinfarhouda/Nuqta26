@@ -230,4 +230,25 @@ export class BookingRepository extends BaseRepository {
         if (error) this.handleError(error, 'BookingRepository.getBookingItemsCount');
         return count || 0;
     }
+
+    /**
+     * Find existing pending or payment_submitted booking for a user and event
+     * Returns the booking if found, null otherwise
+     */
+    async findPendingBookingByUserAndEvent(userId: string, eventId: string): Promise<Booking | null> {
+        const { data, error } = await this.client
+            .from('bookings')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('event_id', eventId)
+            .in('status', ['pending_payment', 'payment_submitted'])
+            .maybeSingle();
+
+        if (error) {
+            this.handleError(error, 'BookingRepository.findPendingBookingByUserAndEvent');
+            return null;
+        }
+
+        return data;
+    }
 }

@@ -1,0 +1,147 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - link "Nuqta Logo" [ref=e4] [cursor=pointer]:
+        - /url: /ar
+        - img "Nuqta Logo" [ref=e6]
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "للمنظمين" [ref=e9] [cursor=pointer]:
+            - /url: /ar/for-vendors
+          - link "تسجيل دخول" [ref=e11] [cursor=pointer]:
+            - /url: /ar/login
+          - link "انضم لنا" [ref=e13] [cursor=pointer]:
+            - /url: /ar/register
+        - generic [ref=e14]:
+          - link "EN" [ref=e15] [cursor=pointer]:
+            - /url: /en/register
+          - link "AR" [ref=e16] [cursor=pointer]:
+            - /url: /ar/register
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - img [ref=e24]
+            - generic [ref=e27]: للمستكشفين
+          - heading "اكتشف تجارب لا تُنسى" [level=1] [ref=e28]
+          - paragraph [ref=e29]: استكشف أفضل الفعاليات والتجمعات في مدينتك. عالم من الترفيه بانتظارك.
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - img [ref=e32]
+              - generic [ref=e35]: حجوزات سهلة وسريعة
+            - generic [ref=e36]:
+              - img [ref=e37]
+              - generic [ref=e40]: اقتراحات مخصصة لك
+            - generic [ref=e41]:
+              - img [ref=e42]
+              - generic [ref=e45]: عروض حصرية
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - heading "إنشاء حساب جديد" [level=2] [ref=e49]
+            - paragraph [ref=e50]: ابدأ رحلتك معنا اليوم
+          - generic [ref=e51]:
+            - button "زائر" [ref=e52]:
+              - img [ref=e54]
+              - text: زائر
+            - button "منظم" [ref=e57]:
+              - img [ref=e58]
+              - text: منظم
+          - generic [ref=e62]:
+            - button "Google جوجل" [ref=e63]:
+              - img "Google" [ref=e64]
+              - generic [ref=e65]: جوجل
+            - button "فيسبوك" [ref=e66]:
+              - img [ref=e67]
+              - generic [ref=e69]: فيسبوك
+          - generic [ref=e72]: أو عبر البريد الإلكتروني
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - generic [ref=e77]:
+                  - img [ref=e78]
+                  - text: الاسم الكامل
+                - textbox "الاسم الكامل" [ref=e81]
+              - generic [ref=e82]:
+                - generic [ref=e83]:
+                  - generic [ref=e84]:
+                    - img [ref=e85]
+                    - text: العمر
+                  - spinbutton [ref=e87]
+                - generic [ref=e88]:
+                  - generic [ref=e89]:
+                    - img [ref=e90]
+                    - text: الجنس
+                  - combobox [ref=e94]:
+                    - option "اختر..." [selected]
+                    - option "ذكر"
+                    - option "أنثى"
+              - generic [ref=e95]:
+                - generic [ref=e96]:
+                  - img [ref=e97]
+                  - text: رقم الهاتف
+                - generic [ref=e100]:
+                  - combobox [ref=e101]:
+                    - option "TR (+90)" [selected]
+                    - option "AE (+971)"
+                    - option "EG (+20)"
+                    - option "KW (+965)"
+                    - option "QA (+974)"
+                    - option "BH (+973)"
+                    - option "OM (+968)"
+                    - option "US (+1)"
+                    - option "GB (+44)"
+                  - textbox "555 123 45 67" [ref=e102]
+              - generic [ref=e103]:
+                - generic [ref=e104]:
+                  - img [ref=e105]
+                  - text: المدينة
+                - combobox [ref=e108]:
+                  - option "اختر..." [selected]
+                  - option "إسطنبول"
+                  - option "أنقرة"
+                  - option "إزمير"
+                  - option "أنطاليا"
+                  - option "بورصة"
+              - generic [ref=e109]:
+                - generic [ref=e110]:
+                  - img [ref=e111]
+                  - text: البريد الإلكتروني
+                - textbox "name@example.com" [ref=e114]
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - img [ref=e117]
+                  - text: كلمة المرور
+                - textbox "••••••••" [ref=e120]
+            - button "إنشاء حساب جديد" [ref=e121]:
+              - generic [ref=e122]: إنشاء حساب جديد
+              - img [ref=e123]
+          - paragraph [ref=e126]:
+            - text: لديك حساب بالفعل؟
+            - link "تسجيل دخول" [ref=e127] [cursor=pointer]:
+              - /url: /ar/login
+    - contentinfo [ref=e128]:
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - link "Nuqta Logo" [ref=e132] [cursor=pointer]:
+            - /url: /ar
+            - img "Nuqta Logo" [ref=e133]
+          - generic [ref=e135]: © 2026 Nuqta Istanbul
+        - navigation [ref=e136]:
+          - link "الرئيسية" [ref=e137] [cursor=pointer]:
+            - /url: /ar
+          - link "للمنظمين" [ref=e138] [cursor=pointer]:
+            - /url: /ar/for-vendors
+          - link "عن نقطة" [ref=e139] [cursor=pointer]:
+            - /url: /ar/about
+          - link "تواصل معنا" [ref=e140] [cursor=pointer]:
+            - /url: /ar/contact
+          - link "الخصوصية" [ref=e141] [cursor=pointer]:
+            - /url: /ar/privacy
+        - generic [ref=e144]: جميع الحقوق محفوظة © 2026
+  - button "Open Next.js Dev Tools" [ref=e150] [cursor=pointer]:
+    - img [ref=e151]
+  - alert [ref=e154]
+```

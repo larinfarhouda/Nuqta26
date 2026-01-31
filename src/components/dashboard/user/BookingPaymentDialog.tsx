@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2, CheckCircle, Info, ChevronRight, TrendingUp, X, Upload, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { submitPaymentProof } from '@/actions/user';
 
 export default function BookingPaymentDialog({ booking }: { booking: any }) {
     const t = useTranslations('Events');
@@ -39,15 +40,11 @@ export default function BookingPaymentDialog({ booking }: { booking: any }) {
 
             const { data: { publicUrl } } = supabase.storage.from('booking-receipts').getPublicUrl(fileName);
 
-            const { error: dbError } = await supabase
-                .from('bookings')
-                .update({
-                    payment_proof_url: publicUrl,
-                    status: 'payment_submitted'
-                })
-                .eq('id', booking.id);
+            // Call server action to update booking and send email
+            const result = await submitPaymentProof(booking.id, publicUrl);
 
-            if (dbError) throw dbError;
+            if (result.error) throw new Error(result.error);
+
             setIsSuccess(true);
             setTimeout(() => {
                 setIsOpen(false);

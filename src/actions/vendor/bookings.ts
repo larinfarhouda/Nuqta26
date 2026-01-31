@@ -85,7 +85,8 @@ export async function updateBookingStatus(
                 customerName: (bookingDetails as any).profiles.full_name || 'Customer',
                 eventTitle: (bookingDetails as any).events?.title || 'Event',
                 bookingId,
-                status
+                status,
+                locale: 'ar', // Default to Arabic
             });
         }
 

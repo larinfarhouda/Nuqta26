@@ -1,76 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createEvent, updateEvent } from '@/actions/vendor/events';
-import { Loader2, X, Calendar } from 'lucide-react';
+import { Loader2, X, Calendar, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { createClient } from '@/utils/supabase/client';
 import { BulkDiscountInput } from '@/types/dto/discount.dto';
+import { useTranslations } from 'next-intl';
+import { createEventValidationSchema } from './validation';
 
 // Sub-components
 import ImageUploader from './components/ImageUploader';
 import TicketManager from './components/TicketManager';
 import EventMap from './components/EventMap';
 import BulkDiscountManager from './components/BulkDiscountManager';
+import FormErrorBanner from './components/FormErrorBanner';
+import UpgradeModal from '../UpgradeModal';
+import type { SubscriptionTier } from '@/lib/constants/subscription';
 
-// Zod Schema Definition
-const schema = z.object({
-    title: z.string().min(3, "العنوان يجب أن يكون 3 أحرف على الأقل"),
-    description: z.string().min(10, "الوصف يجب أن يكون 10 أحرف على الأقل").optional().or(z.literal('')),
-    event_type: z.string().min(1, "يرجى اختيار نوع الفعالية"),
 
-    // Dates
-    date: z.string().min(1, "تاريخ البداية مطلوب"),
-    end_date: z.string().optional(),
-
-    // Location
-    location_name: z.string().optional(),
-    location_lat: z.number().nullable().refine(val => val !== null, "يرجى تحديد الموقع على الخريطة"),
-    location_long: z.number().nullable().refine(val => val !== null, "يرجى تحديد الموقع على الخريطة"),
-    district: z.string().optional(),
-    city: z.string().optional(),
-    country: z.string().optional(),
-
-    // Capacity & Tickets
-    capacity: z.coerce.number().min(1, "السعة يجب أن تكون شخص واحد على الأقل"),
-    tickets: z.array(z.object({
-        id: z.string().optional(), // Add optional ID for updates
-        name: z.string().min(2, "اسم التذكرة مطلوب"),
-        price: z.coerce.number().min(0, "السعر لا يمكن أن يكون سالباً"),
-        quantity: z.coerce.number().min(1, "الكمية يجب أن تكون 1 على الأقل")
-    })).min(1, "يجب إضافة نوع تذكرة واحد على الأقل"),
-
-    // Recurrence
-    is_recurring: z.boolean().optional(),
-    recurrence_type: z.string().nullable().optional(),
-    recurrence_days: z.any().optional(),
-    recurrence_end_date: z.string().nullable().optional(),
-})
-    .refine(data => {
-        if (data.is_recurring && !data.recurrence_type) return false;
-        return true;
-    }, {
-        message: "يرجى اختيار نوع التكرار",
-        path: ["recurrence_type"]
-    })
-    .refine(data => {
-        if (data.end_date && new Date(data.end_date) <= new Date(data.date)) return false;
-        return true;
-    }, {
-        message: "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية",
-        path: ["end_date"]
-    })
-    .refine(data => {
-        const totalTickets = data.tickets.reduce((acc, t) => acc + t.quantity, 0);
-        return totalTickets <= data.capacity;
-    }, {
-        message: "مجموع التذاكر يتجاوز السعة القصوى للفعالية",
-        path: ["capacity"]
-    });
 
 interface Props {
     event?: any;
@@ -80,17 +32,30 @@ interface Props {
 }
 
 export default function EventForm({ event, vendorData, onClose, onSuccess }: Props) {
+    const t = useTranslations('Dashboard.vendor.events.form.validation');
     const [submitting, setSubmitting] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
     const [categoryFetchError, setCategoryFetchError] = useState<string | null>(null);
+
+    // Upgrade modal state
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [upgradeTier, setUpgradeTier] = useState<SubscriptionTier>('starter');
+
+    // Memoize validation schema to prevent recreation on every render
+    const schema = useMemo(() => createEventValidationSchema(t, !!event), [t, event]);
 
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(event?.image_url || null);
 
     // Bulk Discounts State (with id added for UI management)
-    const [bulkDiscounts, setBulkDiscounts] = useState<(BulkDiscountInput & { id?: string })[]>(event?.bulk_discounts || []);
+    const [bulkDiscounts, setBulkDiscounts] = useState<(BulkDiscountInput & { id: string })[]>(
+        (event?.bulk_discounts || []).map((d: any) => ({
+            ...d,
+            id: d.id || crypto.randomUUID()
+        }))
+    );
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -131,7 +96,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             end_date: formatDateForInput(event.end_date),
             is_recurring: event.is_recurring,
             recurrence_days: event.recurrence_days || [],
-            tickets: (event.tickets && event.tickets.length > 0) ? event.tickets : [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
+            tickets: (event.tickets && event.tickets.length > 0) ? event.tickets : [{ name: 'تذكرة عامة', price: 0, quantity: 0 }]
         } : {
             is_recurring: false,
             recurrence_days: [],
@@ -206,8 +171,24 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
         }
 
         setSubmitting(false);
-        if (res.error) alert(res.error);
-        else onSuccess();
+        if (res.error) {
+            // Check for tier limit error
+            if (res.error === 'TIER_LIMIT_REACHED') {
+                setUpgradeTier((res as any).currentTier || 'starter');
+                setShowUpgradeModal(true);
+                return;
+            }
+
+            // Check for incomplete profile error
+            if (res.error === 'INCOMPLETE_PROFILE' || (res as any).message?.includes('bank information')) {
+                const message = t('incomplete_profile_message') || (res as any).message || 'Please complete your bank information in your profile before creating events.';
+                if (window.confirm(`${message}\n\nWould you like to go to your profile settings now?`)) {
+                    window.location.href = '/dashboard/vendor?tab=profile';
+                }
+            } else {
+                alert(res.error);
+            }
+        } else onSuccess();
     };
 
     const DAYS = [
@@ -240,10 +221,9 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit, (errors) => {
-                    console.error("Form Validation Errors:", errors);
-                    alert("يوجد حقول غير مكتملة أو غير صحيحة: " + Object.keys(errors).join(", "));
-                })} className="p-5 sm:p-6 space-y-8 pb-24 sm:pb-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-5 sm:p-6 space-y-8 pb-24 sm:pb-6">
+                    {/* Error Banner */}
+                    <FormErrorBanner errors={errors} t={t} />
 
                     {/* Image Upload Component */}
                     <ImageUploader previewUrl={previewUrl} onImageChange={handleImageChange} />
@@ -385,5 +365,15 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
     );
 
     if (typeof document === 'undefined') return null;
-    return createPortal(content, document.body);
+    return (
+        <>
+            <UpgradeModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                currentTier={upgradeTier}
+                reason="event_limit"
+            />
+            {createPortal(content, document.body)}
+        </>
+    );
 }

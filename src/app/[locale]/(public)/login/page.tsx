@@ -69,29 +69,20 @@ export default function LoginPage() {
                     throw new Error('Email not confirmed');
                 }
 
-                // Prioritize user_metadata role (set during signup)
-                let role = user.user_metadata?.role;
+                // Get role from user_metadata (set during signup)
+                const role = user.user_metadata?.role;
 
-                // Fallback to profiles table if metadata is missing
-                if (!role) {
-                    const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-                    if (profileError) {
-                        console.error('Failed to fetch user profile:', profileError.message);
-                    }
-                    role = profile?.role;
-                }
-
-                router.refresh();
+                // Use hard navigation to ensure server re-renders with updated auth state
                 if (role === 'vendor') {
-                    router.push('/dashboard/vendor');
+                    window.location.href = '/dashboard/vendor';
                 } else if (role === 'admin') {
-                    router.push('/admin');
+                    window.location.href = '/admin';
                 } else {
-                    router.push('/');
+                    window.location.href = '/';
                 }
             } else {
-                router.refresh();
-                router.push('/');
+                // Use hard navigation to ensure server re-renders with updated auth state
+                window.location.href = '/';
             }
 
         } catch (err: any) {
@@ -132,7 +123,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white flex overflow-hidden">
+        <div className="min-h-screen bg-white flex overflow-hidden pt-16 md:pt-24">
 
             {/* Left Side: Visual / Brand */}
             <motion.div
@@ -184,7 +175,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Social Login */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                         <motion.button
                             whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
                             whileTap={{ scale: 0.98 }}
@@ -195,7 +186,8 @@ export default function LoginPage() {
                             <span className="text-sm">{t('continue_google')}</span>
                         </motion.button>
 
-                        <motion.button
+                        {/* Facebook login temporarily hidden */}
+                        {/* <motion.button
                             whileHover={{ scale: 1.02, backgroundColor: '#166fe5' }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleOAuthLogin('facebook')}
@@ -203,7 +195,7 @@ export default function LoginPage() {
                         >
                             <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
                             <span className="text-sm">{t('continue_facebook')}</span>
-                        </motion.button>
+        </motion.button> */}
                     </div>
 
                     <div className="relative flex items-center gap-4 my-2">

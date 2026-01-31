@@ -229,31 +229,45 @@
             "reason3_desc": "Get insights, manage attendees, and handle payments all in one place."
         },
         "Pricing": {
-            "title": "Simple, Transparent Pricing",
-            "subtitle": "Start for free, upgrade as you grow.",
-            "free_tier": "Free",
-            "free_desc": "Perfect for getting started",
-            "free_features": [
-                "Basic Profile",
-                "List 1 Event/Month",
-                "Community Support"
+            "title": "Plans for Everyone",
+            "subtitle": "All plans include all features - only difference is event count",
+            "trial_founder_banner": "🎉 First month free + Founder pricing (50% off lifetime) until May 1, 2026",
+            "all_features_included": "✨ All features included in every plan",
+            "features_list": [
+                "📧 Automated bilingual email notifications (Arabic/English)",
+                "📊 Advanced analytics and dashboard",
+                "👥 Customer & booking management",
+                "💰 Discount codes & bulk discounts",
+                "🎫 Multiple ticket types",
+                "📷 Unlimited photo gallery",
+                "📍 Custom public event page",
+                "💬 Fast support"
             ],
-            "pro_tier": "Professional",
-            "pro_price": "999 TL",
-            "pro_period": "/month",
-            "pro_desc": "For serious organizers",
-            "pro_features": [
-                "Verified Badge",
-                "Unlimited Events",
-                "Advanced Analytics",
-                "Advanced Analytics",
-                "Priority Support"
-            ],
+            "starter_tier": "Starter",
+            "starter_price": "Free",
+            "starter_events": "1 Event",
+            "starter_events_count": "1",
+            "starter_desc": "Perfect for trying the platform",
+            "growth_tier": "Growth",
+            "growth_price": "999 ₺",
+            "growth_period": "/month",
+            "growth_events": "3 Events",
+            "growth_events_count": "3",
+            "growth_desc": "For active organizers",
+            "growth_badge": "Most Popular",
+            "professional_tier": "Professional",
+            "professional_price": "1,999 ₺",
+            "professional_period": "/month",
+            "professional_events": "Unlimited Events",
+            "professional_events_count": "∞",
+            "professional_desc": "For large organizations",
             "most_popular": "Most Popular",
             "simple_growth": "Simple Growth",
-            "no_credit_card": "No credit card required for free tier",
-            "get_started": "Get Started",
-            "scale_now": "Scale Now"
+            "no_credit_card": "No credit card required - Start for free",
+            "get_started": "Start Free",
+            "scale_now": "Try 1 Month Free",
+            "get_professional": "Try 1 Month Free",
+            "active_events": "Active Event"
         },
         "Testimonials": {
             "title": "Success Stories",
@@ -487,7 +501,29 @@
                 "bank_name": "Bank Name",
                 "bank_account_name": "Account Holder Name",
                 "bank_iban": "IBAN",
-                "bank_note": "Your bank details will be shown to users during checkout for ticket payment."
+                "bank_note": "Your bank details will be shown to users during checkout for ticket payment.",
+                "page_title": "Customize Profile",
+                "page_subtitle": "Design your page and update your information",
+                "change_cover": "Change Cover",
+                "brand_identity": "Brand Identity",
+                "contact_social": "Contact & Social",
+                "profile_link_helper": "This is your unique link to share with customers.",
+                "description_placeholder": "Describe your business, mission, and what makes you unique...",
+                "instagram_placeholder": "@username",
+                "website_placeholder": "https://",
+                "bank_name_placeholder": "Select your bank",
+                "bank_account_name_placeholder": "Full Legal Name",
+                "bank_iban_placeholder": "TR...",
+                "validation": {
+                    "business_name_min": "Business name must be at least 2 characters",
+                    "slug_min": "Slug must be at least 3 characters",
+                    "slug_format": "Slug must be lowercase alphanumeric with hyphens",
+                    "invalid_url": "Invalid URL format",
+                    "bank_name_required": "Bank name is required",
+                    "bank_account_name_required": "Account holder name is required (min 3 characters)",
+                    "bank_iban_min": "IBAN must be at least 16 characters",
+                    "bank_iban_format": "Invalid IBAN format (e.g., TR330006100519786457841326)"
+                }
             },
             "gallery": {
                 "add_success": "Image added successfully",
@@ -497,6 +533,34 @@
                 "my_works": "My Works",
                 "add_image": "Add Image",
                 "no_images": "No images yet"
+            },
+            "analytics": {
+                "title": "Analytics Dashboard",
+                "subtitle": "Insights and performance metrics for your events",
+                "loading_analysis": "Loading analytics...",
+                "error_loading": "Failed to load analytics",
+                "no_data": "No analytics data available",
+                "total_revenue": "Total Revenue",
+                "tickets_sold": "Tickets Sold",
+                "total_events": "Total Events",
+                "recent_sales": "Recent Sales",
+                "favorite_types": "Favorite Event Types",
+                "customer_loyalty": "Customer Loyalty",
+                "loyalty_types": {
+                    "one_time": "One-time",
+                    "recurring": "Recurring",
+                    "loyal": "Loyal"
+                },
+                "tip_label": "💡 Tip:",
+                "tip_text": "Engage with recurring customers through personalized offers and exclusive events to build loyalty.",
+                "gender_dist": "Gender Distribution",
+                "gender": {
+                    "male": "Male",
+                    "female": "Female",
+                    "unknown": "Unknown"
+                },
+                "age_dist": "Age Distribution",
+                "no_enough_data": "Not enough data yet"
             },
             "events": {
                 "revenue": "Revenue",
@@ -533,7 +597,37 @@
                 "delete_confirm": "Are you sure you want to delete this event?",
                 "delete_error": "Error deleting event",
                 "expired": "Expired",
-                "sold_out": "Sold Out"
+                "sold_out": "Sold Out",
+                "form": {
+                    "validation": {
+                        "title_required": "Title is required",
+                        "title_min": "Title must be at least 3 characters",
+                        "description_min": "Description must be at least 10 characters",
+                        "event_type_required": "Please select an event type",
+                        "date_required": "Start date is required",
+                        "date_past": "Event date cannot be in the past",
+                        "end_date_after_start": "End date must be after start date",
+                        "location_required": "Please select a location on the map",
+                        "capacity_min": "Capacity must be at least 1 person",
+                        "tickets_min": "At least one ticket type must be added",
+                        "ticket_name_required": "Ticket name is required",
+                        "ticket_name_min": "Ticket name must be at least 2 characters",
+                        "ticket_price_min": "Price cannot be negative",
+                        "ticket_quantity_min": "Quantity must be at least 1",
+                        "capacity_exceeded": "Total tickets exceed event capacity",
+                        "recurrence_type_required": "Please select a recurrence type",
+                        "errors_found": "Form has incomplete or invalid fields",
+                        "please_fix_errors": "Please fix the following errors:",
+                        "required": "Required",
+                        "incomplete_profile": "Please complete your bank information",
+                        "incomplete_profile_message": "To create events, you need to add your bank details (Bank Name and IBAN) in your profile settings. This ensures customers can pay for their bookings."
+                    }
+                }
+            },
+            "warning_banner": {
+                "title": "Complete Your Bank Information",
+                "message": "You need to add your bank details (Bank Name and IBAN) before you can create events. This ensures customers can pay for their bookings.",
+                "action": "Go to Profile Settings"
             },
             "customers": {
                 "title": "Customers",
@@ -635,6 +729,15 @@
                     "percentage": "Percentage (%)",
                     "fixed": "Fixed Amount (TL)"
                 }
+            },
+            "bulk_discounts": {
+                "title": "Bulk Discounts",
+                "add_rule": "Add Rule",
+                "buy_at_least": "Buy at least",
+                "tickets": "tickets",
+                "get": "get",
+                "off": "off",
+                "no_discounts": "No bulk discounts set for this event."
             }
         }
     },
@@ -653,6 +756,7 @@
         "default_partner": "Nuqta Partner",
         "super_partner": "Super Partner",
         "personal_host": "Personal Host",
+        "inquire_whatsapp": "Inquire via WhatsApp",
         "the_experience": "The Experience",
         "default_description": "This exclusive experience invites you to discover the hidden stories of Istanbul. Join us for a journey of connection and culture.",
         "location_context": "Location Context",
@@ -710,7 +814,20 @@
         "invalid_for_event": "This code is not valid for this event",
         "code_expired": "Discount code has expired",
         "code_usage_limit": "Discount code has reached its usage limit",
-        "min_purchase_not_met": "Minimum purchase of {amount} ₺ required"
+        "min_purchase_not_met": "Minimum purchase of {amount} ₺ required",
+        "error_not_authenticated": "You must be logged in to make a booking",
+        "error_event_not_found": "Event not found",
+        "error_ticket_not_found": "Ticket not found",
+        "error_invalid_ticket_price": "Invalid ticket price",
+        "error_vendor_not_found": "Vendor not found",
+        "error_booking_failed": "Failed to create booking. Please try again.",
+        "error_booking_items_failed": "Failed to create booking items. Please try again.",
+        "error_existing_pending_booking": "You already have a pending booking for this event. Please complete or cancel your existing booking before creating a new one.",
+        "manage_booking": "Manage My Bookings",
+        "login_to_book": "Login to Book",
+        "login_prompt": "Create an account or log in to reserve your spot at this event",
+        "quick_login": "Quick Login",
+        "or_continue_with": "Or continue with"
     },
     "Reviews": {
         "title": "Community Reviews",

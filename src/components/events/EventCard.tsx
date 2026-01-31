@@ -8,6 +8,8 @@ import { toggleFavoriteEvent } from '@/actions/user';
 import { useRouter } from 'next/navigation';
 import { getEventStatus, EventStatus } from '@/utils/eventStatus';
 import { useTranslations } from 'next-intl';
+import TierBadge from '@/components/TierBadge';
+import type { SubscriptionTier } from '@/lib/constants/subscription';
 
 interface EventCardProps {
     event: any;
@@ -107,9 +109,23 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
 
                     {/* Type Badge - Positioned at bottom on mobile (only show if not expired/sold out) */}
                     {!isExpired && !isSoldOut && (
-                        <div className="absolute bottom-2 left-2 md:top-3 md:left-3 md:bottom-auto px-2.5 py-1.5 md:px-3 md:py-1.5 bg-white/95 backdrop-blur-md rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm flex items-center gap-1 md:gap-1.5">
-                            <span className="text-sm md:text-sm">{event.category_icon || event.category?.icon || '✨'}</span>
-                            <span className="inline">{event.category_name_en || event.category?.name_en || event.category?.name_ar || 'Event'}</span>
+                        <div className="absolute bottom-2 left-2 md:top-3 md:left-3 md:bottom-auto flex items-center gap-2">
+                            {/* Category Badge */}
+                            <div className="px-2.5 py-1.5 md:px-3 md:py-1.5 bg-white/95 backdrop-blur-md rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm flex items-center gap-1 md:gap-1.5">
+                                <span className="text-sm md:text-sm">{event.category_icon || event.category?.icon || '✨'}</span>
+                                <span className="inline">{event.category_name_en || event.category?.name_en || event.category?.name_ar || 'Event'}</span>
+                            </div>
+
+                            {/* Tier Badge - Growth or Professional */}
+                            {event.vendors?.subscription_tier && (
+                                <div className="hidden md:block">
+                                    <TierBadge
+                                        tier={event.vendors.subscription_tier as SubscriptionTier}
+                                        size="sm"
+                                        showLabel={true}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

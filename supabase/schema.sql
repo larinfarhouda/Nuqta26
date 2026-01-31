@@ -22,6 +22,7 @@ create table if not exists profiles (
   full_name text,
   email text,
   avatar_url text,
+  role text default 'user' check (role in ('user', 'vendor', 'admin')),
   age int,
   gender text,
   country text,
@@ -296,8 +297,8 @@ create policy "Users can update own reviews" on event_reviews for update using (
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name, email, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'avatar_url');
+  insert into public.profiles (id, full_name, email, avatar_url, role)
+  values (new.id, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'avatar_url', coalesce(new.raw_user_meta_data->>'role', 'user'));
   return new;
 end;
 $$ language plpgsql security definer;
@@ -313,6 +314,7 @@ begin
   set email = new.email,
       full_name = coalesce(new.raw_user_meta_data->>'full_name', full_name),
       avatar_url = coalesce(new.raw_user_meta_data->>'avatar_url', avatar_url),
+      role = coalesce(new.raw_user_meta_data->>'role', role),
       updated_at = now()
   where id = new.id;
   return new;

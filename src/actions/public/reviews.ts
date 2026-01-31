@@ -39,6 +39,7 @@ export async function submitReview(eventId: string, rating: number, comment?: st
         .eq('status', 'confirmed')
         .single();
 
+
     // Insert the review
     const { data, error } = await supabase
         .from('event_reviews')
@@ -55,6 +56,51 @@ export async function submitReview(eventId: string, rating: number, comment?: st
     if (error) {
         console.error('Error submitting review:', error);
         return { success: false, error: 'Failed to submit review' };
+    }
+
+    // Send email notification to vendor
+    try {
+        const { ServiceFactory } = await import('@/services/service-factory');
+        const factory = new ServiceFactory(supabase);
+        const notificationService = factory.getNotificationService();
+
+        // Get event and vendor details
+        const { data: event } = await supabase
+            .from('events')
+            .select('title, vendor_id')
+            .eq('id', eventId)
+            .single();
+
+        if (event && event.vendor_id) {
+            // Get vendor profile
+            const { data: vendorProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', event.vendor_id)
+                .single();
+
+            // Get vendor email
+            try {
+                const { data: { user: vendorUser } } = await supabase.auth.admin.getUserById(event.vendor_id);
+
+                if (vendorUser?.email) {
+                    await notificationService.sendReviewReceived({
+                        vendorEmail: vendorUser.email,
+                        vendorName: vendorProfile?.full_name || 'Vendor',
+                        eventTitle: event.title,
+                        rating,
+                        comment: comment?.trim(),
+                        reviewUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist'}/dashboard/vendor/events/${eventId}`,
+                        locale: 'ar', // Default to Arabic
+                    });
+                }
+            } catch (emailErr) {
+                console.error('Failed to send review notification email:', emailErr);
+            }
+        }
+    } catch (notifError) {
+        // Don't fail the review submission if notification fails
+        console.error('Failed to send review notification:', notifError);
     }
 
     // Revalidate the event page

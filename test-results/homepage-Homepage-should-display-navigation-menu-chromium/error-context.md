@@ -1,0 +1,216 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - link "Nuqta Logo" [ref=e4] [cursor=pointer]:
+        - /url: /ar
+        - img "Nuqta Logo" [ref=e6]
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "للمنظمين" [ref=e9] [cursor=pointer]:
+            - /url: /ar/for-vendors
+          - link "تسجيل دخول" [ref=e11] [cursor=pointer]:
+            - /url: /ar/login
+          - link "انضم لنا" [ref=e13] [cursor=pointer]:
+            - /url: /ar/register
+        - generic [ref=e14]:
+          - link "EN" [ref=e15] [cursor=pointer]:
+            - /url: /en
+          - link "AR" [ref=e16] [cursor=pointer]:
+            - /url: /ar
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - generic:
+          - img
+        - main [ref=e19]:
+          - generic [ref=e21]:
+            - generic:
+              - img
+            - generic [ref=e22]:
+              - generic [ref=e23]:
+                - img [ref=e24]
+                - generic [ref=e27]: مجتمع متصل
+              - heading "دليلك لأفضل الفعاليات والأنشطة العربية في إسطنبول" [level=1] [ref=e28]:
+                - text: دليلك لأفضل
+                - generic [ref=e29]: الفعاليات والأنشطة العربية
+                - text: في إسطنبول
+              - paragraph [ref=e30]: ورش عمل، معارض فنية، بازارات، وكل ما يهم المجتمع العربي. اكتشف، شارك، وعش التجربة مع نقطة.
+              - link "اكتشف المزيد" [ref=e32] [cursor=pointer]:
+                - /url: /ar/register
+                - generic [ref=e33]: اكتشف المزيد
+                - img [ref=e34]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]:
+                - img [ref=e40]
+                - textbox "عن ماذا تبحث اليوم؟" [ref=e43]
+              - generic [ref=e45]:
+                - img [ref=e46]
+                - generic [ref=e49]: بحث
+            - generic:
+              - generic: جرب "ليلة جاز"
+              - generic: جرب "ورشة تصوير"
+          - generic [ref=e52]:
+            - button "Scroll left" [ref=e53]:
+              - img [ref=e54]
+            - generic [ref=e56]:
+              - button "🛍️ بازار" [ref=e57]:
+                - generic [ref=e58]: 🛍️
+                - generic [ref=e59]: بازار
+              - button "📚 دورة تدريبية" [ref=e60]:
+                - generic [ref=e61]: 📚
+                - generic [ref=e62]: دورة تدريبية
+              - button "🖼️ معرض فني" [ref=e63]:
+                - generic [ref=e64]: 🖼️
+                - generic [ref=e65]: معرض فني
+              - button "🍲 طعام / مهرجان" [ref=e66]:
+                - generic [ref=e67]: 🍲
+                - generic [ref=e68]: طعام / مهرجان
+              - button "🤝 لقاء مجتمعي" [ref=e69]:
+                - generic [ref=e70]: 🤝
+                - generic [ref=e71]: لقاء مجتمعي
+              - button "✨ آخر" [ref=e72]:
+                - generic [ref=e73]: ✨
+                - generic [ref=e74]: آخر
+              - button "🎨 ورشة عمل" [ref=e75]:
+                - generic [ref=e76]: 🎨
+                - generic [ref=e77]: ورشة عمل
+            - button "Scroll right" [ref=e78]:
+              - img [ref=e79]
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - heading "الفعاليات القادمة" [level=2] [ref=e84]
+              - generic [ref=e86]:
+                - generic [ref=e87]:
+                  - img [ref=e88]
+                  - generic [ref=e93]: خيارات العرض
+                - generic [ref=e94]:
+                  - generic:
+                    - img
+                  - combobox "Filter by neighborhood" [ref=e95] [cursor=pointer]:
+                    - option "كل المناطق" [selected]
+                    - option "Başakşehir"
+                    - option "Fatih"
+                  - generic:
+                    - img
+                - button "Search events near me" [ref=e96]:
+                  - img [ref=e97]
+                  - generic [ref=e99]: بحث في الجوار
+            - generic [ref=e100]:
+              - link "ورشة رسم حر منتهي Add to favorites ورشة رسم حر Başakşehir, İstanbul Jan 18 09:30 500 ₺ منتهي" [ref=e102] [cursor=pointer]:
+                - /url: /ar/events/70315e6c-fb6e-44b2-82fd-f573ab8c9f16
+                - generic [ref=e103]:
+                  - img "ورشة رسم حر" [ref=e104]
+                  - generic [ref=e106]:
+                    - img [ref=e107]
+                    - generic [ref=e111]: منتهي
+                  - button "Add to favorites" [ref=e112]:
+                    - img [ref=e113]
+                - generic [ref=e115]:
+                  - heading "ورشة رسم حر" [level=3] [ref=e117]
+                  - generic [ref=e118]:
+                    - paragraph [ref=e119]:
+                      - generic [ref=e121]: Başakşehir, İstanbul
+                    - paragraph [ref=e122]:
+                      - generic [ref=e123]: Jan 18
+                      - generic [ref=e125]: 09:30
+                  - generic [ref=e126]:
+                    - generic [ref=e128]: 500 ₺
+                    - generic [ref=e129]:
+                      - img [ref=e130]
+                      - generic [ref=e134]: منتهي
+              - link "نادي الكتاب Add to favorites ✨ Event نادي الكتاب Fatih, İstanbul Jan 31 22:00 700 ₺ NEW" [ref=e136] [cursor=pointer]:
+                - /url: /ar/events/8691239b-c12f-4eac-9e3e-1469b6717975
+                - generic [ref=e137]:
+                  - img "نادي الكتاب" [ref=e138]
+                  - button "Add to favorites" [ref=e140]:
+                    - img [ref=e141]
+                  - generic [ref=e143]:
+                    - generic [ref=e144]: ✨
+                    - generic [ref=e145]: Event
+                - generic [ref=e146]:
+                  - heading "نادي الكتاب" [level=3] [ref=e148]
+                  - generic [ref=e149]:
+                    - paragraph [ref=e150]:
+                      - generic [ref=e152]: Fatih, İstanbul
+                    - paragraph [ref=e153]:
+                      - generic [ref=e154]: Jan 31
+                      - generic [ref=e156]: 22:00
+                  - generic [ref=e157]:
+                    - generic [ref=e159]: 700 ₺
+                    - generic [ref=e160]:
+                      - img [ref=e161]
+                      - generic [ref=e163]: NEW
+            - generic [ref=e166]:
+              - generic [ref=e167]:
+                - generic [ref=e168]:
+                  - img [ref=e169]
+                  - generic [ref=e175]: نظامنا البيئي
+                - heading "كل ما تحتاجه لتزدهر في إسطنبول" [level=2] [ref=e176]:
+                  - text: كل ما تحتاجه
+                  - generic [ref=e177]: لتزدهر
+                  - text: في إسطنبول
+              - generic [ref=e179]:
+                - generic [ref=e180]:
+                  - img [ref=e183]
+                  - generic [ref=e186]:
+                    - heading "استكشاف بلا حدود" [level=3] [ref=e187]
+                    - paragraph [ref=e188]: اعثر على أفضل الأنشطة والفعاليات العربية القريبة منك بسهولة.
+                - generic [ref=e190]:
+                  - img [ref=e193]
+                  - generic [ref=e198]:
+                    - heading "تواصل مع مجتمعك" [level=3] [ref=e199]
+                    - paragraph [ref=e200]: تعرف على مبدعين ورواد أعمال من أبناء لغتك وثقافتك.
+                - generic [ref=e202]:
+                  - img [ref=e205]
+                  - generic [ref=e207]:
+                    - heading "طوّر مهاراتك" [level=3] [ref=e208]
+                    - paragraph [ref=e209]: شارك في ورش عمل ودورات تدريبية متميزة في مختلف المجالات.
+        - generic [ref=e217]:
+          - generic [ref=e218]:
+            - generic [ref=e219]:
+              - img [ref=e220]
+              - generic [ref=e223]: جاهز للبدء؟
+            - heading "أنت جزء من القصة" [level=2] [ref=e224]
+          - generic [ref=e225]:
+            - generic [ref=e226] [cursor=pointer]:
+              - img [ref=e228]
+              - generic [ref=e233]:
+                - heading "دخول الزوار" [level=3] [ref=e234]
+                - paragraph [ref=e235]: هل تبحث عن تجارب جديدة؟
+                - generic [ref=e236]:
+                  - generic [ref=e237]: دخول الزوار
+                  - img [ref=e238]
+            - generic [ref=e240] [cursor=pointer]:
+              - img [ref=e242]
+              - generic [ref=e244]:
+                - heading "دخول المنظمين" [level=3] [ref=e245]
+                - paragraph [ref=e246]: هل لديك فعالية أو نشاط تود نشره؟
+                - generic [ref=e247]:
+                  - generic [ref=e248]: دخول المنظمين
+                  - img [ref=e249]
+    - contentinfo [ref=e251]:
+      - generic [ref=e253]:
+        - generic [ref=e254]:
+          - link "Nuqta Logo" [ref=e255] [cursor=pointer]:
+            - /url: /ar
+            - img "Nuqta Logo" [ref=e256]
+          - generic [ref=e258]: © 2026 Nuqta Istanbul
+        - navigation [ref=e259]:
+          - link "الرئيسية" [ref=e260] [cursor=pointer]:
+            - /url: /ar
+          - link "للمنظمين" [ref=e261] [cursor=pointer]:
+            - /url: /ar/for-vendors
+          - link "عن نقطة" [ref=e262] [cursor=pointer]:
+            - /url: /ar/about
+          - link "تواصل معنا" [ref=e263] [cursor=pointer]:
+            - /url: /ar/contact
+          - link "الخصوصية" [ref=e264] [cursor=pointer]:
+            - /url: /ar/privacy
+        - generic [ref=e267]: جميع الحقوق محفوظة © 2026
+  - button "Open Next.js Dev Tools" [ref=e273] [cursor=pointer]:
+    - img [ref=e274]
+  - alert [ref=e277]
+```

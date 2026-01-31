@@ -15,16 +15,13 @@ export async function GET(request: Request) {
             const { data: { user } } = await supabase.auth.getUser();
 
             if (user) {
-                // Fetch the current profile to see what we have
-                const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+                // Get role from user metadata first
+                let finalRole = user.user_metadata?.role;
 
-                let finalRole = profile?.role;
-
-                if (roleParam && roleParam === 'vendor') {
-                    if (!profile || profile.role !== 'vendor') {
-                        await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
-                        finalRole = 'vendor';
-                    }
+                // If roleParam is vendor and user isn't already a vendor, update profile
+                if (roleParam && roleParam === 'vendor' && finalRole !== 'vendor') {
+                    await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
+                    finalRole = 'vendor';
                 }
 
                 const next = searchParams.get('next');

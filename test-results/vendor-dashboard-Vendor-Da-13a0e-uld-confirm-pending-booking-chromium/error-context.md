@@ -1,0 +1,89 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - link "Nuqta Logo" [ref=e4] [cursor=pointer]:
+        - /url: /ar
+        - img "Nuqta Logo" [ref=e6]
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "للمنظمين" [ref=e9] [cursor=pointer]:
+            - /url: /ar/for-vendors
+          - link "تسجيل دخول" [ref=e11] [cursor=pointer]:
+            - /url: /ar/login
+          - link "انضم لنا" [ref=e13] [cursor=pointer]:
+            - /url: /ar/register
+        - generic [ref=e14]:
+          - link "EN" [ref=e15] [cursor=pointer]:
+            - /url: /en/login
+          - link "AR" [ref=e16] [cursor=pointer]:
+            - /url: /ar/login
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e23]:
+          - img "Nuqta Logo" [ref=e25]
+          - heading "أهلاً بعودتك." [level=1] [ref=e26]
+          - paragraph [ref=e27]: سجل دخولك لإدارة فعالياتك، استكشاف المجتمع، والبقاء على تواصل مع نبض إسطنبول.
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - heading "تسجيل الدخول" [level=2] [ref=e31]
+            - paragraph [ref=e32]: أدخل بياناتك للمتابعة
+          - generic [ref=e33]:
+            - button "Google جوجل" [ref=e34]:
+              - img "Google" [ref=e35]
+              - generic [ref=e36]: جوجل
+            - button "فيسبوك" [ref=e37]:
+              - img [ref=e38]
+              - generic [ref=e40]: فيسبوك
+          - generic [ref=e43]: أو عبر البريد الإلكتروني
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - img [ref=e48]
+                - text: البريد الإلكتروني
+              - textbox "name@example.com" [ref=e51]: radiant.dose1@gmail.com
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - generic [ref=e54]:
+                  - img [ref=e55]
+                  - text: كلمة المرور
+                - link "نسيت كلمة المرور؟" [ref=e58] [cursor=pointer]:
+                  - /url: /ar/forgot-password
+              - textbox "••••••••" [ref=e59]: GDt5qFeLLx3ntfG
+            - button "تسجيل دخول" [ref=e60]:
+              - generic [ref=e61]: تسجيل دخول
+              - img [ref=e62]
+          - paragraph [ref=e65]:
+            - text: ليس لديك حساب؟
+            - link "أنشئ حساباً جديداً" [ref=e66] [cursor=pointer]:
+              - /url: /ar/register
+    - contentinfo [ref=e67]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - link "Nuqta Logo" [ref=e71] [cursor=pointer]:
+            - /url: /ar
+            - img "Nuqta Logo" [ref=e72]
+          - generic [ref=e74]: © 2026 Nuqta Istanbul
+        - navigation [ref=e75]:
+          - link "الرئيسية" [ref=e76] [cursor=pointer]:
+            - /url: /ar
+          - link "للمنظمين" [ref=e77] [cursor=pointer]:
+            - /url: /ar/for-vendors
+          - link "عن نقطة" [ref=e78] [cursor=pointer]:
+            - /url: /ar/about
+          - link "تواصل معنا" [ref=e79] [cursor=pointer]:
+            - /url: /ar/contact
+          - link "الخصوصية" [ref=e80] [cursor=pointer]:
+            - /url: /ar/privacy
+        - generic [ref=e83]: جميع الحقوق محفوظة © 2026
+  - button "Open Next.js Dev Tools" [ref=e89] [cursor=pointer]:
+    - generic [ref=e92]:
+      - text: Rendering
+      - generic [ref=e93]:
+        - generic [ref=e94]: .
+        - generic [ref=e95]: .
+        - generic [ref=e96]: .
+  - alert [ref=e97]
+```

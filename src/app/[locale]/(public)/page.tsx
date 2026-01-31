@@ -178,7 +178,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
                 </div>
             </main>
 
-            <CTA />
+            {/* <CTA /> */}
         </div>
     );
 }

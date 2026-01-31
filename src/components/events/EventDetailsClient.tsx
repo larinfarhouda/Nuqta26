@@ -36,6 +36,30 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(false);
 
+    const handleShare = async () => {
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: event.title,
+                    url: window.location.href,
+                });
+            } else {
+                throw new Error('Web Share API not supported');
+            }
+        } catch (error: any) {
+            // Ignore AbortError as it means the user cancelled the share
+            if (error.name === 'AbortError') return;
+
+            // Fallback to clipboard for other errors or if API not supported
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                alert(t('link_copied'));
+            } catch (clipboardError) {
+                console.error('Failed to copy to clipboard:', clipboardError);
+            }
+        }
+    };
+
     const scrollToBooking = () => {
         bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
@@ -91,17 +115,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                     </Link>
                     <div className="flex items-center gap-1 md:gap-3">
                         <button
-                            onClick={() => {
-                                if (navigator.share) {
-                                    navigator.share({
-                                        title: event.title,
-                                        url: window.location.href,
-                                    });
-                                } else {
-                                    navigator.clipboard.writeText(window.location.href);
-                                    alert(t('link_copied'));
-                                }
-                            }}
+                            onClick={handleShare}
                             className="p-2.5 hover:bg-white/50 rounded-full transition-colors text-gray-900"
                         >
                             <Share2 className="w-5 h-5" />
@@ -143,53 +157,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                 </div>
             )}
 
-            {/* 2. Photo Gallery Layout - Floating Cinematic Frame */}
-            <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-6 md:pt-32 md:pb-10 relative z-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 h-auto md:h-[550px] rounded-[2rem] md:rounded-[3rem] overflow-hidden relative shadow-2xl shadow-primary/5 border border-white/50"
-                >
-                    <div className="md:col-span-2 relative aspect-[4/3] md:aspect-auto h-full group bg-gray-50/50">
-                        <Image
-                            src={event.image_url || '/images/hero_community.png'}
-                            alt={event.title}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                    {/* Desktop-only secondary images */}
-                    <div className="hidden md:grid grid-cols-1 grid-rows-2 gap-4 col-span-2">
-                        <div className="relative h-full overflow-hidden group">
-                            <Image
-                                src={event.image_url || '/images/hero_community.png'}
-                                alt={event.title}
-                                fill
-                                className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="relative h-full overflow-hidden group">
-                                <Image
-                                    src={event.image_url || '/images/hero_community.png'}
-                                    alt={event.title}
-                                    fill
-                                    className="object-cover transition-transform duration-1000 group-hover:scale-110 brightness-90"
-                                />
-                            </div>
-                            <div className="relative h-full bg-gray-900/95 flex flex-col items-center justify-center text-white cursor-pointer group hover:bg-primary transition-colors">
-                                <Sparkles className="w-6 h-6 mb-2 text-primary group-hover:text-white" />
-                                <span className="font-black text-xs uppercase tracking-widest">{t('details_count', { count: 12 })}</span>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Mobile counter overlay */}
-                    <div className="absolute bottom-4 right-4 md:hidden bg-white/20 backdrop-blur-xl text-white text-[10px] font-black px-4 py-2 rounded-full tracking-widest border border-white/30 shadow-xl">
-                        <span dir="ltr">1 / 12</span>
-                    </div>
-                </motion.div>
-            </div>
+
 
             {/* 3. Main Content Wrapper */}
             <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-8 md:gap-16 mt-6 md:mt-10 relative z-10">
@@ -197,53 +165,79 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                 {/* Left Column: Details */}
                 <div className="md:col-span-8 space-y-8 md:space-y-10">
 
-                    {/* Header Info - Elevated Glass */}
-                    <div className="space-y-4 md:space-y-6">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className="px-4 py-1.5 bg-primary/10 backdrop-blur-md text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/20 flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                {event.category_name_en || t('default_category')}
-                            </span>
-                            <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                <span>{t('verified_community')}</span>
-                            </div>
-                        </div>
-                        <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
-                            {event.title}
-                        </h1>
+                    {/* Header Info - Side-by-Side Layout */}
+                    <div className="pt-24 md:pt-32">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            {/* Image Column */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="w-full md:w-[280px] shrink-0"
+                            >
+                                <div className="aspect-[4/3] w-full rounded-[2rem] overflow-hidden relative shadow-2xl shadow-primary/10 border border-white/50 bg-gray-50">
+                                    <Image
+                                        src={event.image_url || '/images/hero_community.png'}
+                                        alt={event.title}
+                                        fill
+                                        className="object-cover"
+                                        priority
+                                    />
+                                </div>
+                            </motion.div>
 
-                        <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-4 md:p-6 rounded-[2rem] shadow-xl shadow-primary/5 flex flex-col sm:flex-row sm:items-center gap-6 md:gap-12">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100">
-                                    <Calendar className="w-5 h-5 text-primary" />
+                            {/* Content Column */}
+                            <div className="flex-1 space-y-6">
+                                <div className="space-y-4">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <span className="px-4 py-1.5 bg-primary/10 backdrop-blur-md text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/20 flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                            {event.category_name_en || t('default_category')}
+                                        </span>
+                                        <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                            <span>{t('verified_community')}</span>
+                                        </div>
+                                    </div>
+                                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
+                                        {event.title}
+                                    </h1>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('when')}</span>
-                                    <span className="text-sm font-black text-gray-900 capitalize">{new Date(event.date).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100">
-                                    <Clock className="w-5 h-5 text-primary" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('time')}</span>
-                                    <span className="text-sm font-black text-gray-900 capitalize" dir="ltr">
-                                        {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                        {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100">
-                                    <MapPin className="w-5 h-5 text-primary" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('where')}</span>
-                                    <span className="text-sm font-black text-gray-900 underline underline-offset-4 decoration-primary/30">
-                                        {event.district && event.city ? `${event.district}, ${event.city}` : (event.location_name || t('default_location'))}
-                                    </span>
+
+                                <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-[2rem] shadow-xl shadow-primary/5 flex flex-col gap-5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100 shrink-0">
+                                            <Calendar className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('when')}</span>
+                                            <span className="text-sm font-black text-gray-900 capitalize">{new Date(event.date).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-px bg-gray-200/50 w-full" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100 shrink-0">
+                                            <Clock className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('time')}</span>
+                                            <span className="text-sm font-black text-gray-900 capitalize" dir="ltr">
+                                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="h-px bg-gray-200/50 w-full" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100 shrink-0">
+                                            <MapPin className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('where')}</span>
+                                            <span className="text-sm font-black text-gray-900 underline underline-offset-4 decoration-primary/30">
+                                                {event.district && event.city ? `${event.district}, ${event.city}` : (event.location_name || t('default_location'))}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -289,10 +283,11 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                                 <a
                                     href={`https://wa.me/${event.vendor.whatsapp_number}`}
                                     target="_blank"
-                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black shadow-2xl shadow-gray-900/20 hover:bg-primary transition-all active:scale-95 text-xs uppercase tracking-widest"
+                                    rel="noopener noreferrer"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-2xl font-black shadow-2xl shadow-[#25D366]/20 transition-all active:scale-95 text-xs uppercase tracking-widest"
                                 >
                                     <MessageCircle className="w-4 h-4" />
-                                    <span>{t('personal_host')}</span>
+                                    <span>{t('inquire_whatsapp')}</span>
                                 </a>
                             )}
                         </div>
@@ -425,7 +420,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
 
                 {/* Right Column: Booking Widget - Glowing Card */}
                 <div className="md:col-span-4 relative pb-20 md:pb-0" ref={bookingRef}>
-                    <div className="sticky top-28">
+                    <div className="sticky top-48">
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}

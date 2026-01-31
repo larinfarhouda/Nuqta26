@@ -91,6 +91,27 @@ export default function EventsTab({ vendorData }: { vendorData?: any }) {
                 </button>
             </div>
 
+            {/* Bank Information Warning */}
+            {vendorData && (!vendorData.bank_name || !vendorData.bank_iban) && (
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="font-bold text-amber-900 text-sm">
+                            {t('warning_banner.title')}
+                        </p>
+                        <p className="text-amber-700 text-xs mt-1">
+                            {t('warning_banner.message')}
+                        </p>
+                        <a
+                            href="/dashboard/vendor?tab=profile"
+                            className="inline-block mt-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition-colors"
+                        >
+                            {t('warning_banner.action')}
+                        </a>
+                    </div>
+                </div>
+            )}
+
             {/* Tabs */}
             <div className="flex p-1 bg-gray-100 rounded-xl w-fit">
                 <button

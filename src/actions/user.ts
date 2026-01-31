@@ -167,6 +167,88 @@ export async function updateUserProfile(data: {
 }
 
 /**
+ * Submit payment proof for a booking
+ * Updates booking status and sends confirmation email
+ */
+export async function submitPaymentProof(bookingId: string, paymentProofUrl: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) return { error: 'Unauthorized' };
+
+        // Update booking with payment proof
+        const { error: updateError } = await supabase
+            .from('bookings')
+            .update({
+                payment_proof_url: paymentProofUrl,
+                status: 'payment_submitted'
+            })
+            .eq('id', bookingId)
+            .eq('user_id', user.id); // Ensure user owns this booking
+
+        if (updateError) {
+            logger.error('Failed to update booking with payment proof', { error: updateError, bookingId });
+            return { error: 'Failed to submit payment proof' };
+        }
+
+        // Get booking details for email
+        const { data: booking } = await supabase
+            .from('bookings')
+            .select(`
+                *,
+                events!inner(title, date, vendor_id)
+            `)
+            .eq('id', bookingId)
+            .single();
+
+        if (!booking) {
+            return { error: 'Booking not found' };
+        }
+
+        // Send confirmation email to customer
+        try {
+            const factory = new ServiceFactory(supabase);
+            const notificationService = factory.getNotificationService();
+
+            // Get user profile for customer name
+            const { data: userProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .single();
+
+            const customerName = userProfile?.full_name || 'Customer';
+            const customerEmail = user.email || '';
+
+            if (customerEmail) {
+                await notificationService.sendBookingConfirmation({
+                    customerEmail,
+                    customerName,
+                    eventTitle: (booking.events as any).title,
+                    eventDate: (booking.events as any).date,
+                    bookingId: booking.id,
+                    totalAmount: booking.total_amount || 0,
+                    ticketCount: 1, // You may need to calculate this from booking_items
+                    locale: 'ar', // Default to Arabic
+                });
+            }
+        } catch (emailError) {
+            // Don't fail the payment submission if email fails
+            logger.error('Failed to send payment confirmation email', { emailError, bookingId });
+        }
+
+        revalidatePath('/dashboard/user');
+        logger.info('Payment proof submitted', { userId: user.id, bookingId });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to submit payment proof', { error, bookingId });
+        return { error: error instanceof Error ? error.message : 'Failed to submit payment proof' };
+    }
+}
+
+/**
  * Delete unpaid booking
  * Only allows deletion of bookings with status 'pending_payment' or 'payment_submitted'
  */

@@ -28,6 +28,7 @@ describe('BookingService', () => {
             updateStatus: jest.fn(),
             getPendingCount: jest.fn(),
             getConfirmedBookings: jest.fn(),
+            getBookingItemsCount: jest.fn().mockResolvedValue(1),
         } as any;
 
         mockEventRepo = {

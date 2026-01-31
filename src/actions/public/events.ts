@@ -87,7 +87,7 @@ export async function createBooking(
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        return { error: 'You must be logged in to make a booking' };
+        return { error: 'error_not_authenticated', requiresAuth: true };
     }
 
     try {
@@ -98,17 +98,17 @@ export async function createBooking(
         // Get event and ticket
         const event = await eventService.getPublicEvent(eventId);
         if (!event) {
-            return { error: 'Event not found' };
+            return { error: 'error_event_not_found' };
         }
 
         const ticket = event.tickets?.find((t: any) => t.id === ticketId);
         if (!ticket) {
-            return { error: 'Ticket not found' };
+            return { error: 'error_ticket_not_found' };
         }
 
         // Calculate pricing
         if (!ticket.price) {
-            return { error: 'Invalid ticket price' };
+            return { error: 'error_invalid_ticket_price' };
         }
 
         const basePrice = ticket.price * quantity;
@@ -150,7 +150,19 @@ export async function createBooking(
         // Get vendor ID
         const vendorId = event.vendor_id;
         if (!vendorId) {
-            return { error: 'Vendor not found' };
+            return { error: 'error_vendor_not_found' };
+        }
+
+        // Check for existing pending booking
+        const bookingRepo = factory.getBookingRepository();
+        const existingBooking = await bookingRepo.findPendingBookingByUserAndEvent(user.id, eventId);
+
+        if (existingBooking) {
+            return {
+                error: 'error_existing_pending_booking',
+                bookingId: existingBooking.id,
+                requiresManagement: true
+            };
         }
 
         // Create booking
@@ -170,7 +182,7 @@ export async function createBooking(
 
         if (bookingError) {
             logger.error('Failed to create booking', { bookingError });
-            return { error: bookingError.message };
+            return { error: 'error_booking_failed' };
         }
 
         // Create booking items (one per ticket)
@@ -188,7 +200,7 @@ export async function createBooking(
             // Rollback booking
             await supabase.from('bookings').delete().eq('id', booking.id);
             logger.error('Failed to create booking items', { itemError });
-            return { error: itemError.message };
+            return { error: 'error_booking_items_failed' };
         }
 
         // Update ticket sold count
@@ -197,10 +209,83 @@ export async function createBooking(
             quantity: quantity
         });
 
+        // Send email notifications
+        try {
+            const notificationService = factory.getNotificationService();
+
+            // Get user profile for customer name
+            const { data: userProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', user.id)
+                .single();
+
+            // Get vendor profile for vendor name
+            const { data: vendorProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', vendorId)
+                .single();
+
+            const customerName = userProfile?.full_name || 'Customer';
+            const customerEmail = user.email || '';
+
+            // Default to Arabic locale
+            const locale: 'ar' | 'en' = 'ar';
+
+            // Get vendor email from auth.users (service role required)
+            let vendorEmail = '';
+            try {
+                const { data: { user: vendorUser } } = await supabase.auth.admin.getUserById(vendorId);
+                vendorEmail = vendorUser?.email || '';
+            } catch {
+                vendorEmail = '';
+            }
+
+            // Note: Booking confirmation email is NOT sent here
+            // It will be sent after user submits payment proof via submitPaymentProof()
+
+            if (vendorEmail) {
+                await notificationService.sendVendorNewBooking({
+                    vendorEmail,
+                    vendorName: vendorProfile?.full_name || 'Vendor',
+                    customerName,
+                    eventTitle: event.title,
+                    bookingId: booking.id,
+                    totalAmount,
+                    ticketCount: quantity,
+                    locale,
+                });
+            }
+
+            const { data: ticketData } = await supabase
+                .from('tickets')
+                .select('quantity, sold')
+                .eq('id', ticketId)
+                .single();
+
+            if (ticketData && ticketData.quantity && ticketData.sold != null && ticketData.sold >= ticketData.quantity) {
+                // Event ticket sold out - notify vendor
+                if (vendorEmail) {
+                    await notificationService.sendEventSoldOut({
+                        vendorEmail,
+                        vendorName: vendorProfile?.full_name || 'Vendor',
+                        eventTitle: event.title,
+                        eventId: event.id,
+                        soldCount: ticketData.sold,
+                        locale,
+                    });
+                }
+            }
+        } catch (emailError) {
+            // Don't fail the booking if email sending fails
+            logger.error('Failed to send booking notifications', { emailError, bookingId: booking.id });
+        }
+
         logger.info('Booking created successfully', { bookingId: booking.id });
         return { success: true, booking, bookingId: booking.id };
     } catch (error) {
         logger.error('Failed to create booking', { error, eventId, ticketId, quantity });
-        return { error: error instanceof Error ? error.message : 'Failed to create booking' };
+        return { error: 'error_booking_failed' };
     }
 }

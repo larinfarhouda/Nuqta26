@@ -24,7 +24,7 @@ export const createMockSupabaseClient = () => {
     const mockRange = jest.fn().mockReturnThis();
     const mockRpc = jest.fn().mockResolvedValue({ data: null, error: null });
 
-    const mockFrom = jest.fn().mockReturnValue({
+    const queryBuilder = {
         select: mockSelect,
         insert: mockInsert,
         update: mockUpdate,
@@ -43,7 +43,17 @@ export const createMockSupabaseClient = () => {
         single: mockSingle,
         maybeSingle: mockMaybeSingle,
         range: mockRange,
+    };
+
+    // Make all query builder methods return the query builder for chaining
+    Object.keys(queryBuilder).forEach(key => {
+        const method = queryBuilder[key as keyof typeof queryBuilder];
+        if (typeof method === 'function' && !['single', 'maybeSingle'].includes(key)) {
+            (method as jest.Mock).mockReturnValue(queryBuilder);
+        }
     });
+
+    const mockFrom = jest.fn().mockReturnValue(queryBuilder);
 
     return {
         from: mockFrom,

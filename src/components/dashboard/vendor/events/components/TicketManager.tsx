@@ -22,7 +22,7 @@ export default function TicketManager({ control, register, errors }: TicketManag
 
             <div className="space-y-3">
                 <label className="text-sm font-bold text-gray-700">السعة القصوى للفعالية</label>
-                <input {...register('capacity')} type="number" className={`input-field ${errors.capacity ? 'border-red-500' : ''}`} placeholder="0" />
+                <input {...register('capacity')} type="number" className={`input-field text-gray-900 ${errors.capacity ? 'border-red-500' : ''}`} placeholder="0" />
                 {errors.capacity && <p className="text-red-500 text-xs font-bold mt-1">{errors.capacity.message as string}</p>}
             </div>
 
@@ -44,21 +44,21 @@ export default function TicketManager({ control, register, errors }: TicketManag
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-500">اسم التذكرة (مثال: VIP)</label>
-                                <input {...register(`tickets.${index}.name` as const)} className="input-field h-10 text-sm" placeholder="تذكرة عامة" />
+                                <input {...register(`tickets.${index}.name` as const)} className="input-field h-10 text-sm text-gray-900" placeholder="تذكرة عامة" />
                                 {(errors.tickets as any)?.[index]?.name && <p className="text-red-500 text-xs mt-1">{(errors.tickets as any)[index]?.name?.message as string}</p>}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-500">السعر</label>
                                     <div className="relative">
-                                        <input type="number" {...register(`tickets.${index}.price` as const)} className="input-field h-10 text-sm pl-8" />
+                                        <input type="number" {...register(`tickets.${index}.price` as const)} className="input-field h-10 text-sm text-gray-900 pl-8" />
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₺</span>
                                     </div>
                                     {(errors.tickets as any)?.[index]?.price && <p className="text-red-500 text-xs mt-1">{(errors.tickets as any)[index]?.price?.message as string}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-500">العدد المتاح</label>
-                                    <input type="number" {...register(`tickets.${index}.quantity` as const)} className="input-field h-10 text-sm" />
+                                    <input type="number" {...register(`tickets.${index}.quantity` as const)} className="input-field h-10 text-sm text-gray-900" />
                                     {(errors.tickets as any)?.[index]?.quantity && <p className="text-red-500 text-xs mt-1">{(errors.tickets as any)[index]?.quantity?.message as string}</p>}
                                 </div>
                             </div>

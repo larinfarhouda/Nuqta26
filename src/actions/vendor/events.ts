@@ -5,6 +5,12 @@ import { revalidatePath } from 'next/cache';
 import { ServiceFactory } from '@/services/service-factory';
 import { logger } from '@/lib/logger/logger';
 import { UnauthorizedError } from '@/lib/errors/app-error';
+import {
+    canCreateEvent,
+    getEventLimit,
+    getRequiredUpgradeTier,
+    type SubscriptionTier
+} from '@/lib/constants/subscription';
 
 /**
  * Create event (vendor action)
@@ -16,9 +22,58 @@ export async function createEvent(formData: FormData) {
 
         if (!user) return { error: 'Unauthorized' };
 
-        // Get/verify vendor
-        const { data: vendor } = await supabase.from('vendors').select('id').eq('id', user.id).single();
+        // Get vendor profile with subscription info
+        const { data: vendor } = await supabase
+            .from('vendors')
+            .select('id, bank_name, bank_iban, bank_account_name')
+            .eq('id', user.id)
+            .single();
+
         if (!vendor) return { error: 'Vendor profile not found' };
+
+        // Require bank information before creating events
+        if (!vendor.bank_name || !vendor.bank_iban) {
+            return {
+                error: 'INCOMPLETE_PROFILE',
+                message: 'Please complete your bank information in your profile before creating events.'
+            };
+        }
+
+        // Get profile with subscription tier info
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_tier, is_founder_pricing')
+            .eq('id', user.id)
+            .single();
+
+        const tier = (profile?.subscription_tier || 'starter') as SubscriptionTier;
+
+        // Check subscription tier limits
+        const factory = new ServiceFactory(supabase);
+        const eventRepository = factory.getEventRepository();
+        const activeEventsCount = await eventRepository.countActiveEventsByVendor(user.id);
+
+        if (!canCreateEvent(tier, activeEventsCount)) {
+            const limit = getEventLimit(tier);
+            const upgradeTier = getRequiredUpgradeTier(tier);
+
+            logger.warn('Event creation blocked - tier limit reached', {
+                vendorId: user.id,
+                tier,
+                activeEventsCount,
+                limit
+            });
+
+            return {
+                error: 'TIER_LIMIT_REACHED',
+                message: `You've reached your ${tier} plan limit of ${limit} active event${limit > 1 ? 's' : ''}.`,
+                currentTier: tier,
+                activeEvents: activeEventsCount,
+                limit,
+                upgradeTier,
+                isFounder: profile?.is_founder_pricing || false
+            };
+        }
 
         // Parse form data
         const rawData = {
@@ -65,8 +120,7 @@ export async function createEvent(formData: FormData) {
             slug = `${slug}-${randomStr}`;
         }
 
-        // Use EventService to create
-        const factory = new ServiceFactory(supabase);
+        // Use EventService to create (reuse factory from tier check above)
         const eventService = factory.getEventService();
 
         const event = await eventService.createEvent(vendor.id, {

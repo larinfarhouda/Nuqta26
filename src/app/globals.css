@@ -198,3 +198,33 @@ img {
     padding-top: env(safe-area-inset-top);
   }
 }
+
+/* Form Input Styles */
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 1rem;
+  font-weight: 600;
+  color: #111827;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input-field:focus {
+  border-color: #2CA58D;
+  ring: 2px;
+  ring-color: rgba(44, 165, 141, 0.1);
+}
+
+.input-field:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.input-field::placeholder {
+  color: #9ca3af;
+  font-weight: 500;
+}

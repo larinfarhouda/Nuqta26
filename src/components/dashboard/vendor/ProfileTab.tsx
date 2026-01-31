@@ -12,18 +12,21 @@ import { slugify } from '@/utils/slugify';
 import { useEffect } from 'react';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { COUNTRIES } from '@/constants/locations';
+import { TURKISH_BANKS } from '@/constants/banks';
 
-const detailsSchema = z.object({
-    business_name: z.string().min(2),
-    slug: z.string().min(3).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens").optional(),
+const detailsSchema = (t: any) => z.object({
+    business_name: z.string().min(2, t('validation.business_name_min')),
+    slug: z.string().min(3, t('validation.slug_min')).regex(/^[a-z0-9-]+$/, t('validation.slug_format')).optional(),
     instagram: z.string().optional(),
-    website: z.string().url("Invalid URL").optional().or(z.literal("")),
+    website: z.string().url(t('validation.invalid_url')).optional().or(z.literal("")),
     whatsapp_number: z.string().optional(),
     category: z.string().min(2),
     description_ar: z.string().optional(),
-    bank_name: z.string().optional(),
-    bank_account_name: z.string().optional(),
-    bank_iban: z.string().optional(),
+    bank_name: z.string().min(2, t('validation.bank_name_required')),
+    bank_account_name: z.string().min(3, t('validation.bank_account_name_required')),
+    bank_iban: z.string()
+        .min(16, t('validation.bank_iban_min'))
+        .regex(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/, t('validation.bank_iban_format')),
 });
 
 // CITIES moved to constants/locations.ts
@@ -38,15 +41,27 @@ const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | n
     );
 };
 
+// Error Message Component
+const ErrorMessage = ({ message }: { message?: string }) => {
+    if (!message) return null;
+    return (
+        <p className="text-xs text-red-600 font-medium mt-1 flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            {message}
+        </p>
+    );
+};
+
 export default function ProfileTab({ vendorData, setVendorData, showAlert }: any) {
     const supabase = createClient();
     const t = useTranslations('Dashboard.vendor.profile');
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
 
-    const { register, handleSubmit, watch, setValue } = useForm({
-        resolver: zodResolver(detailsSchema),
-        defaultValues: vendorData
+    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+        resolver: zodResolver(detailsSchema(t)),
+        defaultValues: vendorData,
+        mode: 'onBlur' // Validate on blur
     });
 
     const businessName = watch('business_name');
@@ -125,8 +140,8 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
             {/* 1. Header & Live Preview Button */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Customize Profile</h2>
-                    <p className="text-gray-500 text-sm">Design your page and update your information</p>
+                    <h2 className="text-2xl font-bold text-gray-900">{t('page_title')}</h2>
+                    <p className="text-gray-500 text-sm">{t('page_subtitle')}</p>
                 </div>
                 {vendorData.slug && (
                     <a
@@ -153,7 +168,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                         <label className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur rounded-full font-bold text-sm text-gray-900 cursor-pointer hover:bg-white shadow-lg transition-all">
                             {uploadingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                            {uploadingCover ? t('uploading') : 'Change Cover'}
+                            {uploadingCover ? t('uploading') : t('change_cover')}
                             <input type="file" onChange={(e) => handleImageUpload(e, 'cover')} className="hidden" accept="image/*" disabled={uploadingCover} />
                         </label>
                     </div>
@@ -189,20 +204,24 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
                         <div className="p-2 bg-primary/5 rounded-xl text-primary"><Layout className="w-5 h-5" /></div>
-                        <h3 className="font-bold text-gray-900">Brand Identity</h3>
+                        <h3 className="font-bold text-gray-900">{t('brand_identity')}</h3>
                     </div>
 
                     <div className="space-y-4">
                         {/* Name */}
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase">{t('business_name')}</label>
-                            <input {...register('business_name')} className="input-field py-3 font-bold text-lg text-gray-900" />
+                            <input
+                                {...register('business_name')}
+                                className={`input-field py-3 font-bold text-lg text-gray-900 ${errors.business_name ? 'border-red-500 focus:ring-red-500' : ''}`}
+                            />
+                            <ErrorMessage message={errors.business_name?.message as string} />
                         </div>
 
                         {/* Slug / Link */}
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase">{t('profile_link')}</label>
-                            <div className="bg-gray-50 rounded-xl p-1 flex items-center text-sm border border-gray-200">
+                            <div className={`bg-gray-50 rounded-xl p-1 flex items-center text-sm border ${errors.slug ? 'border-red-500' : 'border-gray-200'}`}>
                                 <span className="text-gray-400 font-medium px-3 select-none">nuqta.ist/v/</span>
                                 <input
                                     {...register('slug')}
@@ -210,7 +229,8 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                                     placeholder="my-brand"
                                 />
                             </div>
-                            <p className="text-[10px] text-gray-400 font-medium">This is your unique link to share with customers.</p>
+                            <ErrorMessage message={errors.slug?.message as string} />
+                            {!errors.slug && <p className="text-[10px] text-gray-400 font-medium">{t('profile_link_helper')}</p>}
                         </div>
 
                         {/* Category */}
@@ -230,7 +250,7 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                             <textarea
                                 {...register('description_ar')}
                                 className="input-field min-h-[140px] text-gray-900 leading-relaxed resize-none p-4"
-                                placeholder="Describe your business, mission, and what makes you unique..."
+                                placeholder={t('description_placeholder')}
                             />
                         </div>
                     </div>
@@ -242,14 +262,14 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
                             <div className="p-2 bg-blue-50 rounded-xl text-blue-600"><ExternalLink className="w-5 h-5" /></div>
-                            <h3 className="font-bold text-gray-900">Contact & Social</h3>
+                            <h3 className="font-bold text-gray-900">{t('contact_social')}</h3>
                         </div>
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase">{t('instagram')}</label>
-                                    <input {...register('instagram')} className="input-field" placeholder="@username" />
+                                    <input {...register('instagram')} className="input-field" placeholder={t('instagram_placeholder')} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase">{t('whatsapp')}</label>
@@ -264,7 +284,12 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-400 uppercase">{t('website')}</label>
-                                <input {...register('website')} className="input-field" placeholder="https://" />
+                                <input
+                                    {...register('website')}
+                                    className={`input-field ${errors.website ? 'border-red-500 focus:ring-red-500' : ''}`}
+                                    placeholder={t('website_placeholder')}
+                                />
+                                <ErrorMessage message={errors.website?.message as string} />
                             </div>
                         </div>
                     </div>
@@ -281,16 +306,43 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert }: any
                                 {t('bank_note')}
                             </p>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase">{t('bank_name')}</label>
-                                <input {...register('bank_name')} className="input-field" placeholder="e.g. Garanti BBVA" />
+                                <label className="text-xs font-bold text-gray-400 uppercase">
+                                    {t('bank_name')} <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    {...register('bank_name')}
+                                    className={`input-field appearance-none cursor-pointer ${errors.bank_name ? 'border-red-500 focus:ring-red-500' : ''}`}
+                                >
+                                    <option value="">{t('bank_name_placeholder')}</option>
+                                    {TURKISH_BANKS.map((bank) => (
+                                        <option key={bank} value={bank}>
+                                            {bank}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ErrorMessage message={errors.bank_name?.message as string} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase">{t('bank_account_name')}</label>
-                                <input {...register('bank_account_name')} className="input-field" placeholder="Full Legal Name" />
+                                <label className="text-xs font-bold text-gray-400 uppercase">
+                                    {t('bank_account_name')} <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    {...register('bank_account_name')}
+                                    className={`input-field ${errors.bank_account_name ? 'border-red-500 focus:ring-red-500' : ''}`}
+                                    placeholder={t('bank_account_name_placeholder')}
+                                />
+                                <ErrorMessage message={errors.bank_account_name?.message as string} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase">{t('bank_iban')}</label>
-                                <input {...register('bank_iban')} className="input-field font-mono" placeholder="TR..." />
+                                <label className="text-xs font-bold text-gray-400 uppercase">
+                                    {t('bank_iban')} <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    {...register('bank_iban')}
+                                    className={`input-field font-mono uppercase ${errors.bank_iban ? 'border-red-500 focus:ring-red-500' : ''}`}
+                                    placeholder={t('bank_iban_placeholder')}
+                                />
+                                <ErrorMessage message={errors.bank_iban?.message as string} />
                             </div>
                         </div>
                     </div>

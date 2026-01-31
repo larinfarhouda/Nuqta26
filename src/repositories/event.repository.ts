@@ -56,7 +56,7 @@ export class EventRepository extends BaseRepository {
 
         let query = this.client
             .from('events')
-            .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban), bulk_discounts(*)')
+            .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban, id), bulk_discounts(*)')
             .eq('status', 'published');
 
         if (isUuid) {
@@ -70,6 +70,19 @@ export class EventRepository extends BaseRepository {
         if (error) {
             if (this.isNotFoundError(error)) return null;
             this.handleError(error, 'EventRepository.findPublicEvent');
+        }
+
+        // Fetch vendor subscription tier from profiles
+        if (data && data.vendors) {
+            const { data: profileData } = await this.client
+                .from('profiles')
+                .select('subscription_tier')
+                .eq('id', (data.vendors as any).id)
+                .single();
+
+            if (profileData) {
+                (data.vendors as any).subscription_tier = profileData.subscription_tier;
+            }
         }
 
         return data;
@@ -202,5 +215,22 @@ export class EventRepository extends BaseRepository {
 
         if (error) this.handleError(error, 'EventRepository.getAllForSitemap');
         return data || [];
+    }
+
+    /**
+     * Count active (non-past) events for a vendor
+     * Used for subscription tier limit enforcement
+     */
+    async countActiveEventsByVendor(vendorId: string): Promise<number> {
+        const now = new Date().toISOString();
+
+        const { count, error } = await this.client
+            .from('events')
+            .select('id', { count: 'exact', head: true })
+            .eq('vendor_id', vendorId)
+            .gte('date', now); // Events that haven't happened yet
+
+        if (error) this.handleError(error, 'EventRepository.countActiveEventsByVendor');
+        return count || 0;
     }
 }

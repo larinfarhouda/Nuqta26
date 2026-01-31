@@ -79,6 +79,7 @@ export default function RegisterPage() {
                 email: data.email,
                 password: data.password,
                 options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`,
                     data: {
                         role: role,
                         full_name: fullName,
@@ -131,7 +132,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col lg:flex-row bg-white">
+        <div className="min-h-screen flex flex-col lg:flex-row bg-white pt-16 md:pt-24">
 
             {/* --- MARKETING SIDE (Left) --- */}
             <div className="lg:w-1/2 relative bg-gray-900 overflow-hidden text-white flex flex-col justify-center p-8 lg:p-16 transition-colors duration-500">
@@ -289,7 +290,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 {/* Social Login */}
-                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="grid grid-cols-1 gap-4 mb-6">
                                     <motion.button
                                         whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
                                         whileTap={{ scale: 0.98 }}
@@ -300,7 +301,8 @@ export default function RegisterPage() {
                                         <span className="text-sm">{t('continue_google')}</span>
                                     </motion.button>
 
-                                    <motion.button
+                                    {/* Facebook login temporarily hidden */}
+                                    {/* <motion.button
                                         whileHover={{ scale: 1.02, backgroundColor: '#166fe5' }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => handleOAuthLogin('facebook')}
@@ -308,7 +310,7 @@ export default function RegisterPage() {
                                     >
                                         <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
                                         <span className="text-sm">{t('continue_facebook')}</span>
-                                    </motion.button>
+                                    </motion.button> */}
                                 </div>
 
                                 <div className="relative flex items-center gap-4 mb-6">

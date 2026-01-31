@@ -7,6 +7,7 @@ import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
+import { MobileLoginDialog } from '@/components/auth/MobileLoginDialog';
 
 export default function EventBookingForm({ event, tickets }: { event: any, tickets: any[] }) {
     const t = useTranslations('Events');
@@ -22,6 +23,8 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     const [appliedDiscount, setAppliedDiscount] = useState<{ id: string, amount: number, code: string } | null>(null);
     const [validatingCode, setValidatingCode] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [showLoginDialog, setShowLoginDialog] = useState(false);
+    const [existingBookingId, setExistingBookingId] = useState<string | null>(null);
 
     const copyToClipboard = (text: string, field: string) => {
         if (!text) return;
@@ -98,8 +101,19 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
         try {
             const res = await createBooking(event.id, activeTicket.id, quantity, appliedDiscount?.code);
             if (res.error) {
-                setStatus('ERROR');
-                setErrorMsg(res.error);
+                // Check if the error requires authentication
+                if (res.requiresAuth) {
+                    setShowLoginDialog(true);
+                } else if (res.requiresManagement) {
+                    // User has an existing pending booking
+                    setExistingBookingId(res.bookingId || null);
+                    setStatus('ERROR');
+                    setErrorMsg(t(res.error));
+                } else {
+                    setStatus('ERROR');
+                    // Translate the error code
+                    setErrorMsg(t(res.error));
+                }
             } else {
                 if (totalPrice > 0) {
                     setBookingId(res.bookingId || null);
@@ -142,7 +156,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
             if (dbError) throw dbError;
             setStatus('SUCCESS');
         } catch (err: any) {
-            setErrorMsg(err.message);
+            setErrorMsg(t('generic_error'));
         } finally {
             setUploading(false);
         }
@@ -466,9 +480,36 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-rose-50 text-rose-600 text-[11px] font-black uppercase tracking-widest rounded-2xl text-center border border-rose-100"
+                            className={`p-6 rounded-2xl border ${existingBookingId
+                                    ? 'bg-amber-50 border-amber-200'
+                                    : 'bg-rose-50 border-rose-100'
+                                }`}
                         >
-                            {errorMsg}
+                            <div className="flex items-start gap-4">
+                                <div className={`p-2 rounded-xl ${existingBookingId
+                                        ? 'bg-amber-100 text-amber-600'
+                                        : 'bg-rose-100 text-rose-600'
+                                    }`}>
+                                    <AlertCircle className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`font-bold text-sm ${existingBookingId
+                                            ? 'text-amber-900'
+                                            : 'text-rose-600'
+                                        }`}>
+                                        {errorMsg}
+                                    </p>
+                                    {existingBookingId && (
+                                        <a
+                                            href="/dashboard/user"
+                                            className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm transition-all shadow-sm"
+                                        >
+                                            <span>{t('manage_booking')}</span>
+                                            <ChevronRight className="w-4 h-4" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
                         </motion.div>
                     )}
 
@@ -488,6 +529,13 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Login Dialog */}
+            <MobileLoginDialog
+                isOpen={showLoginDialog}
+                onClose={() => setShowLoginDialog(false)}
+                returnUrl={typeof window !== 'undefined' ? window.location.pathname : undefined}
+            />
         </div>
     );
 }

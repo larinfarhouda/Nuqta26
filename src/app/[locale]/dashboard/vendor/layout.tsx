@@ -23,14 +23,10 @@ export default async function VendorDashboardLayout({
         return null;
     }
 
-    // Check role
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+    // Check role from user metadata
+    const role = user.user_metadata?.role;
 
-    if (profile?.role !== 'vendor') {
+    if (role !== 'vendor') {
         redirect({ href: '/', locale });
         return null;
     }
