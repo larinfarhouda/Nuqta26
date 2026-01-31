@@ -288,7 +288,7 @@ export default function DiscountsTab({ showAlert }: Props) {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <button
-                                            onClick={() => handleToggle(code.id, code.is_active)}
+                                            onClick={() => handleToggle(code.id, code.is_active ?? false)}
                                             className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${code.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
                                         >
                                             {code.is_active ? t('active') : t('inactive')}
