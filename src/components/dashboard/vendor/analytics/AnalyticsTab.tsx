@@ -76,7 +76,7 @@ export default function AnalyticsTab() {
                     </div>
                     <div className="space-y-4">
                         {segmentation?.typeDistribution?.length > 0 && segmentation.typeDistribution.map((item: any) => {
-                            const maxValue = Math.max(...segmentation.typeDistribution.map((i: any) => i.value), 1);
+                            const maxValue = Math.max(...(segmentation.typeDistribution?.map((i: any) => i.value) || []), 1);
                             return (
                                 <div key={item.name} className="flex items-center gap-4">
                                     <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
@@ -126,7 +126,7 @@ export default function AnalyticsTab() {
                     </div>
                     <div className="space-y-4">
                         {segmentation?.genderDistribution?.map((item: any) => {
-                            const totalVal = segmentation.genderDistribution.reduce((a: any, b: any) => a + b.value, 0) || 1;
+                            const totalVal = (segmentation.genderDistribution?.reduce((a: any, b: any) => a + b.value, 0) || 0) || 1;
                             return (
                                 <div key={item.name} className="flex items-center gap-4">
                                     <div className="w-20 text-xs font-bold text-gray-500">
@@ -155,7 +155,7 @@ export default function AnalyticsTab() {
                     </div>
                     <div className="space-y-4">
                         {segmentation?.ageDistribution?.map((item: any) => {
-                            const maxAgeValue = Math.max(...segmentation.ageDistribution.map((i: any) => i.value), 1);
+                            const maxAgeValue = Math.max(...(segmentation.ageDistribution?.map((i: any) => i.value) || []), 1);
                             return (
                                 <div key={item.name} className="flex items-center gap-4">
                                     <div className="w-20 text-xs font-bold text-gray-500">{item.name}</div>
