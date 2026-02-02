@@ -11,7 +11,7 @@ import NextImage from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { getPendingBookingsCount } from '@/actions/vendor/bookings';
-import SubscriptionBadge from './vendor/SubscriptionBadge';
+import CompactTierBadge from './vendor/CompactTierBadge';
 
 // Dynamic imports for tab components  
 const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
@@ -322,7 +322,10 @@ export default function VendorDashboard({
                                     />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-black text-gray-900">{vendorData?.business_name}</h1>
+                                    <div className="flex items-center gap-2">
+                                        <h1 className="text-2xl font-black text-gray-900">{vendorData?.business_name}</h1>
+                                        <CompactTierBadge vendorId={vendorData?.id} demoMode={demoMode} />
+                                    </div>
                                     <p className="text-sm text-gray-500 font-medium">{t('vendor.title')}</p>
                                 </div>
                             </div>
@@ -356,16 +359,9 @@ export default function VendorDashboard({
                             </div>
                         </div>
 
-                        {/* Subscription Tier Badge */}
-                        <div className="mb-8">
-                            <SubscriptionBadge
-                                vendorId={vendorData?.id}
-                                activeEventsCount={activeEventsCount}
-                                demoMode={demoMode}
-                            />
-                        </div>
 
-                        {activeTab === 'ANALYTICS' && <AnalyticsTab demoMode={demoMode} />}
+
+                        {activeTab === 'ANALYTICS' && <AnalyticsTab vendorId={vendorData?.id} activeEventsCount={activeEventsCount} demoMode={demoMode} />}
                         {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} demoMode={demoMode} />}
                         {activeTab === 'BOOKINGS' && <BookingsTab demoMode={demoMode} />}
                         {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}

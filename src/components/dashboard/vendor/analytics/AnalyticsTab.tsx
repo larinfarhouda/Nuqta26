@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Calendar, DollarSign, PieChart } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, PieChart, ArrowRight } from 'lucide-react';
 import { getVendorAnalytics, getSegmentationData } from '@/actions/vendor/analytics';
 import { VendorAnalyticsDTO, SegmentationDataDTO } from '@/types/dto/analytics.dto';
 import { useTranslations } from 'next-intl';
 import { getDemoAnalytics } from '@/lib/demoData';
+import { createClient } from '@/utils/supabase/client';
+import { SUBSCRIPTION_TIERS, getEventLimit, type SubscriptionTier } from '@/lib/constants/subscription';
 
-export default function AnalyticsTab({ demoMode = false }: { demoMode?: boolean }) {
+export default function AnalyticsTab({ vendorId, activeEventsCount = 0, demoMode = false }: { vendorId?: string; activeEventsCount?: number; demoMode?: boolean }) {
+    const supabase = createClient();
     const [analytics, setAnalytics] = useState<VendorAnalyticsDTO | null>(null);
     const [segmentation, setSegmentation] = useState<SegmentationDataDTO | null>(null);
+    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'professional' : 'starter');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const t = useTranslations('Dashboard.vendor.analytics');
@@ -34,9 +38,16 @@ export default function AnalyticsTab({ demoMode = false }: { demoMode?: boolean 
                         ageDistribution: demoData.ageDistribution,
                     } as SegmentationDataDTO);
                 } else {
-                    const [a, s] = await Promise.all([getVendorAnalytics(), getSegmentationData()]);
+                    const [a, s, tierData] = await Promise.all([
+                        getVendorAnalytics(),
+                        getSegmentationData(),
+                        vendorId ? supabase.from('vendors').select('subscription_tier').eq('id', vendorId).single() : Promise.resolve({ data: null })
+                    ]);
                     setAnalytics(a);
                     setSegmentation(s);
+                    if (tierData.data) {
+                        setTier((tierData.data.subscription_tier || 'starter') as SubscriptionTier);
+                    }
                 }
             } catch (err: any) {
                 console.error('Analytics load error:', err);
@@ -46,11 +57,16 @@ export default function AnalyticsTab({ demoMode = false }: { demoMode?: boolean 
             }
         };
         load();
-    }, []);
+    }, [vendorId, demoMode]);
 
     if (loading) return <div className="text-center py-20 animate-pulse">{t('loading_analysis')}</div>;
     if (error) return <div className="text-center py-20 text-red-500 font-bold">{error}</div>;
     if (!analytics) return <div className="text-center py-20 font-bold text-gray-400">{t('no_data')}</div>;
+
+    const eventLimit = getEventLimit(tier);
+    const limitReached = activeEventsCount >= eventLimit;
+    const progressPercentage = eventLimit === Infinity ? 100 : Math.min((activeEventsCount / eventLimit) * 100, 100);
+    const isNearLimit = progressPercentage >= 80;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
@@ -71,11 +87,48 @@ export default function AnalyticsTab({ demoMode = false }: { demoMode?: boolean 
                     <div className="text-3xl font-black text-gray-900">{analytics.sales}</div>
                     <div className="text-xs font-bold text-indigo-500 uppercase">{t('tickets_sold')}</div>
                 </div>
-                <div className="stat-card bg-purple-50 border-purple-100 border p-6 rounded-3xl">
-                    <Calendar className="text-purple-600 w-6 h-6 mb-2" />
-                    <div className="text-3xl font-black text-gray-900">{analytics.events}</div>
-                    <div className="text-xs font-bold text-purple-500 uppercase">{t('total_events')}</div>
+
+                {/* Event Limit Card */}
+                <div className={`stat-card p-6 rounded-3xl border-2 transition-all ${limitReached ? 'bg-red-50 border-red-200' :
+                    isNearLimit ? 'bg-amber-50 border-amber-200' :
+                        'bg-[#2CA58D]/5 border-[#2CA58D]/20'
+                    }`}>
+                    <Calendar className={`w-6 h-6 mb-2 ${limitReached ? 'text-red-600' :
+                        isNearLimit ? 'text-amber-600' :
+                            'text-[#2CA58D]'
+                        }`} />
+                    <div className="text-3xl font-black text-gray-900">
+                        {activeEventsCount} / {eventLimit === Infinity ? '∞' : eventLimit}
+                    </div>
+                    <div className={`text-xs font-bold uppercase ${limitReached ? 'text-red-600' :
+                        isNearLimit ? 'text-amber-600' :
+                            'text-[#2CA58D]'
+                        }`}>
+                        الفعاليات النشطة
+                    </div>
+
+                    {/* Progress Bar */}
+                    {eventLimit !== Infinity && (
+                        <div className="mt-3 h-1.5 bg-white/60 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${limitReached ? 'bg-red-500' :
+                                    isNearLimit ? 'bg-amber-500' :
+                                        'bg-[#2CA58D]'
+                                    }`}
+                                style={{ width: `${progressPercentage}%` }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Upgrade Button */}
+                    {tier !== 'professional' && (
+                        <button className="mt-3 w-full py-1.5 px-3 bg-[#2CA58D] hover:bg-[#258f7a] text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 group">
+                            <span>ترقية</span>
+                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                    )}
                 </div>
+
                 <div className="stat-card bg-amber-50 border-amber-100 border p-6 rounded-3xl">
                     <TrendingUp className="text-amber-600 w-6 h-6 mb-2" />
                     <div className="text-3xl font-black text-gray-900">{analytics.recentSales}</div>
