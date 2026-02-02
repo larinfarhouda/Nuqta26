@@ -11,8 +11,9 @@ import {
     Loader2, AlertCircle, ExternalLink, Tag
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
+import { getDemoBookings } from '@/lib/demoData';
 
-export default function BookingsTab() {
+export default function BookingsTab({ demoMode = false }: { demoMode?: boolean } = {}) {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
@@ -26,8 +27,13 @@ export default function BookingsTab() {
     const loadBookings = async () => {
         setLoading(true);
         try {
-            const data = await getVendorBookings();
-            setBookings(data);
+            if (demoMode) {
+                // Use demo data instead of fetching from database
+                setBookings(getDemoBookings() as any);
+            } else {
+                const data = await getVendorBookings();
+                setBookings(data);
+            }
         } catch (error) {
             console.error('Failed to load bookings:', error);
         } finally {

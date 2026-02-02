@@ -16,12 +16,14 @@ import {
 } from '@/actions/vendor/discounts';
 import { getVendorEvents } from '@/actions/vendor/events';
 import { DiscountCodeWithEvent, CreateDiscountCodeInput } from '@/types/dto/discount.dto';
+import { getDemoDiscounts, getDemoEvents } from '@/lib/demoData';
 
 interface Props {
     showAlert: (message: string, type: 'success' | 'error') => void;
+    demoMode?: boolean;
 }
 
-export default function DiscountsTab({ showAlert }: Props) {
+export default function DiscountsTab({ showAlert, demoMode = false }: Props) {
     const t = useTranslations('Dashboard.vendor.discounts');
 
     const [codes, setCodes] = useState<DiscountCodeWithEvent[]>([]);
@@ -47,12 +49,18 @@ export default function DiscountsTab({ showAlert }: Props) {
 
     const fetchData = async () => {
         setLoading(true);
-        const [codesData, eventsData] = await Promise.all([
-            getVendorDiscountCodes(),
-            getVendorEvents()
-        ]);
-        setCodes(codesData);
-        setEvents(eventsData);
+        if (demoMode) {
+            // Use demo data instead of fetching from database
+            setCodes(getDemoDiscounts() as any);
+            setEvents(getDemoEvents());
+        } else {
+            const [codesData, eventsData] = await Promise.all([
+                getVendorDiscountCodes(),
+                getVendorEvents()
+            ]);
+            setCodes(codesData);
+            setEvents(eventsData);
+        }
         setLoading(false);
     };
 

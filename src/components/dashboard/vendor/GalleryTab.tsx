@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Loader2, Plus, Trash2, ImageIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export default function GalleryTab({ vendorId, showAlert }: any) {
+export default function GalleryTab({ vendorId, showAlert, demoMode = false }: any) {
     const supabase = createClient();
     const t = useTranslations('Dashboard.vendor.gallery');
     const [gallery, setGallery] = useState<any[]>([]);

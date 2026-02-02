@@ -8,7 +8,7 @@ import {
     Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles
 } from 'lucide-react';
 import NextImage from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { getPendingBookingsCount } from '@/actions/vendor/bookings';
 import SubscriptionBadge from './vendor/SubscriptionBadge';
@@ -74,15 +74,18 @@ interface VendorDashboardProps {
     initialVendorData?: any;
     initialPendingBookingsCount?: number;
     initialActiveEventsCount?: number;
+    demoMode?: boolean;
 }
 
 export default function VendorDashboard({
     initialVendorData,
     initialPendingBookingsCount = 0,
-    initialActiveEventsCount = 0
+    initialActiveEventsCount = 0,
+    demoMode = false
 }: VendorDashboardProps = {}) {
     const supabase = createClient();
     const t = useTranslations('Dashboard');
+    const locale = useLocale();
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -215,6 +218,30 @@ export default function VendorDashboard({
             <div className="fixed -top-20 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl mix-blend-multiply pointer-events-none z-0" />
             <div className="fixed top-40 -right-20 w-96 h-96 bg-purple-50 rounded-full blur-3xl mix-blend-multiply pointer-events-none z-0" />
 
+            {/* Demo Mode Banner */}
+            {demoMode && (
+                <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-4 md:p-6 shadow-lg">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Sparkles className="w-6 h-6 text-amber-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900">وضع التجربة - Demo Mode</h3>
+                                <p className="text-sm text-gray-600 mt-1">أنت تتصفح بيانات تجريبية. سجل الآن لإدارة فعالياتك الحقيقية!</p>
+                                <p className="text-xs text-gray-500 mt-1">You're exploring with sample data. Sign up to manage real events!</p>
+                            </div>
+                        </div>
+                        <a
+                            href="/register?role=vendor"
+                            className="w-full md:w-auto px-6 py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all text-center whitespace-nowrap"
+                        >
+                            سجل الآن
+                        </a>
+                    </div>
+                </div>
+            )}
+
             {/* DASHBOARD NAVIGATION */}
             {step === 'DASHBOARD' && (
                 <div className="sticky top-20 z-30 mb-6 md:mb-8 bg-white/80 backdrop-blur-sm md:backdrop-blur-md p-2 rounded-xl md:rounded-2xl border border-white shadow-sm mx-4 lg:mx-0 overflow-x-auto scrollbar-hide">
@@ -303,7 +330,7 @@ export default function VendorDashboard({
                             <div className="flex items-center gap-3">
                                 {vendorData?.slug ? (
                                     <a
-                                        href={`/v/${vendorData.slug}`}
+                                        href={`/${locale || 'ar'}/v/${vendorData.slug}`}
                                         target="_blank"
                                         className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
                                     >
@@ -334,16 +361,17 @@ export default function VendorDashboard({
                             <SubscriptionBadge
                                 vendorId={vendorData?.id}
                                 activeEventsCount={activeEventsCount}
+                                demoMode={demoMode}
                             />
                         </div>
 
-                        {activeTab === 'ANALYTICS' && <AnalyticsTab />}
-                        {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} />}
-                        {activeTab === 'BOOKINGS' && <BookingsTab />}
-                        {activeTab === 'CUSTOMERS' && <CustomersTab />}
-                        {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} />}
-                        {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} />}
-                        {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} />}
+                        {activeTab === 'ANALYTICS' && <AnalyticsTab demoMode={demoMode} />}
+                        {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} demoMode={demoMode} />}
+                        {activeTab === 'BOOKINGS' && <BookingsTab demoMode={demoMode} />}
+                        {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}
+                        {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} demoMode={demoMode} />}
+                        {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} />}
+                        {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} demoMode={demoMode} />}
                     </div>
                 )}
             </div>

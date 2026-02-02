@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { Plus, Calendar, MapPin, Users, Activity, Trash2, Edit3, XCircle, AlertCircle } from 'lucide-react';
 import { getVendorEvents, deleteEvent } from '@/actions/vendor/events';
@@ -8,8 +6,9 @@ import EventForm from './EventForm';
 import { useTranslations, useLocale } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
 import { createClient } from '@/utils/supabase/client';
+import { getDemoEvents } from '@/lib/demoData';
 
-export default function EventsTab({ vendorData }: { vendorData?: any }) {
+export default function EventsTab({ vendorData, demoMode = false }: { vendorData?: any; demoMode?: boolean }) {
     const [events, setEvents] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -21,8 +20,13 @@ export default function EventsTab({ vendorData }: { vendorData?: any }) {
 
     const loadEvents = async () => {
         setLoading(true);
-        const data = await getVendorEvents();
-        setEvents(data);
+        if (demoMode) {
+            // Use demo data instead of fetching from database
+            setEvents(getDemoEvents());
+        } else {
+            const data = await getVendorEvents();
+            setEvents(data);
+        }
         setLoading(false);
     };
 
@@ -62,7 +66,7 @@ export default function EventsTab({ vendorData }: { vendorData?: any }) {
     const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
     if (viewEvent) {
-        return <EventDetails event={viewEvent} onBack={() => setViewEvent(null)} />;
+        return <EventDetails event={viewEvent} onBack={() => setViewEvent(null)} demoMode={demoMode} />;
     }
 
     const filteredEvents = events.filter(event => {

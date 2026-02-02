@@ -56,7 +56,7 @@ export class EventRepository extends BaseRepository {
 
         let query = this.client
             .from('events')
-            .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban, id), bulk_discounts(*)')
+            .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban, id, subscription_tier), bulk_discounts(*)')
             .eq('status', 'published');
 
         if (isUuid) {
@@ -70,19 +70,6 @@ export class EventRepository extends BaseRepository {
         if (error) {
             if (this.isNotFoundError(error)) return null;
             this.handleError(error, 'EventRepository.findPublicEvent');
-        }
-
-        // Fetch vendor subscription tier from profiles
-        if (data && data.vendors) {
-            const { data: profileData } = await this.client
-                .from('profiles')
-                .select('subscription_tier')
-                .eq('id', (data.vendors as any).id)
-                .single();
-
-            if (profileData) {
-                (data.vendors as any).subscription_tier = profileData.subscription_tier;
-            }
         }
 
         return data;

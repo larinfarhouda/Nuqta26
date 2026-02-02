@@ -5,8 +5,9 @@ import { ArrowLeft, Loader2, Users, Receipt, Calendar, MapPin, Phone, Mail, Chec
 import { getEventBookings } from '@/actions/vendor/events';
 import { updateBookingStatus } from '@/actions/vendor/bookings';
 import { useTranslations, useLocale } from 'next-intl';
+import { getDemoBookings } from '@/lib/demoData';
 
-export default function EventDetails({ event, onBack }: { event: any, onBack: () => void }) {
+export default function EventDetails({ event, onBack, demoMode = false }: { event: any, onBack: () => void, demoMode?: boolean }) {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<string | null>(null);
@@ -19,8 +20,15 @@ export default function EventDetails({ event, onBack }: { event: any, onBack: ()
 
     const loadBookings = async () => {
         setLoading(true);
-        const data = await getEventBookings(event.id);
-        setBookings(data);
+        if (demoMode) {
+            // Filter demo bookings for this specific event
+            const allDemoBookings = getDemoBookings();
+            const eventBookings = allDemoBookings.filter(b => b.event_id === event.id);
+            setBookings(eventBookings as any);
+        } else {
+            const data = await getEventBookings(event.id);
+            setBookings(data);
+        }
         setLoading(false);
     };
 

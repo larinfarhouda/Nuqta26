@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { Users, Search, Mail, Calendar, Award } from 'lucide-react';
 import { getVendorCustomers } from '@/actions/vendor/bookings';
 import { useTranslations, useLocale } from 'next-intl';
+import { getDemoCustomers } from '@/lib/demoData';
 
-export default function CustomersTab() {
+export default function CustomersTab({ demoMode = false }: { demoMode?: boolean }) {
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
@@ -15,12 +16,27 @@ export default function CustomersTab() {
     useEffect(() => {
         const load = async () => {
             setLoading(true);
-            const data = await getVendorCustomers();
-            setCustomers(data);
+            if (demoMode) {
+                // Use demo data - transform to match expected format
+                const demoCustomers = getDemoCustomers();
+                setCustomers(demoCustomers.map(c => ({
+                    id: c.id,
+                    name: c.full_name,
+                    email: c.email,
+                    avatar: null,
+                    bookings_count: c.total_bookings,
+                    total_spent: c.total_spent,
+                    last_booking: new Date().toISOString(),
+                    types_preferred: ['cultural', 'entertainment']
+                })));
+            } else {
+                const data = await getVendorCustomers();
+                setCustomers(data);
+            }
             setLoading(false);
         };
         load();
-    }, []);
+    }, [demoMode]);
 
     const filtered = customers.filter(c =>
         c.name.includes(filter) || c.email?.includes(filter)

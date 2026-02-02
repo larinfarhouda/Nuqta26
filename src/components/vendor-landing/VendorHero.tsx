@@ -47,7 +47,7 @@ export default function VendorHero() {
                                 {t('subtitle')}
                             </p>
 
-                            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5 md:gap-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 md:gap-4">
                                 <Link
                                     href="/register?role=vendor"
                                     className="w-full sm:w-auto px-8 md:px-10 py-4 md:py-5 bg-primary text-white font-black rounded-2xl md:rounded-[2rem] transition-all shadow-xl md:shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.05] active:scale-95 flex items-center justify-center gap-2 md:gap-3 group text-lg md:text-xl"
@@ -55,16 +55,23 @@ export default function VendorHero() {
                                     <span>{t('cta')}</span>
                                     <ArrowRight className="w-5 h-5 md:w-6 md:h-6 rtl:rotate-180 group-hover:translate-x-2 transition-transform rtl:group-hover:-translate-x-2" />
                                 </Link>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex -space-x-2">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm">
-                                                <img src={`https://i.pravatar.cc/100?u=v${i}`} alt="Vendor" loading="lazy" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <span className="text-gray-400 text-xs md:text-sm font-bold uppercase tracking-widest">{tCommon('trusted_partners')}</span>
+                                <Link
+                                    href="/demo/vendor"
+                                    className="w-full sm:w-auto px-6 md:px-8 py-4 md:py-5 bg-gray-100 text-gray-800 font-bold rounded-2xl md:rounded-[2rem] transition-all hover:bg-gray-200 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 text-base md:text-lg"
+                                >
+                                    <span>{t('try_demo')}</span>
+                                </Link>
+                            </div>
+
+                            <div className="flex items-center justify-center lg:justify-start gap-3">
+                                <div className="flex -space-x-2">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm">
+                                            <img src={`https://i.pravatar.cc/100?u=v${i}`} alt="Vendor" loading="lazy" />
+                                        </div>
+                                    ))}
                                 </div>
+                                <span className="text-gray-400 text-xs md:text-sm font-bold uppercase tracking-widest">{tCommon('trusted_partners')}</span>
                             </div>
 
                             {/* Trust Perks */}
@@ -175,6 +182,6 @@ export default function VendorHero() {
                     animation: float-slow 7s ease-in-out 1s infinite;
                 }
             `}</style>
-        </div>
+        </div >
     );
 }

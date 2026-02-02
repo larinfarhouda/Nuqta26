@@ -677,11 +677,16 @@ export type Database = {
           description_ar: string | null
           id: string
           instagram: string | null
+          is_founder_pricing: boolean | null
           is_verified: boolean | null
           location_lat: number | null
           location_long: number | null
           slug: string | null
           status: string | null
+          subscription_expires_at: string | null
+          subscription_starts_at: string | null
+          subscription_status: string | null
+          subscription_tier: string | null
           tax_id_document: string | null
           website: string | null
           whatsapp_number: string | null
@@ -698,11 +703,16 @@ export type Database = {
           description_ar?: string | null
           id: string
           instagram?: string | null
+          is_founder_pricing?: boolean | null
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
           slug?: string | null
           status?: string | null
+          subscription_expires_at?: string | null
+          subscription_starts_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           tax_id_document?: string | null
           website?: string | null
           whatsapp_number?: string | null
@@ -719,11 +729,16 @@ export type Database = {
           description_ar?: string | null
           id?: string
           instagram?: string | null
+          is_founder_pricing?: boolean | null
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
           slug?: string | null
           status?: string | null
+          subscription_expires_at?: string | null
+          subscription_starts_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           tax_id_document?: string | null
           website?: string | null
           whatsapp_number?: string | null

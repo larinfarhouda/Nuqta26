@@ -15,8 +15,15 @@ export async function GET(request: Request) {
             const { data: { user } } = await supabase.auth.getUser();
 
             if (user) {
-                // Get role from user metadata first
-                let finalRole = user.user_metadata?.role;
+                // Get actual role from profiles table (more reliable than user metadata for OAuth)
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+
+                // Determine final role
+                let finalRole = profile?.role || user.user_metadata?.role || 'user';
 
                 // If roleParam is vendor and user isn't already a vendor, update profile
                 if (roleParam && roleParam === 'vendor' && finalRole !== 'vendor') {
@@ -33,7 +40,7 @@ export async function GET(request: Request) {
                     return NextResponse.redirect(`${origin}${localizedTarget}`);
                 }
 
-                // Determine redirect path
+                // Determine redirect path based on actual role
                 if (finalRole === 'vendor') {
                     return NextResponse.redirect(`${origin}/${locale}/dashboard/vendor`);
                 } else if (finalRole === 'admin') {

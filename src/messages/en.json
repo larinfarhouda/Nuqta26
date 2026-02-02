@@ -208,7 +208,8 @@
         "Hero": {
             "title": "Expand Your Reach with Nuqta",
             "subtitle": "The ultimate platform for Arab events and culture in Istanbul. Connect with a community that speaks your language.",
-            "cta": "Start for Free"
+            "cta": "Start for Free",
+            "try_demo": "Try Demo"
         },
         "ProblemSolution": {
             "title": "The Challenges You Face vs. The Nuqta Solution",
@@ -642,7 +643,7 @@
                     "interests": "Interests"
                 },
                 "vip_tooltip": "VIP Customer (Recurring)",
-                "currency": "TL",
+                "currency": "₺",
                 "no_results": "No results found"
             },
             "bookings": {

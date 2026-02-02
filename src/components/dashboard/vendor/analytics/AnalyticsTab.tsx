@@ -5,8 +5,9 @@ import { TrendingUp, Users, Calendar, DollarSign, PieChart } from 'lucide-react'
 import { getVendorAnalytics, getSegmentationData } from '@/actions/vendor/analytics';
 import { VendorAnalyticsDTO, SegmentationDataDTO } from '@/types/dto/analytics.dto';
 import { useTranslations } from 'next-intl';
+import { getDemoAnalytics } from '@/lib/demoData';
 
-export default function AnalyticsTab() {
+export default function AnalyticsTab({ demoMode = false }: { demoMode?: boolean }) {
     const [analytics, setAnalytics] = useState<VendorAnalyticsDTO | null>(null);
     const [segmentation, setSegmentation] = useState<SegmentationDataDTO | null>(null);
     const [loading, setLoading] = useState(true);
@@ -18,9 +19,25 @@ export default function AnalyticsTab() {
             setLoading(true);
             setError(null);
             try {
-                const [a, s] = await Promise.all([getVendorAnalytics(), getSegmentationData()]);
-                setAnalytics(a);
-                setSegmentation(s);
+                if (demoMode) {
+                    const demoData = getDemoAnalytics();
+                    setAnalytics({
+                        revenue: demoData.totalRevenue,
+                        sales: demoData.totalBookings,
+                        events: demoData.totalEvents,
+                        recentSales: demoData.recentSales,
+                    } as VendorAnalyticsDTO);
+                    setSegmentation({
+                        typeDistribution: demoData.typeDistribution,
+                        customerLoyalty: demoData.customerLoyalty,
+                        genderDistribution: demoData.genderDistribution,
+                        ageDistribution: demoData.ageDistribution,
+                    } as SegmentationDataDTO);
+                } else {
+                    const [a, s] = await Promise.all([getVendorAnalytics(), getSegmentationData()]);
+                    setAnalytics(a);
+                    setSegmentation(s);
+                }
             } catch (err: any) {
                 console.error('Analytics load error:', err);
                 setError(t('error_loading'));

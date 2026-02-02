@@ -1,17 +1,17 @@
 # Manual Database Migration Instructions
 
-## Subscription Tiers Migration
+## Move Subscription Fields to Vendors Table
 
-Since local Supabase/Docker isn't running, you need to apply this migration to your remote database.
+Since local Supabase/Docker isn't running, you need to apply this migration to your remote database manually.
 
 ---
 
-## Option 1: Via Supabase Dashboard (Recommended)
+## Option 1: Via Supabase Dashboard (Recommended - EASIEST)
 
-1. Go to your Supabase project dashboard
+1. Go to: **https://supabase.com/dashboard/project/jhojxyyfkirkmfunaahy**
 2. Navigate to **SQL Editor** in the left sidebar
 3. Click **New Query**
-4. Copy and paste the entire SQL below
+4. Copy and paste the SQL below
 5. Click **Run** or press `Cmd/Ctrl + Enter`
 
 ---
@@ -19,114 +19,127 @@ Since local Supabase/Docker isn't running, you need to apply this migration to y
 ## SQL Migration Script
 
 ```sql
--- Add subscription management columns to profiles table
--- Migration: Add subscription tiers and founder pricing support
+-- Migration: Move subscription fields from profiles to vendors table
+-- This improves data architecture by placing vendor-specific data in the vendors table
 
-ALTER TABLE profiles 
+-- Step 1: Add subscription columns to vendors table
+ALTER TABLE vendors 
 ADD COLUMN IF NOT EXISTS subscription_tier TEXT DEFAULT 'starter' 
 CHECK (subscription_tier IN ('starter', 'growth', 'professional'));
 
-ALTER TABLE profiles
+ALTER TABLE vendors
 ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'active'
 CHECK (subscription_status IN ('active', 'trial', 'expired', 'cancelled'));
 
-ALTER TABLE profiles
+ALTER TABLE vendors
 ADD COLUMN IF NOT EXISTS subscription_starts_at TIMESTAMP;
 
-ALTER TABLE profiles
+ALTER TABLE vendors
 ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP;
 
--- CRITICAL: Founder pricing flag - locks in 50% discount forever
-ALTER TABLE profiles
+ALTER TABLE vendors
 ADD COLUMN IF NOT EXISTS is_founder_pricing BOOLEAN DEFAULT FALSE;
 
--- Track when vendor signed up (determines founder pricing eligibility)
-ALTER TABLE profiles
-ADD COLUMN IF NOT EXISTS platform_signup_date TIMESTAMP DEFAULT NOW();
+-- Step 2: Migrate existing subscription data from profiles to vendors
+-- Only migrate for users who have vendor entries
+UPDATE vendors v
+SET 
+  subscription_tier = COALESCE(p.subscription_tier, 'starter'),
+  subscription_status = COALESCE(p.subscription_status, 'active'),
+  subscription_starts_at = p.subscription_starts_at,
+  subscription_expires_at = p.subscription_expires_at,
+  is_founder_pricing = COALESCE(p.is_founder_pricing, FALSE)
+FROM profiles p
+WHERE v.id = p.id;
 
--- Set platform_signup_date for existing vendors
-UPDATE profiles 
-SET platform_signup_date = created_at 
-WHERE platform_signup_date IS NULL;
+-- Step 3: Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_vendors_subscription_tier ON vendors(subscription_tier);
+CREATE INDEX IF NOT EXISTS idx_vendors_subscription_status ON vendors(subscription_status);
+CREATE INDEX IF NOT EXISTS idx_vendors_founder_pricing ON vendors(is_founder_pricing);
 
--- Add index for faster subscription queries
-CREATE INDEX IF NOT EXISTS idx_profiles_subscription_tier ON profiles(subscription_tier);
-CREATE INDEX IF NOT EXISTS idx_profiles_subscription_status ON profiles(subscription_status);
-CREATE INDEX IF NOT EXISTS idx_profiles_founder_pricing ON profiles(is_founder_pricing);
+-- Step 4: Add helpful comments
+COMMENT ON COLUMN vendors.subscription_tier IS 'Current subscription tier: starter (free), growth (3 events), professional (unlimited)';
+COMMENT ON COLUMN vendors.subscription_status IS 'Status of the subscription: active, trial, expired, or cancelled';
+COMMENT ON COLUMN vendors.is_founder_pricing IS 'True if vendor locked in founder pricing (50% off forever) during launch period';
 
--- Add comments for documentation
-COMMENT ON COLUMN profiles.is_founder_pricing IS 'True if vendor locked in founder pricing (50% off forever) during launch period';
-COMMENT ON COLUMN profiles.platform_signup_date IS 'Date vendor first signed up - determines eligibility for founder pricing';
-COMMENT ON COLUMN profiles.subscription_tier IS 'Current subscription tier: starter (free), growth (3 events), professional (unlimited)';
+-- Note: We are NOT dropping the columns from profiles yet
+-- This will be done in a follow-up migration after verification
 ```
 
 ---
 
-## Option 2: Via Command Line (If you have psql access)
+## Verification After Running
 
-```bash
-# Connect to your remote database
-psql "your-supabase-connection-string"
-
-# Then paste the SQL above
-```
-
----
-
-## Option 3: Using Supabase CLI with Remote Project
-
-```bash
-# Link to your remote project (if not already)
-npx supabase link --project-ref your-project-ref
-
-# Apply pending migrations
-npx supabase db push
-```
-
----
-
-## Verification
-
-After running the migration, verify it worked:
+Check that the migration worked correctly:
 
 ```sql
--- Check new columns exist
+-- Verify new columns exist in vendors table
 SELECT column_name, data_type, column_default 
 FROM information_schema.columns 
-WHERE table_name = 'profiles' 
+WHERE table_name = 'vendors' 
 AND column_name IN (
     'subscription_tier', 
     'subscription_status', 
     'is_founder_pricing',
-    'platform_signup_date',
     'subscription_starts_at',
     'subscription_expires_at'
 );
+
+-- Verify data was migrated
+SELECT id, business_name, subscription_tier, is_founder_pricing
+FROM vendors
+LIMIT 5;
 ```
 
-Expected output: 6 rows showing all the new columns.
+Expected: You should see 5 new columns in vendors table and existing vendors should have their subscription data.
 
 ---
 
 ## What This Does
 
-✅ Adds `subscription_tier` - Tracks starter/growth/professional tier
-✅ Adds `subscription_status` - Tracks active/trial/expired/cancelled
-✅ Adds `is_founder_pricing` - **Critical flag** for lifetime 50% discount
-✅ Adds `platform_signup_date` - Determines founder pricing eligibility
-✅ Adds `subscription_starts_at` - When subscription began
-✅ Adds `subscription_expires_at` - When subscription/trial ends
-✅ Creates indexes for fast queries
-✅ Sets all existing vendors to 'starter' tier by default
-✅ Sets platform_signup_date to their created_at date
+✅ **Adds 5 columns to vendors table**:
+   - `subscription_tier` - starter/growth/professional
+   - `subscription_status` - active/trial/expired/cancelled  
+   - `subscription_starts_at` - When subscription began
+   - `subscription_expires_at` - When it expires
+   - `is_founder_pricing` - Lifetime 50% discount flag
+
+✅ **Migrates all existing data** from profiles → vendors  
+✅ **Creates performance indexes** for fast queries  
+✅ **Preserves old data** in profiles (for safety, will remove later)
 
 ---
 
 ## After Migration
 
-Once applied:
-- TypeScript errors will disappear
-- Event limit enforcement will work automatically
-- All existing vendors will be on 'starter' tier (1 event limit)
+Once applied successfully:
 
-You can then manually upgrade specific vendors in the Supabase dashboard if needed.
+1. **TypeScript errors will disappear** (database schema matches code now)
+2. **Refresh your browser** to test vendor dashboard
+3. **Test these features**:
+   - Vendor dashboard subscription badge
+   - Event creation tier limits
+   - Subscription upgrade prompts
+
+---
+
+## Cleanup (Run Later After Verification)
+
+After you've tested and verified everything works, you can optionally clean up the old columns from profiles:
+
+```sql
+-- ONLY RUN THIS AFTER VERIFYING EVERYTHING WORKS!
+ALTER TABLE profiles DROP COLUMN IF EXISTS subscription_tier;
+ALTER TABLE profiles DROP COLUMN IF EXISTS subscription_status;
+ALTER TABLE profiles DROP COLUMN IF EXISTS subscription_starts_at;
+ALTER TABLE profiles DROP COLUMN IF EXISTS subscription_expires_at;
+ALTER TABLE profiles DROP COLUMN IF EXISTS is_founder_pricing;
+ALTER TABLE profiles DROP COLUMN IF EXISTS platform_signup_date;
+
+DROP INDEX IF EXISTS idx_profiles_subscription_tier;
+DROP INDEX IF EXISTS idx_profiles_subscription_status;
+DROP INDEX IF EXISTS idx_profiles_founder_pricing;
+```
+
+**Don't run the cleanup yet! Test first!**
+

@@ -52,7 +52,7 @@ const ErrorMessage = ({ message }: { message?: string }) => {
     );
 };
 
-export default function ProfileTab({ vendorData, setVendorData, showAlert }: any) {
+export default function ProfileTab({ vendorData, setVendorData, showAlert, demoMode = false }: any) {
     const supabase = createClient();
     const t = useTranslations('Dashboard.vendor.profile');
     const [uploadingLogo, setUploadingLogo] = useState(false);

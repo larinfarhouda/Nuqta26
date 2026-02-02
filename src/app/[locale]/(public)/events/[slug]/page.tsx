@@ -4,9 +4,27 @@ import EventDetailsClient from '@/components/events/EventDetailsClient';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { Metadata } from 'next';
+import { getDemoEvents } from '@/lib/demoData';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const { slug } = await params;
+
+    // Check if this is a demo event
+    const demoEvents = getDemoEvents();
+    const demoEvent = demoEvents.find(e => e.slug === slug);
+
+    if (demoEvent) {
+        return {
+            title: `${demoEvent.title} | Nuqta`,
+            description: demoEvent.description?.substring(0, 160) || 'Join this amazing event on Nuqta.',
+            openGraph: {
+                title: demoEvent.title,
+                description: demoEvent.description?.substring(0, 160),
+                images: demoEvent.image_url ? [demoEvent.image_url] : [],
+            },
+        };
+    }
+
     const event = await getPublicEvent(slug);
 
     if (!event) {
@@ -28,6 +46,16 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
 
 export default async function EventPage({ params }: { params: any }) {
     const { slug } = await params;
+
+    // Check if this is a demo event
+    const demoEvents = getDemoEvents();
+    const demoEvent = demoEvents.find(e => e.slug === slug);
+
+    if (demoEvent) {
+        // For demo events, we don't need actual user auth
+        return <EventDetailsClient event={demoEvent} user={null} />;
+    }
+
     const event = await getPublicEvent(slug);
 
     if (!event) return notFound();

@@ -13,18 +13,25 @@ import { Crown, Sparkles, Check, TrendingUp } from 'lucide-react';
 interface SubscriptionBadgeProps {
     vendorId: string;
     activeEventsCount?: number;
+    demoMode?: boolean;
 }
 
-export default function SubscriptionBadge({ vendorId, activeEventsCount = 0 }: SubscriptionBadgeProps) {
+export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, demoMode = false }: SubscriptionBadgeProps) {
     const supabase = createClient();
-    const [tier, setTier] = useState<SubscriptionTier>('starter');
+    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'professional' : 'starter');
     const [isFounder, setIsFounder] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!demoMode);
 
     useEffect(() => {
+        // Skip database fetch in demo mode
+        if (demoMode) {
+            setLoading(false);
+            return;
+        }
+
         async function fetchSubscriptionInfo() {
             const { data } = await supabase
-                .from('profiles')
+                .from('vendors')
                 .select('subscription_tier, is_founder_pricing')
                 .eq('id', vendorId)
                 .single();
@@ -37,7 +44,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0 }: S
         }
 
         fetchSubscriptionInfo();
-    }, [vendorId]);
+    }, [vendorId, demoMode]);
 
     if (loading) {
         return (
