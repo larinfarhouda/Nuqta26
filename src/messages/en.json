@@ -232,7 +232,7 @@
         "Pricing": {
             "title": "Plans for Everyone",
             "subtitle": "All plans include all features - only difference is event count",
-            "trial_founder_banner": "🎉 First month free + Founder pricing (50% off lifetime) until May 1, 2026",
+            "trial_founder_banner": "🎉 First month free + Founder pricing (50% off) until May 1, 2026",
             "all_features_included": "✨ All features included in every plan",
             "features_list": [
                 "📧 Automated bilingual email notifications (Arabic/English)",
@@ -623,12 +623,12 @@
                         "incomplete_profile": "Please complete your bank information",
                         "incomplete_profile_message": "To create events, you need to add your bank details (Bank Name and IBAN) in your profile settings. This ensures customers can pay for their bookings."
                     }
+                },
+                "warning_banner": {
+                    "title": "Complete Your Bank Information",
+                    "message": "You need to add your bank details (Bank Name and IBAN) before you can create events. This ensures customers can pay for their bookings.",
+                    "action": "Go to Profile Settings"
                 }
-            },
-            "warning_banner": {
-                "title": "Complete Your Bank Information",
-                "message": "You need to add your bank details (Bank Name and IBAN) before you can create events. This ensures customers can pay for their bookings.",
-                "action": "Go to Profile Settings"
             },
             "customers": {
                 "title": "Customers",
