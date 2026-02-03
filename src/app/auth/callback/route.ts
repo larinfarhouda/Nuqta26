@@ -73,6 +73,12 @@ export async function GET(request: Request) {
 
                 // Determine redirect path based on actual role
                 console.log('🎯 Redirecting based on role:', finalRole);
+
+                // TEMPORARY: Alert to debug OAuth role detection
+                if (roleParam || !roleParam) {
+                    alert(`DEBUG: Detected role = "${finalRole}"\nProfile role = "${profile?.role}"\nRedirecting to: ${finalRole === 'vendor' ? 'vendor dashboard' : 'user page'}`);
+                }
+
                 if (finalRole === 'vendor') {
                     console.log('→ Redirecting to vendor dashboard');
                     return NextResponse.redirect(`${origin}/${locale}/dashboard/vendor`);
