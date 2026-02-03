@@ -25,11 +25,16 @@ export async function GET(request: Request) {
                 // Determine final role
                 let finalRole = profile?.role || user.user_metadata?.role || 'user';
 
-                // If roleParam is vendor and user isn't already a vendor, update profile
-                if (roleParam && roleParam === 'vendor' && finalRole !== 'vendor') {
-                    await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
+                //Handle vendor role assignment and vendor entry creation
+                if (roleParam && roleParam === 'vendor') {
+                    // Update profile role if needed
+                    if (finalRole !== 'vendor') {
+                        await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
+                        finalRole = 'vendor';
+                    }
 
-                    // Ensure vendor entry exists (defense in depth)
+                    // ALWAYS check and create vendor entry for vendor role
+                    // This handles both new OAuth signups and role upgrades
                     const { data: existingVendor } = await supabase
                         .from('vendors')
                         .select('id')
@@ -37,16 +42,13 @@ export async function GET(request: Request) {
                         .single();
 
                     if (!existingVendor) {
-                        // Create minimal vendor entry with required fields
-                        // User can complete profile later in vendor dashboard
+                        console.log('Creating vendor entry for OAuth user:', user.id);
                         await supabase.from('vendors').insert({
                             business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
                             category: 'other',  // Default category
                             subscription_tier: 'starter'
                         });
                     }
-
-                    finalRole = 'vendor';
                 }
 
                 const next = searchParams.get('next');
