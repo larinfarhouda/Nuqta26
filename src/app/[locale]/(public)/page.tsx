@@ -70,7 +70,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
     const favoriteIds = await getUserFavoriteIds();
     const favoritesSet = new Set(favoriteIds);
 
-    const jsonLd = {
+    const organizationSchema = {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Nuqta",
@@ -80,8 +80,49 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
             "https://instagram.com/nuqta_ist",
             "https://twitter.com/nuqta_ist"
         ],
-        "description": "The digital marketplace for events and ticketing in Istanbul's Arabic-speaking community."
+        "description": "The digital marketplace for events and ticketing in Istanbul's Arabic-speaking community.",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Istanbul",
+            "addressCountry": "TR"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            "url": "https://nuqta.ist/contact"
+        }
     };
+
+    const webSiteSchema = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Nuqta",
+        "url": "https://nuqta.ist",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://nuqta.ist/?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+        }
+    };
+
+    const itemListSchema = events && events.length > 0 ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": events.slice(0, 12).map((event: any, index: number) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+                "@type": "Event",
+                "name": event.title,
+                "url": `https://nuqta.ist/events/${event.slug || event.id}`,
+                "image": event.image_url,
+                "startDate": event.date
+            }
+        }))
+    } : null;
 
     const isFiltered = !!(search || location || date || category || lat);
 
@@ -89,8 +130,18 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
         <div className="min-h-screen bg-white flex flex-col relative selection:bg-primary selection:text-white">
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
             />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+            />
+            {itemListSchema && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+                />
+            )}
 
             <BackgroundShapes />
 

@@ -29,3 +29,29 @@ export async function getPublicVendor(slug: string) {
         return null;
     }
 }
+
+/**
+ * Get all vendor slugs for sitemap generation
+ * Returns array of vendor slugs and their last update times
+ */
+export async function getAllVendorSlugsForSitemap() {
+    try {
+        const supabase = await createClient();
+
+        const { data, error } = await supabase
+            .from('vendors')
+            .select('slug, updated_at')
+            .eq('status', 'approved')
+            .not('slug', 'is', null);
+
+        if (error) {
+            logger.error('Failed to fetch vendor slugs for sitemap', { error });
+            return [];
+        }
+
+        return data || [];
+    } catch (error) {
+        logger.error('Failed to get vendor slugs for sitemap', { error });
+        return [];
+    }
+}

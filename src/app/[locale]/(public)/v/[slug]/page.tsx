@@ -1,23 +1,48 @@
-
 import { getPublicVendor } from '@/actions/public/vendors';
 import VendorProfileClient from '@/components/vendor/VendorProfileClient';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getDemoVendorData, DEMO_VENDOR_SLUG, getDemoEvents, getDemoGallery } from '@/lib/demoData';
+import {
+    generateCanonicalUrl,
+    generateLanguageAlternates,
+    createVendorDescription,
+    generateImageUrl
+} from '@/lib/seo';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
-    const { slug } = await params;
+    const { slug, locale } = await params;
 
     // Handle demo vendor
     if (slug === DEMO_VENDOR_SLUG) {
         const demoVendor = getDemoVendorData();
+        const description = createVendorDescription(demoVendor);
+        const canonicalUrl = generateCanonicalUrl(`v/${slug}`, locale || 'en');
+        const alternates = generateLanguageAlternates(`v/${slug}`);
+        const imageUrl = generateImageUrl(demoVendor.company_logo);
+
         return {
             title: `${demoVendor.business_name} | Nuqta`,
-            description: demoVendor.description_ar?.substring(0, 160) || 'Discover this amazing organizer on Nuqta.',
+            description,
+            alternates: {
+                canonical: canonicalUrl,
+                languages: Object.fromEntries(
+                    alternates.map(alt => [alt.hreflang, alt.href])
+                ),
+            },
             openGraph: {
+                type: 'profile',
                 title: demoVendor.business_name,
-                description: demoVendor.description_ar?.substring(0, 160),
-                images: demoVendor.company_logo ? [demoVendor.company_logo] : [],
+                description,
+                images: [{ url: imageUrl, width: 1200, height: 630, alt: demoVendor.business_name }],
+                url: canonicalUrl,
+                siteName: 'Nuqta',
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: demoVendor.business_name,
+                description,
+                images: [imageUrl],
             },
         };
     }
@@ -30,13 +55,33 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
         };
     }
 
+    const description = createVendorDescription(vendor);
+    const canonicalUrl = generateCanonicalUrl(`v/${slug}`, locale || 'en');
+    const alternates = generateLanguageAlternates(`v/${slug}`);
+    const imageUrl = generateImageUrl(vendor.company_logo);
+
     return {
         title: `${vendor.business_name} | Nuqta`,
-        description: vendor.description_ar?.substring(0, 160) || 'Discover this amazing organizer on Nuqta.',
+        description,
+        alternates: {
+            canonical: canonicalUrl,
+            languages: Object.fromEntries(
+                alternates.map(alt => [alt.hreflang, alt.href])
+            ),
+        },
         openGraph: {
+            type: 'profile',
             title: vendor.business_name,
-            description: vendor.description_ar?.substring(0, 160),
-            images: vendor.company_logo ? [vendor.company_logo] : [],
+            description,
+            images: [{ url: imageUrl, width: 1200, height: 630, alt: vendor.business_name }],
+            url: canonicalUrl,
+            siteName: 'Nuqta',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: vendor.business_name,
+            description,
+            images: [imageUrl],
         },
     };
 }

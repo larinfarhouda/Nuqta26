@@ -1,0 +1,41 @@
+# Nuqta.ist Robots.txt
+# Updated: 2026-02-04
+
+# Allow all crawlers to index public content
+User-agent: *
+Allow: /
+
+# Prevent indexing of user dashboards and admin areas
+Disallow: /*/dashboard/
+Disallow: /*/admin/
+Disallow: /dashboard/
+Disallow: /admin/
+
+# Prevent indexing of authentication pages
+Disallow: /*/login
+Disallow: /*/register
+Disallow: /*/forgot-password
+Disallow: /*/update-password
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /update-password
+
+# Prevent indexing of API routes
+Disallow: /api/
+Disallow: /auth/
+
+# Prevent indexing of email preview
+Disallow: /email-preview/
+
+# Allow specific static assets
+Allow: /images/
+Allow: /icons/
+Allow: /_next/static/
+Allow: /_next/image
+
+# Sitemap location
+Sitemap: https://nuqta.ist/sitemap.xml
+
+# Crawl delay to prevent overload (1 second)
+Crawl-delay: 1

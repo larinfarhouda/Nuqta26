@@ -38,17 +38,25 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://nuqta.ist'),
     title: {
         default: "Nuqta | Istanbul's Arabic Event Hub",
         template: "%s | Nuqta"
     },
     description: "Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.",
-    keywords: ["Istanbul events", "Arabic community Istanbul", "workshops Istanbul", "tickets Istanbul", "Nuqta"],
+    keywords: ["Istanbul events", "Arabic community Istanbul", "workshops Istanbul", "tickets Istanbul", "Nuqta", "event marketplace", "event ticketing", "Istanbul Arabic events"],
+    applicationName: "Nuqta",
+    authors: [{ name: "Nuqta" }],
+    creator: "Nuqta",
+    publisher: "Nuqta",
     openGraph: {
         type: 'website',
         locale: 'en_US',
+        alternateLocale: ['ar_AR'],
         url: 'https://nuqta.ist',
         siteName: 'Nuqta',
+        title: "Nuqta | Istanbul's Arabic Event Hub",
+        description: "Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.",
         images: [{
             url: '/images/og-image.png',
             width: 1200,
@@ -59,6 +67,8 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         site: '@nuqta_ist',
+        title: "Nuqta | Istanbul's Arabic Event Hub",
+        description: "Discover and join vibrant community events in Istanbul.",
     },
     appleWebApp: {
         title: "Nuqta",
@@ -73,6 +83,11 @@ export const metadata: Metadata = {
         ],
         apple: { url: '/apple-touch-icon.png', sizes: '180x180' },
     },
+    // Add verification meta tags here once you have them:
+    // verification: {
+    //     google: 'your-google-verification-code',
+    //     yandex: 'your-yandex-verification-code',
+    // },
 };
 
 export default async function LocaleLayout({
