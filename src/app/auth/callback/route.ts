@@ -28,6 +28,24 @@ export async function GET(request: Request) {
                 // If roleParam is vendor and user isn't already a vendor, update profile
                 if (roleParam && roleParam === 'vendor' && finalRole !== 'vendor') {
                     await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
+
+                    // Ensure vendor entry exists (defense in depth)
+                    const { data: existingVendor } = await supabase
+                        .from('vendors')
+                        .select('id')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (!existingVendor) {
+                        // Create minimal vendor entry with required fields
+                        // User can complete profile later in vendor dashboard
+                        await supabase.from('vendors').insert({
+                            business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
+                            category: 'other',  // Default category
+                            subscription_tier: 'starter'
+                        });
+                    }
+
                     finalRole = 'vendor';
                 }
 
