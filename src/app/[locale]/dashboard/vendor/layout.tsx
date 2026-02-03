@@ -23,8 +23,14 @@ export default async function VendorDashboardLayout({
         return null;
     }
 
-    // Check role from user metadata
-    const role = user.user_metadata?.role;
+    // Check role from profiles table (OAuth users don't have it in user_metadata)
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    const role = profile?.role || user.user_metadata?.role;
 
     if (role !== 'vendor') {
         redirect({ href: '/', locale });
