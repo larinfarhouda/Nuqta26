@@ -25,6 +25,15 @@ export async function GET(request: Request) {
                 // Determine final role
                 let finalRole = profile?.role || user.user_metadata?.role || 'user';
 
+                console.log('🔍 Auth Callback Debug:', {
+                    userId: user.id,
+                    email: user.email,
+                    profileRole: profile?.role,
+                    metadataRole: user.user_metadata?.role,
+                    finalRole,
+                    roleParam
+                });
+
                 //Handle vendor role assignment and vendor entry creation
                 if (roleParam && roleParam === 'vendor') {
                     // Update profile role if needed
@@ -63,7 +72,9 @@ export async function GET(request: Request) {
                 }
 
                 // Determine redirect path based on actual role
+                console.log('🎯 Redirecting based on role:', finalRole);
                 if (finalRole === 'vendor') {
+                    console.log('→ Redirecting to vendor dashboard');
                     return NextResponse.redirect(`${origin}/${locale}/dashboard/vendor`);
                 } else if (finalRole === 'admin') {
                     return NextResponse.redirect(`${origin}/${locale}/admin`);
