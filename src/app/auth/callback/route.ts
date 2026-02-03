@@ -44,6 +44,7 @@ export async function GET(request: Request) {
                     if (!existingVendor) {
                         console.log('Creating vendor entry for OAuth user:', user.id);
                         await supabase.from('vendors').insert({
+                            id: user.id,  // Required field
                             business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
                             category: 'other',  // Default category
                             subscription_tier: 'starter'
