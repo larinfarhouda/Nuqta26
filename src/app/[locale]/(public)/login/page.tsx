@@ -67,8 +67,14 @@ export default function LoginPage() {
                     throw new Error('Email not confirmed');
                 }
 
-                // Get role from user_metadata (set during signup)
-                const role = user.user_metadata?.role;
+                // Get role from profiles table (OAuth users don't have it in user_metadata)
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+
+                const role = profile?.role || user.user_metadata?.role || 'user';
 
                 // Use hard navigation to ensure server re-renders with updated auth state
                 if (role === 'vendor') {
