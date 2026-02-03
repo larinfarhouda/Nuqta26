@@ -40,9 +40,7 @@ export default function LoginPage() {
             provider,
             options: {
                 redirectTo: `${window.location.origin}/auth/callback?locale=${locale}`,
-                queryParams: {
-                    role: 'user' // Default to user for new social signups from login page
-                }
+                // Don't pass role during login - let callback use existing profile role
             },
         });
     };
