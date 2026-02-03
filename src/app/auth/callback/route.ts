@@ -43,12 +43,13 @@ export async function GET(request: Request) {
 
                     if (!existingVendor) {
                         console.log('Creating vendor entry for OAuth user:', user.id);
+                        // Type assertion needed due to incorrect auto-generated types
                         await supabase.from('vendors').insert({
-                            id: user.id,  // Required field
+                            id: user.id,
                             business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
-                            category: 'other',  // Default category
+                            category: 'other',
                             subscription_tier: 'starter'
-                        });
+                        } as any);
                     }
                 }
 
