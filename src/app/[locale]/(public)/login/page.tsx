@@ -75,7 +75,6 @@ export default function LoginPage() {
                     .single();
 
                 const role = profile?.role || user.user_metadata?.role || 'user';
-                console.log('Role:', role);
 
                 // Use hard navigation to ensure server re-renders with updated auth state
                 if (role === 'vendor') {
