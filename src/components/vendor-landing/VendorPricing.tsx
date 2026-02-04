@@ -71,10 +71,15 @@ export default function VendorPricing() {
                         {t('subtitle')}
                     </p>
 
-                    {/* Trial + Founder Banner */}
-                    <div className="inline-flex items-center gap-2 px-4 py-2.5 mt-4 bg-[#2CA58D]/10 border-2 border-[#2CA58D]/30 rounded-2xl">
-                        <Sparkles className="w-5 h-5 text-[#2CA58D]" />
-                        <span className="text-xs md:text-sm font-bold text-[#2CA58D]">{t('trial_founder_banner')}</span>
+                    {/* Founder Pricing Banner - Primary Focus */}
+                    <div className="mt-6 relative">
+                        <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2CA58D]/10 via-[#2CA58D]/5 to-secondary/10 border-2 border-[#2CA58D]/40 rounded-3xl shadow-2xl shadow-[#2CA58D]/20 animate-pulse">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-6 h-6 text-[#2CA58D]" />
+                                <span className="text-sm md:text-base font-black text-[#2CA58D]">{t('trial_founder_banner')}</span>
+                            </div>
+                            <span className="text-xs font-bold text-gray-600">{t('founder_urgency')}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -122,10 +127,15 @@ export default function VendorPricing() {
                             {/* CTA Button */}
                             <Link
                                 href="/register?role=vendor"
-                                className={`w-full py-3.5 rounded-xl font-black text-sm md:text-base transition-all flex items-center justify-center gap-2 group/btn ${tier.highlight ? 'bg-[#2CA58D] text-white shadow-lg hover:shadow-xl hover:bg-[#258f7a]' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                                className={`w-full py-4 rounded-xl font-black text-sm md:text-base transition-all flex flex-col items-center justify-center gap-1 group/btn ${tier.highlight ? 'bg-[#2CA58D] text-white shadow-lg hover:shadow-xl hover:bg-[#258f7a]' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                             >
-                                {tier.cta}
-                                <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform rtl:rotate-180 rtl:group-hover/btn:-translate-x-1" />
+                                <div className="flex items-center gap-2">
+                                    {tier.cta}
+                                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform rtl:rotate-180 rtl:group-hover/btn:-translate-x-1" />
+                                </div>
+                                {tier.highlight && (
+                                    <span className="text-xs text-white/80 font-medium">{t('cta_secondary')}</span>
+                                )}
                             </Link>
                         </div>
                     ))}

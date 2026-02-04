@@ -63,6 +63,14 @@ export default function VendorBenefits() {
                             <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-3 md:mb-4 tracking-tight">{benefit.title}</h3>
                             <p className="text-base md:text-lg text-gray-500 font-medium leading-relaxed">{benefit.desc}</p>
 
+                            {/* Verified Badge for Trust benefit (index 2) */}
+                            {idx === 2 && (
+                                <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span>{t('verified_badge')}</span>
+                                </div>
+                            )}
+
                             {/* Decorative line */}
                             <div className="w-12 h-2 bg-secondary/50 rounded-full mt-auto pt-8 md:pt-10" />
                         </div>

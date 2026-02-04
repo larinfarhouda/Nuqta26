@@ -47,13 +47,29 @@ export default function VendorHero() {
                                 {t('subtitle')}
                             </p>
 
+                            {/* Founder Pricing Badge + Scarcity Counter */}
+                            <div className="space-y-3">
+                                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary/10 to-secondary/10 backdrop-blur-md text-primary rounded-2xl text-sm md:text-base font-black border-2 border-primary/30 shadow-xl shadow-primary/20 animate-pulse">
+                                    <span>{t('founder_pricing_badge')}</span>
+                                </div>
+                                <p className="text-xs md:text-sm text-gray-600 font-bold">
+                                    {t('founder_pricing_subtitle')}
+                                </p>
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs md:text-sm font-black border border-red-200">
+                                    <span>{t('spots_remaining', { count: 12 })}</span>
+                                </div>
+                            </div>
+
                             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 md:gap-4">
                                 <Link
                                     href="/register?role=vendor"
-                                    className="w-full sm:w-auto px-8 md:px-10 py-4 md:py-5 bg-primary text-white font-black rounded-2xl md:rounded-[2rem] transition-all shadow-xl md:shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.05] active:scale-95 flex items-center justify-center gap-2 md:gap-3 group text-lg md:text-xl"
+                                    className="w-full sm:w-auto px-8 md:px-10 py-4 md:py-5 bg-primary text-white font-black rounded-2xl md:rounded-[2rem] transition-all shadow-xl md:shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.05] active:scale-95 flex flex-col items-center justify-center gap-1 group text-base md:text-lg"
                                 >
-                                    <span>{t('cta')}</span>
-                                    <ArrowRight className="w-5 h-5 md:w-6 md:h-6 rtl:rotate-180 group-hover:translate-x-2 transition-transform rtl:group-hover:-translate-x-2" />
+                                    <div className="flex items-center gap-2 md:gap-3">
+                                        <span>{t('cta')}</span>
+                                        <ArrowRight className="w-5 h-5 md:w-6 md:h-6 rtl:rotate-180 group-hover:translate-x-2 transition-transform rtl:group-hover:-translate-x-2" />
+                                    </div>
+                                    <span className="text-xs text-primary-50 font-medium">{t('cta_subtitle')}</span>
                                 </Link>
                                 <Link
                                     href="/demo/vendor"
