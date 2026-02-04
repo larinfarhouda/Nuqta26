@@ -298,6 +298,33 @@
             "community_focus": "Community focus",
             "brand_customization": "Brand customization",
             "multi_language": "Multi-language"
+        },
+        "SEO": {
+            "title": "Event Management Platform for Arab Organizers in Turkey | Nuqta",
+            "description": "Stop managing events manually. Turkey's first platform dedicated to Arab event organizers. 5,000+ active users, automated bilingual bookings, verified reviews. Start free today.",
+            "keywords": "event management Turkey, Arab event organizers Istanbul, bilingual event platform, automated event bookings, verified review system, event automation Turkey, Arabic event marketplace, professional event management",
+            "og_title": "Professional Event Management for Arab Organizers | Nuqta",
+            "og_description": "Join 5,000+ Arab event organizers in Turkey. Automated bilingual bookings, verified reviews, and real growth.",
+            "og_image_alt": "Nuqta - Event Management Platform for Arab Organizers",
+            "twitter_title": "Event Management Platform for Arab Organizers in Turkey",
+            "twitter_description": "5,000+ active users | Automated bilingual bookings | Verified reviews | Start free"
+        },
+        "FAQ": {
+            "tag": "FAQ",
+            "title": "Frequently Asked Questions",
+            "subtitle": "Everything you need to know about managing events on Nuqta",
+            "q1": "Do I need technical knowledge to use Nuqta?",
+            "a1": "Not at all! Nuqta is designed to be user-friendly. You can create and manage events in minutes without any technical skills. Our platform handles all the complexity for you.",
+            "q2": "How does the bilingual system work?",
+            "a2": "All emails and notifications are automatically sent in both Arabic and English to your attendees. You only need to enter your event details once, and we handle the bilingual communication.",
+            "q3": "What payment methods can I accept?",
+            "a3": "You can accept payments via bank transfer in Turkey. Attendees submit payment proof through the platform, and you can verify and manage all bookings from your dashboard.",
+            "q4": "How does the verified review system work?",
+            "a4": "Only attendees who actually attended your event can leave reviews. This prevents fake reviews and ensures your brand reputation is protected with authentic feedback from real participants.",
+            "q5": "Can I try Nuqta before committing to a paid plan?",
+            "a5": "Yes! Our Starter plan is completely free and includes 1 active event with all features. You can test the platform's full capabilities before upgrading to a paid plan.",
+            "more_questions": "Still have questions?",
+            "contact_support": "Contact Support on WhatsApp"
         }
     },
     "VendorProfile": {
