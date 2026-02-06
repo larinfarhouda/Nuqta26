@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function VendorFAQ() {
@@ -9,26 +9,28 @@ export default function VendorFAQ() {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     const faqs = [
-        {
-            question: t('q1'),
-            answer: t('a1')
-        },
-        {
-            question: t('q2'),
-            answer: t('a2')
-        },
-        {
-            question: t('q3'),
-            answer: t('a3')
-        },
-        {
-            question: t('q4'),
-            answer: t('a4')
-        },
-        {
-            question: t('q5'),
-            answer: t('a5')
-        }
+        { question: t('q1'), answer: t('a1') },
+        { question: t('q2'), answer: t('a2') },
+        { question: t('q3'), answer: t('a3') },
+        { question: t('q4'), answer: t('a4') },
+        { question: t('q5'), answer: t('a5') },
+        { question: t('q6'), answer: t('a6') },
+        { question: t('q7'), answer: t('a7') },
+        { question: t('q8'), answer: t('a8') },
+        { question: t('q9'), answer: t('a9') },
+        { question: t('q10'), answer: t('a10') },
+        { question: t('q11'), answer: t('a11') }
+    ];
+
+    const comparisonFeatures = [
+        { label: t('comparison_table.feature_confirmations'), manual: t('comparison_table.manual_confirmations'), nuqta: t('comparison_table.nuqta_confirmations') },
+        { label: t('comparison_table.feature_payment'), manual: t('comparison_table.manual_payment'), nuqta: t('comparison_table.nuqta_payment') },
+        { label: t('comparison_table.feature_attendance'), manual: t('comparison_table.manual_attendance'), nuqta: t('comparison_table.nuqta_attendance') },
+        { label: t('comparison_table.feature_reviews'), manual: t('comparison_table.manual_reviews'), nuqta: t('comparison_table.nuqta_reviews') },
+        { label: t('comparison_table.feature_time'), manual: t('comparison_table.manual_time'), nuqta: t('comparison_table.nuqta_time') },
+        { label: t('comparison_table.feature_language'), manual: t('comparison_table.manual_language'), nuqta: t('comparison_table.nuqta_language') },
+        { label: t('comparison_table.feature_discovery'), manual: t('comparison_table.manual_discovery'), nuqta: t('comparison_table.nuqta_discovery') },
+        { label: t('comparison_table.feature_cost'), manual: t('comparison_table.manual_cost'), nuqta: t('comparison_table.nuqta_cost') }
     ];
 
     return (
@@ -54,6 +56,66 @@ export default function VendorFAQ() {
 
             <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-white to-gray-50">
                 <div className="container mx-auto px-4">
+                    {/* Comparison Table */}
+                    <div className="max-w-5xl mx-auto mb-16 md:mb-24">
+                        <div className="text-center mb-12 md:mb-16">
+                            <div className="inline-flex items-center gap-2 px-4 md:px-6 py-1.5 md:py-2 bg-amber-50 text-amber-700 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border border-amber-200 mb-6">
+                                <span>مقارنة</span>
+                            </div>
+                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 mb-4">
+                                {t('comparison_table.title')}
+                            </h2>
+                            <p className="text-base md:text-lg text-gray-600">
+                                {t('comparison_table.subtitle')}
+                            </p>
+                        </div>
+
+                        <div className="bg-white rounded-2xl md:rounded-3xl border-2 border-gray-200 overflow-hidden shadow-xl">
+                            {/* Table Header */}
+                            <div className="grid grid-cols-3 bg-gray-50 border-b-2 border-gray-200">
+                                <div className="p-4 md:p-6 border-e border-gray-200"></div>
+                                <div className="p-4 md:p-6 border-e border-gray-200 text-center">
+                                    <div className="text-xs md:text-sm font-black uppercase tracking-widest text-gray-500">
+                                        {t('comparison_table.manual_title')}
+                                    </div>
+                                </div>
+                                <div className="p-4 md:p-6 text-center bg-primary/5">
+                                    <div className="text-xs md:text-sm font-black uppercase tracking-widest text-primary">
+                                        {t('comparison_table.nuqta_title')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Table Rows */}
+                            {comparisonFeatures.map((feature, idx) => (
+                                <div key={idx} className={`grid grid-cols-3 ${idx !== comparisonFeatures.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                                    <div className="p-4 md:p-6 border-e border-gray-200">
+                                        <div className="text-sm md:text-base font-bold text-gray-900">
+                                            {feature.label}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 md:p-6 border-e border-gray-200 flex items-center">
+                                        <div className="flex items-start gap-2">
+                                            <X className="w-4 h-4 md:w-5 md:h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                            <span className="text-xs md:text-sm text-gray-600">
+                                                {feature.manual}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 md:p-6 bg-primary/5 flex items-center">
+                                        <div className="flex items-start gap-2">
+                                            <Check className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
+                                            <span className="text-xs md:text-sm font-bold text-gray-900">
+                                                {feature.nuqta}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* FAQ Section */}
                     <div className="max-w-3xl mx-auto">
                         {/* Header */}
                         <div className="text-center mb-12 md:mb-16">
