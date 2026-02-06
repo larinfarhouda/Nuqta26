@@ -55,8 +55,13 @@ export default function VendorHero() {
                                 <p className="text-xs md:text-sm text-gray-600 font-bold">
                                     {t('founder_pricing_subtitle')}
                                 </p>
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs md:text-sm font-black border border-red-200">
-                                    <span>{t('spots_remaining', { count: 12 })}</span>
+                                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs md:text-sm font-black border border-red-200">
+                                        <span>{t('spots_remaining', { count: 12 })}</span>
+                                    </div>
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs md:text-sm font-black border border-amber-200">
+                                        <span>⏰ {t('founder_deadline')}</span>
+                                    </div>
                                 </div>
                             </div>
 
