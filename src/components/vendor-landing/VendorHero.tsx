@@ -86,9 +86,15 @@ export default function VendorHero() {
 
                             <div className="flex items-center justify-center lg:justify-start gap-3">
                                 <div className="flex -space-x-2">
-                                    {[1, 2, 3].map(i => (
+                                    {[1, 2, 3, 4].map((i) => (
                                         <div key={i} className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden shadow-sm">
-                                            <img src={`https://i.pravatar.cc/100?u=v${i}`} alt="Vendor" loading="lazy" />
+                                            <img
+                                                src={`https://i.pravatar.cc/100?u=v${i}`}
+                                                alt={`Arab event organizer ${i} using Nuqta platform in Turkey`}
+                                                loading="lazy"
+                                                width="40"
+                                                height="40"
+                                            />
                                         </div>
                                     ))}
                                 </div>
