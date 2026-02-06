@@ -1,81 +1,77 @@
-import VendorHero from '@/components/vendor-landing/VendorHero';
-import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import dynamic from 'next/dynamic';
 
-// Dynamic imports for below-fold content
+const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'), {
+    ssr: true,
+    loading: () => <div className="h-screen w-full animate-pulse bg-gray-50" />
+});
+
 const VendorBenefits = dynamic(() => import('@/components/vendor-landing/VendorBenefits'), {
-    loading: () => <div className="h-96 bg-white animate-pulse" />
+    ssr: true,
+    loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorTestimonials = dynamic(() => import('@/components/vendor-landing/VendorTestimonials'), {
-    loading: () => <div className="h-96 bg-[#fffcf9] animate-pulse" />
-});
-
-const VendorPricing = dynamic(() => import('@/components/vendor-landing/VendorPricing'), {
-    loading: () => <div className="h-96 bg-[#fffcf9] animate-pulse" />
+    ssr: true,
+    loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorFAQ = dynamic(() => import('@/components/vendor-landing/VendorFAQ'), {
-    loading: () => <div className="h-96 bg-gray-50 animate-pulse" />
+    ssr: true,
+    loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
-// SEO Metadata
-export async function generateMetadata({
-    params
-}: {
-    params: Promise<{ locale: string }>
-}): Promise<Metadata> {
+const VendorPricing = dynamic(() => import('@/components/vendor-landing/VendorPricing'), {
+    ssr: true,
+    loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
+});
+
+type Props = {
+    params: Promise<{
+        locale: string;
+    }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { locale } = await params;
     const t = await getTranslations({ locale, namespace: 'VendorLanding.SEO' });
 
     return {
         title: t('title'),
         description: t('description'),
-        keywords: t('keywords').split(', '),
-        alternates: {
-            canonical: `https://nuqta.ist/${locale}/for-vendors`,
-            languages: {
-                'en': 'https://nuqta.ist/en/for-vendors',
-                'ar': 'https://nuqta.ist/ar/for-vendors',
-                'x-default': 'https://nuqta.ist/en/for-vendors'
-            }
-        },
+        keywords: t('keywords'),
         openGraph: {
             title: t('og_title'),
             description: t('og_description'),
-            url: `https://nuqta.ist/${locale}/for-vendors`,
+            images: [
+                {
+                    url: '/og-vendor.png',
+                    width: 1200,
+                    height: 630,
+                    alt: t('og_image_alt')
+                }
+            ],
             type: 'website',
-            images: [{
-                url: '/images/og-vendor-landing.jpg',
-                width: 1200,
-                height: 630,
-                alt: t('og_image_alt')
-            }],
-            locale: locale === 'ar' ? 'ar_AR' : 'en_US',
-            siteName: 'Nuqta',
+            locale: locale === 'ar' ? 'ar_TR' : 'en_US'
         },
         twitter: {
             card: 'summary_large_image',
             title: t('twitter_title'),
             description: t('twitter_description'),
-            images: ['/images/og-vendor-landing.jpg'],
+            images: ['/og-vendor.png']
         },
-        robots: {
-            index: true,
-            follow: true,
-            googleBot: {
-                index: true,
-                follow: true,
-                'max-video-preview': -1,
-                'max-image-preview': 'large',
-                'max-snippet': -1,
-            },
-        },
+        alternates: {
+            canonical: `https://nuqta.ist/${locale}/for-vendors`,
+            languages: {
+                'ar': 'https://nuqta.ist/ar/for-vendors',
+                'en': 'https://nuqta.ist/en/for-vendors'
+            }
+        }
     };
 }
 
-export default function VendorLandingPage() {
+export default async function VendorLandingPage() {
     return (
         <>
             {/* JSON-LD Structured Data */}
@@ -159,6 +155,147 @@ export default function VendorLandingPage() {
                             contactType: 'Customer Support',
                             availableLanguage: ['English', 'Arabic']
                         }
+                    })
+                }}
+            />
+
+            {/* Product Schema with Reviews */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Product',
+                        name: 'Nuqta Event Management Platform',
+                        description: 'Professional event management platform for Arab organizers in Turkey. Save 15 hours per event with full automation, bilingual system, and verified reviews.',
+                        brand: {
+                            '@type': 'Brand',
+                            name: 'Nuqta'
+                        },
+                        offers: {
+                            '@type': 'AggregateOffer',
+                            priceCurrency: 'TRY',
+                            lowPrice: '0',
+                            highPrice: '1999',
+                            offerCount: '3'
+                        },
+                        aggregateRating: {
+                            '@type': 'AggregateRating',
+                            ratingValue: '4.8',
+                            reviewCount: '300',
+                            bestRating: '5'
+                        },
+                        review: [
+                            {
+                                '@type': 'Review',
+                                author: {
+                                    '@type': 'Person',
+                                    name: 'Sarah Al-Mansour'
+                                },
+                                reviewRating: {
+                                    '@type': 'Rating',
+                                    ratingValue: '5',
+                                    bestRating: '5'
+                                },
+                                reviewBody: 'After using Nuqta for 3 months, attendance increased 40% and I save 15 hours per event.'
+                            },
+                            {
+                                '@type': 'Review',
+                                author: {
+                                    '@type': 'Person',
+                                    name: 'Muna Al-Kurdi'
+                                },
+                                reviewRating: {
+                                    '@type': 'Rating',
+                                    ratingValue: '5',
+                                    bestRating: '5'
+                                },
+                                reviewBody: 'No-show rate dropped from 20% to 5%, revenue increased 65%. The bilingual system handles everything automatically.'
+                            },
+                            {
+                                '@type': 'Review',
+                                author: {
+                                    '@type': 'Person',
+                                    name: 'Laila Hassan'
+                                },
+                                reviewRating: {
+                                    '@type': 'Rating',
+                                    ratingValue: '5',
+                                    bestRating: '5'
+                                },
+                                reviewBody: 'Got 4.9/5.0 rating from 85 verified attendees. My business grew beyond imagination with the verified reviews system.'
+                            }
+                        ]
+                    })
+                }}
+            />
+
+            {/* Service Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Service',
+                        serviceType: 'Event Management Software',
+                        provider: {
+                            '@type': 'Organization',
+                            name: 'Nuqta'
+                        },
+                        areaServed: {
+                            '@type': 'Country',
+                            name: 'Turkey'
+                        },
+                        audience: {
+                            '@type': 'Audience',
+                            audienceType: 'Arab Event Organizers in Turkey'
+                        }
+                    })
+                }}
+            />
+
+            {/* HowTo Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'HowTo',
+                        name: 'How to Grow Your Event Attendance with Nuqta',
+                        description: 'Step-by-step guide to automating your event management and growing attendance by over 127%',
+                        totalTime: 'PT2M',
+                        step: [
+                            {
+                                '@type': 'HowToStep',
+                                position: 1,
+                                name: 'Create Free Account',
+                                text: 'Register for free in 2 minutes without credit card.'
+                            },
+                            {
+                                '@type': 'HowToStep',
+                                position: 2,
+                                name: 'Create Your First Event',
+                                text: 'Set up your event with bilingual descriptions, ticket types, and pricing.'
+                            },
+                            {
+                                '@type': 'HowToStep',
+                                position: 3,
+                                name: 'Share Event Link',
+                                text: 'Share your event with 5,000+ active Arab users in Turkey.'
+                            },
+                            {
+                                '@type': 'HowToStep',
+                                position: 4,
+                                name: 'Automated Management',
+                                text: 'System sends automatic bilingual confirmations and manages attendance. Save 15 hours per event.'
+                            },
+                            {
+                                '@type': 'HowToStep',
+                                position: 5,
+                                name: 'Collect Verified Reviews',
+                                text: 'Only real attendees can review. Build authentic reputation with 100% verified reviews.'
+                            }
+                        ]
                     })
                 }}
             />

@@ -206,8 +206,8 @@
     },
     "VendorLanding": {
         "Hero": {
-            "title": "Stop Managing Events Manually.",
-            "subtitle": "Turkey's first and only platform dedicated to the Arab community. Full booking automation, bilingual communication, and real growth beyond scattered groups.",
+            "title": "Wasting 10+ Hours Weekly Managing Event Bookings?",
+            "subtitle": "Join 300+ Arab organizers in Turkey who saved 15 hours per event and grew attendance by +127%. Full automation, 100% verified reviews, real growth—no failed experiments.",
             "founder_pricing_badge": "🎉 Founder Pricing Active",
             "founder_pricing_subtitle": "Lock in 50% off forever — limited to first 50 organizers",
             "spots_remaining": "🔥 Only {count} spots left at Founder Pricing",
@@ -301,13 +301,13 @@
         },
         "SEO": {
             "title": "Event Management Platform for Arab Organizers in Turkey | Nuqta",
-            "description": "Stop managing events manually. Turkey's first platform dedicated to Arab event organizers. 5,000+ active users, automated bilingual bookings, verified reviews. Start free today.",
+            "description": "Save 15 hours per event, grow attendance +127%. Join 300+ Arab organizers using Nuqta for full automation, auto-confirmations, 100% verified reviews. Start free—no credit card, ready in 2min. Founder offer: 50% off lifetime until March 15.",
             "keywords": "event management Turkey, Arab event organizers Istanbul, bilingual event platform, automated event bookings, verified review system, event automation Turkey, Arabic event marketplace, professional event management",
             "og_title": "Professional Event Management for Arab Organizers | Nuqta",
-            "og_description": "Join 5,000+ Arab event organizers in Turkey. Automated bilingual bookings, verified reviews, and real growth.",
+            "og_description": "300+ organizers saved 15 hrs/event, grew +127%. Full automation, 100% verified reviews. Start free—founder offer ends March 15!",
             "og_image_alt": "Nuqta - Event Management Platform for Arab Organizers",
             "twitter_title": "Event Management Platform for Arab Organizers in Turkey",
-            "twitter_description": "5,000+ active users | Automated bilingual bookings | Verified reviews | Start free"
+            "twitter_description": "Save 15 hrs/event | +127% avg growth | 100% verified reviews | Founder offer -50% ends soon"
         },
         "FAQ": {
             "tag": "FAQ",
