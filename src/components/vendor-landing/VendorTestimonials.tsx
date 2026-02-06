@@ -6,25 +6,36 @@ import { Quote, Star, TrendingUp, Clock, Users, Award } from 'lucide-react';
 export default function VendorTestimonials() {
     const t = useTranslations('VendorLanding.Testimonials');
 
-    const testimonials = [
-        {
-            id: 't1',
-            icon: TrendingUp,
-            color: 'rose'
-        },
-        {
-            id: 't2',
-            icon: Clock,
-            color: 'emerald'
-        },
-        {
-            id: 't3',
-            icon: Award,
-            color: 'amber'
-        }
-    ];
+    type ColorKey = 'rose' | 'emerald' | 'amber';
 
-    const colorClasses = {
+    const testimonials: Array<{
+        id: string;
+        icon: typeof TrendingUp;
+        color: ColorKey;
+    }> = [
+            {
+                id: 't1',
+                icon: TrendingUp,
+                color: 'rose'
+            },
+            {
+                id: 't2',
+                icon: Clock,
+                color: 'emerald'
+            },
+            {
+                id: 't3',
+                icon: Award,
+                color: 'amber'
+            }
+        ];
+
+    const colorClasses: Record<ColorKey, {
+        bg: string;
+        text: string;
+        border: string;
+        badge: string;
+    }> = {
         rose: {
             bg: 'bg-rose-50',
             text: 'text-rose-600',
