@@ -96,7 +96,7 @@ export default function VendorTestimonials() {
 
                                 {/* Before Section */}
                                 <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-100">
-                                    <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">قبل نقطة</div>
+                                    <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t('before_nuqta')}</div>
                                     <p className="text-sm md:text-base text-gray-600 leading-relaxed">
                                         {t(`${testimonial.id}.before`)}
                                     </p>
@@ -104,7 +104,7 @@ export default function VendorTestimonials() {
 
                                 {/* After Section */}
                                 <div className="mb-4 md:mb-6">
-                                    <div className="text-xs font-black uppercase tracking-widest text-primary mb-2">بعد نقطة</div>
+                                    <div className="text-xs font-black uppercase tracking-widest text-primary mb-2">{t('after_nuqta')}</div>
                                     <p className="text-sm md:text-base text-gray-800 font-bold leading-relaxed">
                                         {t(`${testimonial.id}.after`)}
                                     </p>

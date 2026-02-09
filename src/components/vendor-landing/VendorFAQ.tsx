@@ -60,7 +60,7 @@ export default function VendorFAQ() {
                     <div className="max-w-5xl mx-auto mb-16 md:mb-24">
                         <div className="text-center mb-12 md:mb-16">
                             <div className="inline-flex items-center gap-2 px-4 md:px-6 py-1.5 md:py-2 bg-amber-50 text-amber-700 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border border-amber-200 mb-6">
-                                <span>مقارنة</span>
+                                <span>{t('comparison_badge')}</span>
                             </div>
                             <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 mb-4">
                                 {t('comparison_table.title')}

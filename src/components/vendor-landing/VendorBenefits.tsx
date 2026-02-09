@@ -89,7 +89,7 @@ export default function VendorBenefits() {
                                 <div className="mb-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <AlertCircle className="w-4 h-4 text-red-500" />
-                                        <span className="text-xs font-black uppercase tracking-widest text-red-600">المشكلة</span>
+                                        <span className="text-xs font-black uppercase tracking-widest text-red-600">{t('problem_label')}</span>
                                     </div>
                                     <h3 className="text-lg md:text-xl font-black text-gray-900 mb-2">{t(`${benefit.id}.problem_title`)}</h3>
                                     <p className="text-sm md:text-base text-gray-600 leading-relaxed">{t(`${benefit.id}.problem_desc`)}</p>
@@ -104,7 +104,7 @@ export default function VendorBenefits() {
                                 <div className={`p-4 md:p-5 ${benefit.color.bg} rounded-xl md:rounded-2xl mb-4`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <TrendingUp className={`w-4 h-4 ${benefit.color.primary}`} />
-                                        <span className={`text-xs font-black uppercase tracking-widest ${benefit.color.primary}`}>الحل</span>
+                                        <span className={`text-xs font-black uppercase tracking-widest ${benefit.color.primary}`}>{t('solution_label')}</span>
                                     </div>
                                     <h4 className="text-base md:text-lg font-black text-gray-900 mb-2">{t(`${benefit.id}.solution_title`)}</h4>
                                     <p className="text-sm md:text-base text-gray-700 leading-relaxed font-medium">{t(`${benefit.id}.solution_desc`)}</p>
