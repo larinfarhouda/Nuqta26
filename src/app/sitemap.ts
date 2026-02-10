@@ -44,7 +44,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Static pages with their respective priorities
     const staticRoutes = [
         { route: '', priority: 1.0, changeFrequency: 'daily' as const },
-        { route: '/events', priority: 0.9, changeFrequency: 'daily' as const },
         { route: '/for-vendors', priority: 0.8, changeFrequency: 'weekly' as const },
         { route: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
         { route: '/contact', priority: 0.7, changeFrequency: 'monthly' as const },
@@ -53,38 +52,67 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const sitemapEntries: MetadataRoute.Sitemap = [];
 
-    // 1. Static Routes - Both locales
+    // 1. Static Routes - One entry per route with language alternates
     staticRoutes.forEach(({ route, priority, changeFrequency }) => {
         locales.forEach(locale => {
+            const alternateLanguages: Record<string, string> = {};
+            locales.forEach(altLocale => {
+                alternateLanguages[altLocale] = `${BASE_URL}/${altLocale}${route}`;
+            });
+            // x-default points to the default locale (Arabic)
+            alternateLanguages['x-default'] = `${BASE_URL}/ar${route}`;
+
             sitemapEntries.push({
                 url: `${BASE_URL}/${locale}${route}`,
                 lastModified: new Date(),
                 changeFrequency,
                 priority,
+                alternates: {
+                    languages: alternateLanguages,
+                },
             });
         });
     });
 
-    // 2. Dynamic Event Pages - High priority, weekly updates
+    // 2. Dynamic Event Pages - with language alternates
     events.forEach((event: any) => {
+        const slug = event.slug || event.id;
         locales.forEach(locale => {
+            const alternateLanguages: Record<string, string> = {};
+            locales.forEach(altLocale => {
+                alternateLanguages[altLocale] = `${BASE_URL}/${altLocale}/events/${slug}`;
+            });
+            alternateLanguages['x-default'] = `${BASE_URL}/ar/events/${slug}`;
+
             sitemapEntries.push({
-                url: `${BASE_URL}/${locale}/events/${event.slug || event.id}`,
+                url: `${BASE_URL}/${locale}/events/${slug}`,
                 lastModified: new Date(event.updated_at || event.created_at || new Date()),
                 changeFrequency: 'weekly',
                 priority: 0.9,
+                alternates: {
+                    languages: alternateLanguages,
+                },
             });
         });
     });
 
-    // 3. Vendor Profile Pages - Good priority, weekly updates
+    // 3. Vendor Profile Pages - with language alternates
     vendors.forEach((vendor: any) => {
         locales.forEach(locale => {
+            const alternateLanguages: Record<string, string> = {};
+            locales.forEach(altLocale => {
+                alternateLanguages[altLocale] = `${BASE_URL}/${altLocale}/v/${vendor.slug}`;
+            });
+            alternateLanguages['x-default'] = `${BASE_URL}/ar/v/${vendor.slug}`;
+
             sitemapEntries.push({
                 url: `${BASE_URL}/${locale}/v/${vendor.slug}`,
                 lastModified: new Date(vendor.updated_at || new Date()),
                 changeFrequency: 'weekly',
                 priority: 0.8,
+                alternates: {
+                    languages: alternateLanguages,
+                },
             });
         });
     });

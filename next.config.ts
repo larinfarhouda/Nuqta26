@@ -48,6 +48,23 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Locale-prefixed redirects (avoid double-redirect through middleware)
+      {
+        source: '/:locale/contact-us',
+        destination: '/:locale/contact',
+        permanent: true,
+      },
+      {
+        source: '/:locale/join-us',
+        destination: '/:locale/for-vendors',
+        permanent: true,
+      },
+      {
+        source: '/:locale/vendor',
+        destination: '/:locale/for-vendors',
+        permanent: true,
+      },
+      // Non-locale redirects (for direct access without locale)
       {
         source: '/contact-us',
         destination: '/contact',

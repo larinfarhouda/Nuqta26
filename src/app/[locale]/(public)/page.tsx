@@ -10,6 +10,29 @@ import { Search } from 'lucide-react';
 import { Link } from '@/navigation';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { Metadata } from 'next';
+
+type Props = {
+    params: Promise<{ locale: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { locale } = await params;
+
+    return {
+        alternates: {
+            canonical: `https://nuqta.ist/${locale}`,
+            languages: {
+                'ar': 'https://nuqta.ist/ar',
+                'en': 'https://nuqta.ist/en',
+            },
+        },
+        openGraph: {
+            url: `https://nuqta.ist/${locale}`,
+        },
+    };
+}
 
 // Dynamic imports for heavy components to reduce initial bundle size
 const EventSearchClient = dynamic(() => import('@/components/events/EventSearchClient'), {
