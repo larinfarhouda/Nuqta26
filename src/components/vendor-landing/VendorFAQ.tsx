@@ -167,7 +167,7 @@ export default function VendorFAQ() {
                         <div className="mt-12 text-center">
                             <p className="text-gray-600 mb-4">{t('more_questions')}</p>
                             <a
-                                href="https://wa.me/905428751112"
+                                href="https://wa.me/00905444477620"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors"

@@ -6,7 +6,10 @@ import WelcomeTemplate from '@/components/emails/WelcomeTemplate';
 import EventReminderTemplate from '@/components/emails/EventReminderTemplate';
 import ReviewReceivedTemplate from '@/components/emails/ReviewReceivedTemplate';
 import EventSoldOutTemplate from '@/components/emails/EventSoldOutTemplate';
+import NewSignupAdminTemplate from '@/components/emails/NewSignupAdminTemplate';
 import React from 'react';
+
+const ADMIN_NOTIFICATION_EMAIL = 'nuqta.events@gmail.com';
 
 /**
  * Notification Service
@@ -339,6 +342,57 @@ export class NotificationService {
             logger.info('Event reminder sent successfully');
         } catch (error) {
             logger.error('Failed to send event reminder', { error, params });
+        }
+    }
+
+    /**
+     * Send new signup notification to admin
+     * Triggered when a new customer or vendor registers
+     */
+    async sendNewSignupNotification(params: {
+        userName: string;
+        userEmail: string;
+        userRole: 'user' | 'vendor';
+        signupMethod: 'email' | 'google' | 'facebook';
+        additionalInfo?: Record<string, string>;
+    }) {
+        logger.info('NotificationService: Sending new signup admin notification', {
+            email: params.userEmail,
+            role: params.userRole,
+            method: params.signupMethod
+        });
+
+        try {
+            const timestamp = new Date().toLocaleString('en-US', {
+                timeZone: 'Europe/Istanbul',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            await sendEmail({
+                to: ADMIN_NOTIFICATION_EMAIL,
+                subject: `🆕 New ${params.userRole === 'vendor' ? 'Vendor' : 'Customer'} Signup: ${params.userName}`,
+                react: React.createElement(NewSignupAdminTemplate, {
+                    userName: params.userName,
+                    userEmail: params.userEmail,
+                    userRole: params.userRole,
+                    signupMethod: params.signupMethod,
+                    timestamp,
+                    additionalInfo: params.additionalInfo,
+                })
+            });
+
+            logger.info('New signup admin notification sent successfully', {
+                userEmail: params.userEmail,
+                role: params.userRole
+            });
+        } catch (error) {
+            logger.error('Failed to send new signup admin notification', { error, params });
+            // Don't throw - admin notification failure shouldn't break signup
         }
     }
 }

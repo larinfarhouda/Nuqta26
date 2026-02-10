@@ -73,7 +73,7 @@ export default function PrivacyPage() {
                         <div className="inline-block px-8 py-6 rounded-[2rem] bg-gray-50 border border-gray-100 italic">
                             <p className="text-gray-500 font-medium">
                                 If you have any questions regarding this privacy policy, please contact us at <br />
-                                <span className="text-primary font-black not-italic text-lg">privacy@nuqta.ist</span>
+                                <span className="text-primary font-black not-italic text-lg">info@nuqta.ist</span>
                             </p>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { NotificationService } from '@/services/notification.service';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
@@ -59,6 +60,30 @@ export async function GET(request: Request) {
                             category: 'other',
                             subscription_tier: 'starter'
                         } as any);
+                    }
+                }
+
+                // Check if this is a new user (profile created within last 60 seconds)
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('created_at, full_name')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profileData && profileData.created_at) {
+                    const createdAt = new Date(profileData.created_at);
+                    const now = new Date();
+                    const diffSeconds = (now.getTime() - createdAt.getTime()) / 1000;
+
+                    if (diffSeconds < 60) {
+                        // New user — send admin notification (fire-and-forget)
+                        const notificationService = new NotificationService();
+                        notificationService.sendNewSignupNotification({
+                            userName: profileData.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown',
+                            userEmail: user.email || 'No email',
+                            userRole: finalRole === 'vendor' ? 'vendor' : 'user',
+                            signupMethod: 'google',
+                        }).catch(() => { /* silently ignore */ });
                     }
                 }
 

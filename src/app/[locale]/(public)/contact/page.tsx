@@ -32,7 +32,7 @@ export default function ContactPage() {
         {
             icon: <Mail className="w-8 h-8" />,
             label: t('cards.email'),
-            value: "hello@nuqta.ist",
+            value: "info@nuqta.ist",
             color: "from-blue-500/10 to-blue-600/5 text-blue-700 border-blue-200/50"
         },
         {

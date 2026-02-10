@@ -100,6 +100,24 @@ export default function RegisterPage() {
             setIsSuccess(true);
             setSubmittedEmail(data.email);
 
+            // Notify admin about new signup (fire-and-forget)
+            fetch('/api/notify-signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userName: fullName,
+                    userEmail: data.email,
+                    userRole: role,
+                    signupMethod: 'email',
+                    additionalInfo: role === 'user' ? {
+                        ...(data.phone ? { Phone: data.phone } : {}),
+                        ...(data.city ? { City: data.city } : {}),
+                        ...(data.gender ? { Gender: data.gender } : {}),
+                        ...(data.age ? { Age: data.age } : {}),
+                    } : undefined,
+                }),
+            }).catch(() => { /* silently ignore */ });
+
         } catch (err: any) {
             console.error('Registration error:', err);
             const message = err.message || '';
