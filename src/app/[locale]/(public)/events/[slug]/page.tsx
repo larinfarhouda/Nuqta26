@@ -3,6 +3,7 @@ import EventDetailsClient from '@/components/events/EventDetailsClient';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { hasExpressedInterest, getEventInterestCount } from '@/actions/public/interests';
+import { trackPageView } from '@/actions/public/track';
 import { Metadata } from 'next';
 import { getDemoEvents } from '@/lib/demoData';
 import {
@@ -119,6 +120,9 @@ export default async function EventPage({ params }: { params: any }) {
         ]);
         interestData = { isInterested, interestCount };
     }
+
+    // Track page view (fire-and-forget)
+    trackPageView('event', event.id, { slug, title: event.title });
 
     // Generate Event Schema (JSON-LD)
     const eventSchema = {

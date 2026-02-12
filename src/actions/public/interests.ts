@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/logger/logger';
+import { trackActivity } from '@/lib/track-activity';
 
 /**
  * Express interest in a prospect event.
@@ -50,6 +51,13 @@ export async function expressInterest(eventId: string) {
             logger.error('Failed to express interest', { error });
             return { error: 'Failed to express interest.' };
         }
+
+        trackActivity({
+            userId: user.id,
+            action: 'interest_expressed',
+            targetType: 'event',
+            targetId: eventId,
+        });
 
         return { success: true };
     } catch (error) {

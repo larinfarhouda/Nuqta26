@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { ServiceFactory } from '@/services/service-factory';
 import { logger } from '@/lib/logger/logger';
 import { UnauthorizedError } from '@/lib/errors/app-error';
+import { trackActivity } from '@/lib/track-activity';
 
 /**
  * Get vendor bookings
@@ -92,6 +93,14 @@ export async function updateBookingStatus(
 
         revalidatePath('/dashboard/vendor');
         logger.info('Booking status updated', { bookingId, status });
+
+        trackActivity({
+            userId: user.id,
+            userRole: 'vendor',
+            action: status === 'confirmed' ? 'booking_confirmed' : 'booking_cancelled',
+            targetType: 'booking',
+            targetId: bookingId,
+        });
 
         return { success: true };
     } catch (error) {

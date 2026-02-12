@@ -2,6 +2,7 @@ import { getPublicVendor } from '@/actions/public/vendors';
 import VendorProfileClient from '@/components/vendor/VendorProfileClient';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { trackPageView } from '@/actions/public/track';
 import { getDemoVendorData, DEMO_VENDOR_SLUG, getDemoEvents, getDemoGallery } from '@/lib/demoData';
 import {
     generateCanonicalUrl,
@@ -136,6 +137,9 @@ export default async function VendorProfilePage({ params }: { params: any }) {
     const vendor = await getPublicVendor(slug);
 
     if (!vendor) return notFound();
+
+    // Track page view (fire-and-forget)
+    trackPageView('vendor', vendor.id, { slug, businessName: vendor.business_name });
 
     const jsonLd = {
         '@context': 'https://schema.org',

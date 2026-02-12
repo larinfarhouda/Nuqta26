@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { trackActivity } from '@/lib/track-activity';
 
 /**
  * Submit a new review for an event
@@ -105,6 +106,14 @@ export async function submitReview(eventId: string, rating: number, comment?: st
 
     // Revalidate the event page
     revalidatePath(`/events/${eventId}`);
+
+    trackActivity({
+        userId: user.id,
+        action: 'review_submitted',
+        targetType: 'event',
+        targetId: eventId,
+        details: { rating },
+    });
 
     return { success: true, data };
 }
@@ -371,6 +380,14 @@ export async function flagReview(reviewId: string, reason?: string) {
             .update({ is_flagged: true })
             .eq('id', reviewId);
     }
+
+    trackActivity({
+        userId: user.id,
+        action: 'review_flagged',
+        targetType: 'review',
+        targetId: reviewId,
+        details: { reason },
+    });
 
     return { success: true };
 }

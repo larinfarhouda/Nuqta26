@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { NotificationService } from '@/services/notification.service';
+import { trackActivity } from '@/lib/track-activity';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
@@ -86,6 +87,14 @@ export async function GET(request: Request) {
                         }).catch(() => { /* silently ignore */ });
                     }
                 }
+
+                // Track login activity
+                trackActivity({
+                    userId: user.id,
+                    userRole: finalRole === 'vendor' ? 'vendor' : 'customer',
+                    action: 'user_login',
+                    details: { method: 'oauth' },
+                });
 
                 const next = searchParams.get('next');
                 if (next) {

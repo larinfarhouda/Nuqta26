@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { ServiceFactory } from '@/services/service-factory';
 import { logger } from '@/lib/logger/logger';
 import { UnauthorizedError } from '@/lib/errors/app-error';
+import { trackActivity } from '@/lib/track-activity';
 
 /**
  * Toggle favorite event
@@ -24,6 +25,13 @@ export async function toggleFavoriteEvent(eventId: string, isFavorite: boolean) 
         revalidatePath('/dashboard/user/favorites');
         revalidatePath(`/events/${eventId}`);
         logger.info('Favorite toggled', { userId: user.id, eventId, isFavorite: !isFavorite });
+
+        trackActivity({
+            userId: user.id,
+            action: isFavorite ? 'event_unfavorited' : 'event_favorited',
+            targetType: 'event',
+            targetId: eventId,
+        });
 
         return { success: true };
     } catch (error) {
@@ -159,6 +167,14 @@ export async function updateUserProfile(data: {
         revalidatePath('/dashboard/user/profile');
         logger.info('User profile updated', { userId: user.id });
 
+        trackActivity({
+            userId: user.id,
+            action: 'profile_updated',
+            targetType: 'profile',
+            targetId: user.id,
+            details: { fields: Object.keys(updates) },
+        });
+
         return { success: true };
     } catch (error) {
         logger.error('Failed to update profile', { error });
@@ -241,6 +257,13 @@ export async function submitPaymentProof(bookingId: string, paymentProofUrl: str
         revalidatePath('/dashboard/user');
         logger.info('Payment proof submitted', { userId: user.id, bookingId });
 
+        trackActivity({
+            userId: user.id,
+            action: 'payment_submitted',
+            targetType: 'booking',
+            targetId: bookingId,
+        });
+
         return { success: true };
     } catch (error) {
         logger.error('Failed to submit payment proof', { error, bookingId });
@@ -270,6 +293,13 @@ export async function deleteUnpaidBooking(bookingId: string) {
 
         revalidatePath('/dashboard/user');
         logger.info('Unpaid booking deleted', { userId: user.id, bookingId });
+
+        trackActivity({
+            userId: user.id,
+            action: 'booking_deleted',
+            targetType: 'booking',
+            targetId: bookingId,
+        });
 
         return { success: true };
     } catch (error) {

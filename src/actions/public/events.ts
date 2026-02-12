@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { ServiceFactory } from '@/services/service-factory';
 import { EventFilters } from '@/types/dto/event.dto';
 import { logger } from '@/lib/logger/logger';
+import { trackActivity } from '@/lib/track-activity';
 
 /**
  * Get public event by ID or slug
@@ -283,6 +284,15 @@ export async function createBooking(
         }
 
         logger.info('Booking created successfully', { bookingId: booking.id });
+
+        trackActivity({
+            userId: user.id,
+            action: 'booking_created',
+            targetType: 'booking',
+            targetId: booking.id,
+            details: { eventId, ticketId, quantity, totalAmount },
+        });
+
         return { success: true, booking, bookingId: booking.id };
     } catch (error) {
         logger.error('Failed to create booking', { error, eventId, ticketId, quantity });

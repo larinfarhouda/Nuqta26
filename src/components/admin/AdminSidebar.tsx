@@ -8,6 +8,7 @@ import {
     CreditCard,
     Shield,
     UserPlus,
+    Users,
     Activity,
     ChevronLeft,
     ChevronRight,
@@ -28,6 +29,7 @@ const navItems = [
     { label: 'Bookings', icon: CreditCard, href: '/admin/bookings' },
     { label: 'Moderation', icon: Shield, href: '/admin/moderation' },
     { label: 'Prospects', icon: UserPlus, href: '/admin/prospects' },
+    { label: 'Users', icon: Users, href: '/admin/users' },
     { label: 'Activity', icon: Activity, href: '/admin/activity' },
 ];
 

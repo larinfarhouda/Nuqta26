@@ -97,9 +97,14 @@ export default function AdminProspectsClient({
 
     const prospects = data?.data || [];
 
-    const inputStyle = {
+    const inputStyle: React.CSSProperties = {
         width: '100%', padding: '10px 14px', borderRadius: '10px',
         border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none',
+        color: '#1e293b', backgroundColor: '#fff',
+    };
+
+    const labelStyle: React.CSSProperties = {
+        fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px', display: 'block',
     };
 
     return (
@@ -175,18 +180,39 @@ export default function AdminProspectsClient({
                 >
                     <div onClick={(e) => e.stopPropagation()}
                         style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '480px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>New Prospect Vendor</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <input placeholder="Business Name *" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} style={inputStyle} />
-                            <input placeholder="Logo URL" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} style={inputStyle} />
-                            <input placeholder="Email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} style={inputStyle} />
-                            <input placeholder="Phone" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} style={inputStyle} />
-                            <input placeholder="Instagram" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={inputStyle} />
-                            <input placeholder="Website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} style={inputStyle} />
-                            <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>New Prospect Vendor</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div>
+                                <label style={labelStyle}>Business Name *</label>
+                                <input placeholder="e.g. Café Istanbul" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Logo URL</label>
+                                <input placeholder="https://..." value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Email</label>
+                                <input placeholder="vendor@example.com" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Phone</label>
+                                <input placeholder="+90 5XX XXX XX XX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Instagram</label>
+                                <input placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Website</label>
+                                <input placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Notes</label>
+                                <textarea placeholder="Any additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+                            </div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
+                            <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
                             <button onClick={handleCreate} disabled={loading || !form.business_name} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create'}
                             </button>
@@ -202,27 +228,57 @@ export default function AdminProspectsClient({
                 >
                     <div onClick={(e) => e.stopPropagation()}
                         style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '520px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Create Phantom Event</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <input placeholder="Event Title *" value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} style={inputStyle} />
-                            <textarea placeholder="Description" value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <input type="datetime-local" placeholder="Start Date *" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
-                                <input type="datetime-local" placeholder="End Date" value={eventForm.end_date} onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>Create Phantom Event</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div>
+                                <label style={labelStyle}>Event Title *</label>
+                                <input placeholder="e.g. Art Night" value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} style={inputStyle} />
                             </div>
-                            <input placeholder="Location Name" value={eventForm.location_name} onChange={(e) => setEventForm({ ...eventForm, location_name: e.target.value })} style={inputStyle} />
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <input placeholder="City" value={eventForm.city} onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
-                                <input placeholder="Country" value={eventForm.country} onChange={(e) => setEventForm({ ...eventForm, country: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                            <div>
+                                <label style={labelStyle}>Description</label>
+                                <textarea placeholder="Describe the event..." value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <input placeholder="Event Type" value={eventForm.event_type} onChange={(e) => setEventForm({ ...eventForm, event_type: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
-                                <input type="number" placeholder="Capacity" value={eventForm.capacity} onChange={(e) => setEventForm({ ...eventForm, capacity: parseInt(e.target.value) || 0 })} style={{ ...inputStyle, flex: 1 }} />
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>Start Date *</label>
+                                    <input type="datetime-local" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} style={inputStyle} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>End Date</label>
+                                    <input type="datetime-local" value={eventForm.end_date} onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })} style={inputStyle} />
+                                </div>
                             </div>
-                            <input placeholder="Image URL" value={eventForm.image_url} onChange={(e) => setEventForm({ ...eventForm, image_url: e.target.value })} style={inputStyle} />
+                            <div>
+                                <label style={labelStyle}>Location Name</label>
+                                <input placeholder="e.g. Grand Hall" value={eventForm.location_name} onChange={(e) => setEventForm({ ...eventForm, location_name: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>City</label>
+                                    <input placeholder="Istanbul" value={eventForm.city} onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })} style={inputStyle} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>Country</label>
+                                    <input placeholder="Turkey" value={eventForm.country} onChange={(e) => setEventForm({ ...eventForm, country: e.target.value })} style={inputStyle} />
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>Event Type</label>
+                                    <input placeholder="e.g. Workshop" value={eventForm.event_type} onChange={(e) => setEventForm({ ...eventForm, event_type: e.target.value })} style={inputStyle} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={labelStyle}>Capacity</label>
+                                    <input type="number" placeholder="50" value={eventForm.capacity} onChange={(e) => setEventForm({ ...eventForm, capacity: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                                </div>
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Image URL</label>
+                                <input placeholder="https://..." value={eventForm.image_url} onChange={(e) => setEventForm({ ...eventForm, image_url: e.target.value })} style={inputStyle} />
+                            </div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={() => setShowEvent(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
+                            <button onClick={() => setShowEvent(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
                             <button onClick={handleCreateEvent} disabled={loading || !eventForm.title || !eventForm.date} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create Event'}
                             </button>

@@ -296,3 +296,48 @@ export async function searchEventsForAdmin(query: string) {
         return [];
     }
 }
+
+// ─── User Activity Tracking ─────────────────────────────────────────────────
+
+export async function getAdminUserActivity(
+    page = 1,
+    pageSize = 20,
+    filters?: { userId?: string; action?: string; userRole?: string }
+) {
+    try {
+        await requireAdmin();
+        const adminClient = createAdminClient();
+        const { AdminRepository } = await import('@/repositories/admin.repository');
+        const repo = new AdminRepository(adminClient);
+        return await repo.getUserActivityFeed(page, pageSize, filters);
+    } catch (error) {
+        logger.error('Failed to get user activity feed', { error });
+        return null;
+    }
+}
+
+export async function getAdminUserEngagement() {
+    try {
+        await requireAdmin();
+        const adminClient = createAdminClient();
+        const { AdminRepository } = await import('@/repositories/admin.repository');
+        const repo = new AdminRepository(adminClient);
+        return await repo.getUserEngagementStats();
+    } catch (error) {
+        logger.error('Failed to get user engagement stats', { error });
+        return null;
+    }
+}
+
+export async function getAdminMostActiveUsers(limit = 10) {
+    try {
+        await requireAdmin();
+        const adminClient = createAdminClient();
+        const { AdminRepository } = await import('@/repositories/admin.repository');
+        const repo = new AdminRepository(adminClient);
+        return await repo.getMostActiveUsers(limit);
+    } catch (error) {
+        logger.error('Failed to get most active users', { error });
+        return [];
+    }
+}

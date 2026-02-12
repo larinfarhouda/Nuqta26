@@ -11,6 +11,7 @@ import {
     getRequiredUpgradeTier,
     type SubscriptionTier
 } from '@/lib/constants/subscription';
+import { trackActivity } from '@/lib/track-activity';
 
 /**
  * Create event (vendor action)
@@ -162,6 +163,15 @@ export async function createEvent(formData: FormData) {
         revalidatePath('/dashboard/vendor');
         logger.info('Event created successfully', { eventId: event.id });
 
+        trackActivity({
+            userId: user.id,
+            userRole: 'vendor',
+            action: 'event_created',
+            targetType: 'event',
+            targetId: event.id,
+            details: { title: formData.get('title') },
+        });
+
         return { success: true, eventId: event.id };
     } catch (error) {
         logger.error('Failed to create event', { error });
@@ -268,6 +278,14 @@ export async function updateEvent(eventId: string, formData: FormData) {
         revalidatePath('/dashboard/vendor');
         logger.info('Event updated successfully', { eventId });
 
+        trackActivity({
+            userId: user.id,
+            userRole: 'vendor',
+            action: 'event_updated',
+            targetType: 'event',
+            targetId: eventId,
+        });
+
         return { success: true };
     } catch (error) {
         logger.error('Failed to update event', { error, eventId });
@@ -315,6 +333,14 @@ export async function deleteEvent(eventId: string) {
 
         revalidatePath('/dashboard/vendor');
         logger.info('Event deleted successfully', { eventId });
+
+        trackActivity({
+            userId: user.id,
+            userRole: 'vendor',
+            action: 'event_deleted',
+            targetType: 'event',
+            targetId: eventId,
+        });
 
         return { success: true };
     } catch (error) {
