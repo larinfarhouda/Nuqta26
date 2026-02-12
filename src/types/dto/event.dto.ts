@@ -26,7 +26,9 @@ export interface PublicEventDTO {
     location_lat: number | null;
     location_long: number | null;
     category_id: string | null;
+    category_name_en: string | null;
     vendor_id: string;
+    prospect_vendor_id: string | null;
 
     // Related data
     tickets: Ticket[];

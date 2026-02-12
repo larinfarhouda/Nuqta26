@@ -25,7 +25,6 @@ export const getDemoVendorData = () => ({
     location_long: 28.9784,
     district: 'istanbul',
     subscription_tier: 'professional',
-    platform_signup_date: '2025-06-15T00:00:00Z',
     created_at: '2025-06-15T10:00:00Z',
     updated_at: '2026-01-28T14:30:00Z'
 });

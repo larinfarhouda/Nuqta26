@@ -2,6 +2,7 @@ import { getPublicEvent } from '@/actions/public/events';
 import EventDetailsClient from '@/components/events/EventDetailsClient';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
+import { hasExpressedInterest, getEventInterestCount } from '@/actions/public/interests';
 import { Metadata } from 'next';
 import { getDemoEvents } from '@/lib/demoData';
 import {
@@ -109,6 +110,16 @@ export default async function EventPage({ params }: { params: any }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Get interest data for prospect events
+    let interestData: { isInterested: boolean; interestCount: number } | undefined;
+    if (event.prospect_vendor_id) {
+        const [isInterested, interestCount] = await Promise.all([
+            hasExpressedInterest(event.id),
+            getEventInterestCount(event.id),
+        ]);
+        interestData = { isInterested, interestCount };
+    }
+
     // Generate Event Schema (JSON-LD)
     const eventSchema = {
         '@context': 'https://schema.org',
@@ -193,7 +204,7 @@ export default async function EventPage({ params }: { params: any }) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
             />
-            <EventDetailsClient event={event} user={user} />
+            <EventDetailsClient event={event} user={user} interestData={interestData} />
         </>
     );
 }

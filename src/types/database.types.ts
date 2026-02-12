@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_items: {
         Row: {
           attendee_email: string | null
@@ -260,6 +301,42 @@ export type Database = {
           },
         ]
       }
+      event_interests: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_interests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_interests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_reviews: {
         Row: {
           booking_id: string | null
@@ -330,12 +407,15 @@ export type Database = {
           district: string | null
           end_date: string | null
           event_type: string | null
+          featured_at: string | null
           id: string
           image_url: string | null
+          is_featured: boolean | null
           is_recurring: boolean | null
           location_lat: number | null
           location_long: number | null
           location_name: string | null
+          prospect_vendor_id: string | null
           recurrence_days: string[] | null
           recurrence_end_date: string | null
           recurrence_type: string | null
@@ -355,12 +435,15 @@ export type Database = {
           district?: string | null
           end_date?: string | null
           event_type?: string | null
+          featured_at?: string | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           is_recurring?: boolean | null
           location_lat?: number | null
           location_long?: number | null
           location_name?: string | null
+          prospect_vendor_id?: string | null
           recurrence_days?: string[] | null
           recurrence_end_date?: string | null
           recurrence_type?: string | null
@@ -380,12 +463,15 @@ export type Database = {
           district?: string | null
           end_date?: string | null
           event_type?: string | null
+          featured_at?: string | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           is_recurring?: boolean | null
           location_lat?: number | null
           location_long?: number | null
           location_name?: string | null
+          prospect_vendor_id?: string | null
           recurrence_days?: string[] | null
           recurrence_end_date?: string | null
           recurrence_type?: string | null
@@ -400,6 +486,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_prospect_vendor_id_fkey"
+            columns: ["prospect_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_vendors"
             referencedColumns: ["id"]
           },
           {
@@ -460,14 +553,8 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
-          is_founder_pricing: boolean | null
           phone: string | null
-          platform_signup_date: string | null
           role: string | null
-          subscription_expires_at: string | null
-          subscription_starts_at: string | null
-          subscription_status: string | null
-          subscription_tier: string | null
         }
         Insert: {
           age?: number | null
@@ -481,14 +568,8 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id: string
-          is_founder_pricing?: boolean | null
           phone?: string | null
-          platform_signup_date?: string | null
           role?: string | null
-          subscription_expires_at?: string | null
-          subscription_starts_at?: string | null
-          subscription_status?: string | null
-          subscription_tier?: string | null
         }
         Update: {
           age?: number | null
@@ -502,16 +583,76 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
-          is_founder_pricing?: boolean | null
           phone?: string | null
-          platform_signup_date?: string | null
           role?: string | null
-          subscription_expires_at?: string | null
-          subscription_starts_at?: string | null
-          subscription_status?: string | null
-          subscription_tier?: string | null
         }
         Relationships: []
+      }
+      prospect_vendors: {
+        Row: {
+          business_name: string
+          claim_token: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          converted_vendor_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          notes: string | null
+          status: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          business_name: string
+          claim_token?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          converted_vendor_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_name?: string
+          claim_token?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          converted_vendor_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_vendors_converted_vendor_id_fkey"
+            columns: ["converted_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_vendors_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_flags: {
         Row: {

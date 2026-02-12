@@ -7,6 +7,7 @@ import { Link, useRouter } from '@/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles, XCircle, AlertCircle } from 'lucide-react';
 import EventBookingForm from '@/components/events/EventBookingForm';
+import InterestWidget from '@/components/events/InterestWidget';
 import MobileBookingBar from '@/components/events/MobileBookingBar';
 import BackgroundShapes from '@/components/home/BackgroundShapes';
 import { Suspense } from 'react';
@@ -19,9 +20,13 @@ import { getEventRatingSummary, checkCanReviewEvent, getUserReviewForEvent } fro
 type EventDetailsClientProps = {
     event: any;
     user: any;
+    interestData?: {
+        isInterested: boolean;
+        interestCount: number;
+    };
 };
 
-export default function EventDetailsClient({ event, user }: EventDetailsClientProps) {
+export default function EventDetailsClient({ event, user, interestData }: EventDetailsClientProps) {
     const t = useTranslations('Events');
     const tReviews = useTranslations('Reviews');
     const locale = useLocale();
@@ -73,6 +78,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
     const isExpired = eventStatus === 'expired';
     const isSoldOut = eventStatus === 'sold_out';
     const isBookable = eventStatus === 'active';
+    const isProspectEvent = !!event.prospect_vendor_id;
 
     // Fetch review data on component mount
     useEffect(() => {
@@ -193,10 +199,17 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                                             {event.category_name_en || t('default_category')}
                                         </span>
-                                        <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                            <span>{t('verified_community')}</span>
-                                        </div>
+                                        {isProspectEvent ? (
+                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                                                <span className="w-4 h-4 text-amber-500">⚡</span>
+                                                <span>Coming Soon</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                                <span>{t('verified_community')}</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
                                         {event.title}
@@ -418,7 +431,7 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                     </div>
                 </div>
 
-                {/* Right Column: Booking Widget - Glowing Card */}
+                {/* Right Column: Booking Widget or Interest Widget */}
                 <div className="md:col-span-4 relative pb-20 md:pb-0" ref={bookingRef}>
                     <div className="sticky top-48">
                         <motion.div
@@ -428,9 +441,18 @@ export default function EventDetailsClient({ event, user }: EventDetailsClientPr
                         >
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full" />
                             <div className="relative z-10">
-                                <Suspense fallback={<div className="h-[450px] bg-white/50 animate-pulse rounded-[2.5rem]" />}>
-                                    <EventBookingForm event={event} tickets={event.tickets || []} />
-                                </Suspense>
+                                {isProspectEvent && interestData ? (
+                                    <InterestWidget
+                                        eventId={event.id}
+                                        user={user}
+                                        initialInterested={interestData.isInterested}
+                                        interestCount={interestData.interestCount}
+                                    />
+                                ) : (
+                                    <Suspense fallback={<div className="h-[450px] bg-white/50 animate-pulse rounded-[2.5rem]" />}>
+                                        <EventBookingForm event={event} tickets={event.tickets || []} />
+                                    </Suspense>
+                                )}
                             </div>
                         </motion.div>
 

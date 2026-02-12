@@ -1,5 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from '@/navigation';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import { ToastProvider } from '@/components/ui/Toast';
 
 export default async function AdminLayout({
     children,
@@ -16,8 +18,8 @@ export default async function AdminLayout({
     } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect({ href: '/login', locale }); // Or a specific admin login
-        return null; // Ensure TS knows execution stops here (or we return early)
+        redirect({ href: '/login', locale });
+        return null;
     }
 
     if (!user.id) return null;
@@ -34,14 +36,13 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <header className="mb-8 flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900">Admin Control Tower</h1>
-                <div className="text-sm">{user.email}</div>
-            </header>
-            <main>
-                {children}
-            </main>
-        </div>
+        <ToastProvider>
+            <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
+                <AdminSidebar locale={locale} userEmail={user.email || ''} />
+                <main style={{ flex: 1, padding: '24px', overflow: 'auto', minWidth: 0 }}>
+                    {children}
+                </main>
+            </div>
+        </ToastProvider>
     );
 }

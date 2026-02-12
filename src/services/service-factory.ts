@@ -8,6 +8,7 @@ import { CategoryRepository } from '@/repositories/category.repository';
 import { ReviewRepository } from '@/repositories/review.repository';
 import { DiscountRepository } from '@/repositories/discount.repository';
 import { AnalyticsRepository } from '@/repositories/analytics.repository';
+import { AdminRepository } from '@/repositories/admin.repository';
 import { EventService } from '@/services/event.service';
 import { BookingService } from '@/services/booking.service';
 import { UserService } from '@/services/user.service';
@@ -17,6 +18,7 @@ import { ReviewService } from '@/services/review.service';
 import { DiscountService } from '@/services/discount.service';
 import { AnalyticsService } from '@/services/analytics.service';
 import { NotificationService } from '@/services/notification.service';
+import { AdminService } from '@/services/admin.service';
 
 /**
  * Service Factory
@@ -32,6 +34,7 @@ export class ServiceFactory {
     private reviewRepo: ReviewRepository;
     private discountRepo: DiscountRepository;
     private analyticsRepo: AnalyticsRepository;
+    private adminRepo: AdminRepository;
 
     constructor(private supabase: SupabaseClient) {
         // Initialize all repositories
@@ -44,6 +47,7 @@ export class ServiceFactory {
         this.reviewRepo = new ReviewRepository(supabase);
         this.discountRepo = new DiscountRepository(supabase);
         this.analyticsRepo = new AnalyticsRepository(supabase);
+        this.adminRepo = new AdminRepository(supabase);
     }
 
     /**
@@ -123,6 +127,13 @@ export class ServiceFactory {
     }
 
     /**
+     * Get AdminService
+     */
+    getAdminService(): AdminService {
+        return new AdminService(this.adminRepo);
+    }
+
+    /**
      * Get BookingRepository
      */
     getBookingRepository(): BookingRepository {
@@ -136,3 +147,4 @@ export class ServiceFactory {
         return this.eventRepo;
     }
 }
+
