@@ -1020,5 +1020,9 @@
         "you_reviewed": "✓ You've reviewed this event",
         "error_rating_required": "Please select a rating",
         "generic_error": "Something went wrong. Please try again."
+    },
+    "DemoVendor": {
+        "demo_mode": "Demo Mode",
+        "register_now": "Register Now"
     }
 }

@@ -1020,5 +1020,9 @@
     "you_reviewed": "✓ لقد قيّمت هذه الفعالية",
     "error_rating_required": "يرجى اختيار تقييم",
     "generic_error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
+  "DemoVendor": {
+    "demo_mode": "وضع التجربة",
+    "register_now": "سجل الآن"
   }
 }
