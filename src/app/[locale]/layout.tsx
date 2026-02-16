@@ -4,7 +4,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
 import Script from 'next/script';
+import { generateSiteGraphSchema } from '@/lib/seo';
 import "../globals.css";
+
 
 const cairo = Cairo({
     subsets: ["arabic", "latin"],
@@ -137,6 +139,12 @@ export default async function LocaleLayout({
                 {/* Mobile Optimizations handled by viewport export */}
                 <meta name="mobile-web-app-capable" content="yes" />
                 <meta name="format-detection" content="telephone=no" />
+
+                {/* Site-wide Organization + WebSite schema graph for AEO */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(generateSiteGraphSchema(locale)) }}
+                />
             </head>
             <body
                 className={`${cairo.className} ${geistSans.variable} antialiased`}

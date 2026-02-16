@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import ContactPageClient from './ContactPageClient';
-import { generateLocaleBreadcrumbSchema, generateWebPageSchema } from '@/lib/seo';
+import { generateLocaleBreadcrumbSchema, generateWebPageSchema, generateSpeakableSchema } from '@/lib/seo';
 
 type Props = {
     params: Promise<{ locale: string }>;
@@ -49,15 +49,22 @@ export default async function ContactPage({ params }: Props) {
         { name: locale === 'ar' ? 'تواصل معنا' : 'Contact Us', path: '/contact' },
     ]);
 
-    const contactPageSchema = generateWebPageSchema({
-        name: locale === 'ar' ? 'تواصل معنا | نقطة' : 'Contact Us | Nuqta',
-        description: locale === 'ar'
-            ? 'تواصل مع فريق نقطة. نحن هنا لمساعدتك في أي استفسارات حول الفعاليات والتذاكر في اسطنبول.'
-            : 'Get in touch with the Nuqta team. We are here to help with any questions about events and ticketing in Istanbul.',
-        url: `https://nuqta.ist/${locale}/contact`,
-        locale,
-        type: 'ContactPage',
-    });
+    const contactPageSchema = {
+        ...generateWebPageSchema({
+            name: locale === 'ar' ? 'تواصل معنا | نقطة' : 'Contact Us | Nuqta',
+            description: locale === 'ar'
+                ? 'تواصل مع فريق نقطة. نحن هنا لمساعدتك في أي استفسارات حول الفعاليات والتذاكر في اسطنبول.'
+                : 'Get in touch with the Nuqta team. We are here to help with any questions about events and ticketing in Istanbul.',
+            url: `https://nuqta.ist/${locale}/contact`,
+            locale,
+            type: 'ContactPage',
+        }),
+        mainEntity: {
+            '@type': 'Organization',
+            '@id': 'https://nuqta.ist/#organization',
+        },
+        speakable: generateSpeakableSchema(),
+    };
 
     return (
         <>

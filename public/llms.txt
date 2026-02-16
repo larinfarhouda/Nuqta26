@@ -1,0 +1,33 @@
+# Nuqta – Istanbul's Arabic Event Hub
+
+> Nuqta (nuqta.ist) is a bilingual (Arabic/English) event discovery and management platform
+> connecting the Arab community in Istanbul, Turkey with workshops, bazaars, concerts, and more.
+> Founded in 2024, Nuqta serves as the central meeting point for Arabic-speaking residents
+> and visitors looking to discover cultural events, or for organizers wanting to manage and
+> promote their events professionally.
+
+## About
+- [About Nuqta](https://nuqta.ist/en/about): Our mission, story, and why we built Nuqta
+- [Contact Us](https://nuqta.ist/en/contact): Get in touch with the Nuqta team
+- [Privacy Policy](https://nuqta.ist/en/privacy): How we handle and protect user data
+
+## For Event Organizers
+- [For Vendors / Organizers](https://nuqta.ist/en/for-vendors): Professional event management platform for Arab organizers in Turkey
+- [Pricing Plans](https://nuqta.ist/en/for-vendors#pricing): Starter (Free, 1 event), Growth (999 TRY/mo, 3 events), Professional (1999 TRY/mo, unlimited)
+
+## Events
+- [Browse Events](https://nuqta.ist/en): Discover upcoming Arabic community events in Istanbul
+- [Event Categories](https://nuqta.ist/en): Workshops, Bazaars, Music & Concerts, Art & Exhibitions, Food & Other
+
+## Key Facts
+- **Name**: Nuqta (نقطة — meaning "point" or "dot" in Arabic)
+- **Founded**: 2024
+- **Location**: Istanbul, Turkey
+- **Languages**: Arabic, English
+- **Target Audience**: Arabic-speaking community in Istanbul and Turkey
+- **Platform Type**: Web-based event marketplace with ticketing and booking management
+- **Contact Email**: nuqta.events@gmail.com
+- **Social**: [@nuqta_ist on Instagram](https://instagram.com/nuqta_ist), [@nuqta_ist on Twitter](https://twitter.com/nuqta_ist)
+
+## Optional
+- [Full details for LLMs](https://nuqta.ist/llms-full.txt): Extended information about features, FAQ, and pricing

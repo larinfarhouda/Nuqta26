@@ -8,7 +8,8 @@ import {
     generateCanonicalUrl,
     generateLanguageAlternates,
     createVendorDescription,
-    generateImageUrl
+    generateImageUrl,
+    generateSpeakableSchema
 } from '@/lib/seo';
 import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
 import { createClient } from '@/utils/supabase/server';
@@ -146,6 +147,12 @@ export default async function VendorProfilePage({ params }: { params: any }) {
                 latitude: vendor.location_lat,
                 longitude: vendor.location_long
             } : undefined,
+            inLanguage: locale === 'ar' ? 'ar' : 'en',
+            mainEntityOfPage: {
+                '@type': 'WebPage',
+                '@id': `https://nuqta.ist/${locale}/v/${slug}`,
+            },
+            speakable: generateSpeakableSchema(['h1', '[data-speakable]']),
         };
 
         const breadcrumbSchema = generateLocaleBreadcrumbSchema(locale, [
@@ -196,6 +203,15 @@ export default async function VendorProfilePage({ params }: { params: any }) {
             latitude: vendor.location_lat,
             longitude: vendor.location_long
         } : undefined,
+        ...((vendor as any).instagram ? {
+            sameAs: [`https://instagram.com/${(vendor as any).instagram.replace('@', '')}`]
+        } : {}),
+        inLanguage: locale === 'ar' ? 'ar' : 'en',
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://nuqta.ist/${locale}/v/${slug}`,
+        },
+        speakable: generateSpeakableSchema(['h1', '[data-speakable]']),
     };
 
     const breadcrumbSchema = generateLocaleBreadcrumbSchema(locale, [

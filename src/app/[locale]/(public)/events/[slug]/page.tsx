@@ -11,7 +11,8 @@ import {
     generateLanguageAlternates,
     createEventDescription,
     formatDateForOG,
-    generateImageUrl
+    generateImageUrl,
+    generateSpeakableSchema
 } from '@/lib/seo';
 
 export async function generateStaticParams() {
@@ -191,7 +192,13 @@ export default async function EventPage({ params }: { params: any }) {
             priceCurrency: 'TRY',
             availability: event.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
             url: generateCanonicalUrl(`events/${slug}`, locale || 'en')
-        }
+        },
+        inLanguage: locale === 'ar' ? 'ar' : 'en',
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': generateCanonicalUrl(`events/${slug}`, locale || 'en'),
+        },
+        speakable: generateSpeakableSchema(['h1', '[data-speakable]']),
     };
 
     // Generate Breadcrumb Schema

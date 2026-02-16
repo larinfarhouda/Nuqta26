@@ -230,3 +230,107 @@ export function generateWebPageSchema(options: {
         },
     };
 }
+
+/**
+ * Generate speakable property for schema objects
+ * Tells LLMs which parts of the page are most suitable for text-to-speech / citation
+ */
+export function generateSpeakableSchema(cssSelectors?: string[]) {
+    return {
+        '@type': 'SpeakableSpecification',
+        cssSelector: cssSelectors || ['h1', 'h2', '[data-speakable]', 'meta[name="description"]'],
+    };
+}
+
+/**
+ * Generate centralized Organization schema with knowsAbout for AEO
+ */
+export function generateOrganizationSchema(locale: string) {
+    return {
+        '@type': 'Organization',
+        '@id': `${BASE_URL}/#organization`,
+        name: 'Nuqta',
+        url: BASE_URL,
+        logo: {
+            '@type': 'ImageObject',
+            url: `${BASE_URL}/icon0.svg`,
+        },
+        image: `${BASE_URL}/images/og-image.png`,
+        description: locale === 'ar'
+            ? 'المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
+            : "The digital marketplace for events and ticketing in Istanbul's Arabic-speaking community.",
+        foundingDate: '2024',
+        inLanguage: ['ar', 'en'],
+        sameAs: [
+            'https://instagram.com/nuqta_ist',
+            'https://twitter.com/nuqta_ist',
+        ],
+        knowsAbout: [
+            'Arabic community events in Istanbul',
+            'Event management for Arabic-speaking organizers',
+            'Bilingual event ticketing platform',
+            'Cultural events in Turkey',
+            'Workshop and bazaar organization',
+            'فعاليات المجتمع العربي في إسطنبول',
+            'إدارة الفعاليات',
+        ],
+        areaServed: {
+            '@type': 'City',
+            name: 'Istanbul',
+            containedInPlace: {
+                '@type': 'Country',
+                name: 'Turkey',
+            },
+        },
+        address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Istanbul',
+            addressCountry: 'TR',
+        },
+        contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'Customer Service',
+            url: `${BASE_URL}/${locale}/contact`,
+            availableLanguage: ['Arabic', 'English'],
+        },
+    };
+}
+
+/**
+ * Generate centralized WebSite schema with SearchAction for AEO
+ */
+export function generateWebSiteSchema(locale: string) {
+    return {
+        '@type': 'WebSite',
+        '@id': `${BASE_URL}/#website`,
+        name: 'Nuqta',
+        url: BASE_URL,
+        description: locale === 'ar'
+            ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول'
+            : 'Discover the best Arabic events and activities in Istanbul',
+        inLanguage: ['ar', 'en'],
+        publisher: { '@id': `${BASE_URL}/#organization` },
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: {
+                '@type': 'EntryPoint',
+                urlTemplate: `${BASE_URL}/${locale}?search={search_term_string}`,
+            },
+            'query-input': 'required name=search_term_string',
+        },
+    };
+}
+
+/**
+ * Generate a combined @graph schema for use in root layout
+ */
+export function generateSiteGraphSchema(locale: string) {
+    return {
+        '@context': 'https://schema.org',
+        '@graph': [
+            generateOrganizationSchema(locale),
+            generateWebSiteSchema(locale),
+        ],
+    };
+}
+

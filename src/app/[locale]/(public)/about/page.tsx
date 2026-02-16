@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import AboutPageClient from './AboutPageClient';
-import { generateLocaleBreadcrumbSchema, generateWebPageSchema } from '@/lib/seo';
+import { generateLocaleBreadcrumbSchema, generateWebPageSchema, generateSpeakableSchema } from '@/lib/seo';
 
 type Props = {
     params: Promise<{ locale: string }>;
@@ -49,15 +49,22 @@ export default async function AboutPage({ params }: Props) {
         { name: locale === 'ar' ? 'من نحن' : 'About Us', path: '/about' },
     ]);
 
-    const webPageSchema = generateWebPageSchema({
-        name: locale === 'ar' ? 'من نحن | نقطة' : 'About Us | Nuqta',
-        description: locale === 'ar'
-            ? 'تعرف على نقطة - المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
-            : 'Learn about Nuqta - the digital marketplace for events and ticketing in Istanbul\'s Arabic-speaking community.',
-        url: `https://nuqta.ist/${locale}/about`,
-        locale,
-        type: 'AboutPage',
-    });
+    const webPageSchema = {
+        ...generateWebPageSchema({
+            name: locale === 'ar' ? 'من نحن | نقطة' : 'About Us | Nuqta',
+            description: locale === 'ar'
+                ? 'تعرف على نقطة - المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
+                : 'Learn about Nuqta - the digital marketplace for events and ticketing in Istanbul\'s Arabic-speaking community.',
+            url: `https://nuqta.ist/${locale}/about`,
+            locale,
+            type: 'AboutPage',
+        }),
+        mainEntity: {
+            '@type': 'Organization',
+            '@id': 'https://nuqta.ist/#organization',
+        },
+        speakable: generateSpeakableSchema(),
+    };
 
     return (
         <>

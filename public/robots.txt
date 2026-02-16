@@ -1,5 +1,5 @@
 # Nuqta.ist Robots.txt
-# Updated: 2026-02-04
+# Updated: 2026-02-16
 
 # Allow all crawlers to index public content
 User-agent: *
@@ -28,6 +28,28 @@ Disallow: /auth/
 # Prevent indexing of email preview
 Disallow: /email-preview/
 
+# Welcome AI/LLM crawlers explicitly
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
 # Allow specific static assets
 Allow: /images/
 Allow: /icons/
@@ -36,4 +58,8 @@ Allow: /_next/image
 
 # Sitemap location
 Sitemap: https://nuqta.ist/sitemap.xml
+
+# LLM-optimized content
+# https://nuqta.ist/llms.txt
+# https://nuqta.ist/llms-full.txt
 

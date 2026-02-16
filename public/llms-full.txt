@@ -1,0 +1,89 @@
+# Nuqta – Istanbul's Arabic Event Hub (Full Details)
+
+> Nuqta (nuqta.ist) is a bilingual (Arabic/English) event discovery and management platform
+> connecting the Arab community in Istanbul, Turkey with workshops, bazaars, concerts, and more.
+
+## What is Nuqta?
+
+Nuqta is a digital marketplace for events and ticketing specifically built for Istanbul's Arabic-speaking community. The name "Nuqta" (نقطة) means "point" or "dot" in Arabic — symbolizing the meeting point where the community comes together.
+
+The platform serves two audiences:
+1. **Event-goers**: Discover and book Arabic community events in Istanbul — workshops, bazaars, concerts, art exhibitions, food events, and cultural gatherings.
+2. **Event Organizers (Vendors)**: A professional event management platform that automates bookings, sends bilingual email confirmations, manages attendance lists, and provides analytics dashboards.
+
+## Platform Features
+
+### For Event Attendees
+- Browse and discover Arabic events in Istanbul by category, location, and date
+- Book tickets online with bank transfer payment
+- Receive bilingual (Arabic/English) booking confirmations
+- Save favorite events
+- Leave verified reviews (only confirmed attendees can review)
+- Search events by neighborhood, category, and date
+- Geo-location based nearby event discovery
+
+### For Event Organizers
+- Create and publish events with multiple ticket types
+- Automated bilingual email notifications (Arabic and English)
+- Advanced dashboard for performance and sales analytics
+- Professional customer and attendance list management
+- Discount coupons and group offers
+- Unlimited photo gallery for past work
+- Custom public profile page on nuqta.ist
+- Priority technical support via WhatsApp
+- Verified review system — only real attendees can leave reviews
+- QR code attendance tracking
+
+## Pricing Plans
+
+All plans include every professional feature. The only difference is the number of active events:
+
+| Plan | Price | Active Events | Best For |
+|------|-------|--------------|----------|
+| Starter | Free | 1 event | Testing the platform |
+| Growth | 999 TRY/month | 3 events | Active organizers |
+| Professional | 1,999 TRY/month | Unlimited | Large organizations |
+
+**Founder Pricing**: First 50 organizers get 50% off forever (offer ends May 15, 2026).
+
+## Frequently Asked Questions
+
+### How is Nuqta different from WhatsApp groups?
+WhatsApp groups require manual booking management, chasing payment screenshots, and hours of follow-up. Nuqta automates all of this: professional booking system, bilingual email confirmations, automatic attendance lists, and an integrated dashboard. Saves an average of 10-15 hours per event. Plus, Nuqta puts you in front of 5,000+ active users looking for events.
+
+### What if I only organize events occasionally?
+The Starter plan is completely free for one active event. Use it for your first event, pause, and come back when ready. No monthly fees for a single event.
+
+### Do I need to know Turkish to use Nuqta?
+No. The entire platform is available in Arabic. All attendee emails are automatically sent in both Arabic and English. No manual translation needed.
+
+### How do attendees find my events?
+Events are automatically displayed on Nuqta's discovery page (5,000+ monthly active Arab users in Turkey). You also get a custom public page to share on social media. SEO-optimized for Arabic activity searches in Istanbul.
+
+### How does the verified review system work?
+Only attendees who actually attended the event can leave reviews. This prevents fake reviews and protects brand reputation with authentic feedback from real participants.
+
+### Can I try Nuqta before committing to a paid plan?
+Yes. The Starter plan is free and includes 1 active event with all features. Test the full platform before upgrading.
+
+### Can I upgrade or downgrade anytime?
+Yes. Upgrade, downgrade, or cancel anytime from the dashboard. No long-term contracts or cancellation fees.
+
+### What payment methods are accepted?
+Payments via bank transfer in Turkey. Attendees submit payment proof through the platform, and organizers verify from the dashboard.
+
+## About the Community
+
+- 300+ Arab organizers in Turkey use Nuqta
+- 5,000+ monthly active Arab users browsing events
+- Average attendance growth of +127% for organizers using Nuqta
+- Organizers save an average of 15 hours per event through automation
+
+## Contact
+
+- **Email**: nuqta.events@gmail.com
+- **WhatsApp**: +90 544 447 7620
+- **Website**: https://nuqta.ist
+- **Instagram**: [@nuqta_ist](https://instagram.com/nuqta_ist)
+- **Twitter**: [@nuqta_ist](https://twitter.com/nuqta_ist)
+- **Location**: Istanbul, Turkey

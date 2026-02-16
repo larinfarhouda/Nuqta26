@@ -62,7 +62,24 @@
         "noMatchesDescription": "We couldn't find any events matching your current filters. Try broadening your search!",
         "resetDiscovery": "Reset Discovery",
         "joinNow": "Join Now",
-        "login": "Login"
+        "login": "Login",
+        "faq": {
+            "tag": "Frequently Asked Questions",
+            "title": "Common Questions",
+            "subtitle": "Everything you need to know about discovering events on Nuqta",
+            "q1": "What is Nuqta?",
+            "a1": "Nuqta is a bilingual (Arabic/English) event discovery and management platform connecting the Arab community in Istanbul, Turkey. We help you discover workshops, bazaars, concerts, art exhibitions, and cultural gatherings — all in one place.",
+            "q2": "How do I find events in Istanbul?",
+            "a2": "Simply browse our homepage to see upcoming events. You can filter by category (workshops, bazaars, concerts, exhibitions, food), search by neighborhood, or use your location to find events near you.",
+            "q3": "Is Nuqta free to use?",
+            "a3": "Yes! Browsing and discovering events is completely free. You can book events, save favorites, and leave reviews at no cost. Nuqta only charges event organizers who want to manage their events professionally.",
+            "q4": "What languages does Nuqta support?",
+            "a4": "Nuqta is fully bilingual — available in both Arabic and English. All email confirmations and notifications are automatically sent in both languages. You can switch between languages anytime.",
+            "q5": "How do I book an event?",
+            "a5": "Find an event you like, select your ticket type, and complete your booking. You'll receive a bilingual confirmation email with all the details. Payment is via bank transfer — simply upload your payment proof and the organizer will confirm your booking.",
+            "q6": "Can I organize my own events on Nuqta?",
+            "a6": "Absolutely! Nuqta offers a professional event management platform for organizers. You can start for free with one event, and our system handles automated bookings, bilingual emails, attendance lists, and analytics. Visit our For Vendors page to learn more."
+        }
     },
     "Navigation": {
         "home": "Home",
