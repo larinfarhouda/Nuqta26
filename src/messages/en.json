@@ -594,15 +594,21 @@
         },
         "Privacy": {
             "title": "Privacy Policy",
-            "last_updated": "Last updated: January 2026",
+            "last_updated": "Last updated: February 2026",
             "s1_title": "1. Information We Collect",
             "s1_desc": "We collect information you provide directly to us when you create an account, register for an event, or communicate with us. This may include your name, email address, password, and information about the events you organize or attend.",
             "s2_title": "2. How We Use Your Information",
             "s2_desc": "We use the information we collect to provide, maintain, and improve our services, including to process event registrations, provide customer support, and send you technical notices and security alerts.",
             "s3_title": "3. Information Sharing",
             "s3_desc": "We do not share your personal information with third parties except as described in this policy, such as when you register for an event and we share necessary details with the event organizer to facilitate your attendance.",
-            "s4_title": "4. Your Rights",
-            "s4_desc": "You have the right to access, update, or delete your personal information at any time through your account settings or by contacting us directly."
+            "s4_title": "4. Analytics & Tracking Technologies",
+            "s4_desc": "We use Google Tag Manager (GTM) to manage analytics and tracking tools on our website. Through GTM, we use Google Analytics 4 (GA4) to understand how visitors interact with our site, including page views, session duration, and navigation patterns. We also use Microsoft Clarity to gain insights into user behavior through session recordings and heatmaps. Clarity captures how you use and interact with our website (e.g., clicks, scrolls, and mouse movements). This data helps us improve the user experience. Microsoft Clarity does not collect personal information such as passwords or payment details. For more information, please review Microsoft's Privacy Statement at https://privacy.microsoft.com.",
+            "s5_title": "5. Cookies & Similar Technologies",
+            "s5_desc": "Our website uses cookies and similar tracking technologies set by third-party services such as Google Analytics and Microsoft Clarity. These cookies help us analyze website traffic, understand user behavior, and improve our services. You can manage or disable cookies through your browser settings at any time, although some features of the website may not function properly without them.",
+            "s6_title": "6. Your Rights",
+            "s6_desc": "You have the right to access, update, or delete your personal information at any time through your account settings or by contacting us directly.",
+            "contact_text": "If you have any questions regarding this privacy policy, please contact us at",
+            "contact_email": "info@nuqta.ist"
         }
     },
     "Dashboard": {

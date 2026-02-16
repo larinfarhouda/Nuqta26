@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, FileText, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, Eye, FileText, CheckCircle2, BarChart3, Cookie } from 'lucide-react';
 
 export default function PrivacyPage() {
     const t = useTranslations('StaticPages.Privacy');
@@ -11,7 +11,9 @@ export default function PrivacyPage() {
         { icon: <Eye className="w-6 h-6 text-primary" />, title: t('s1_title'), desc: t('s1_desc') },
         { icon: <Lock className="w-6 h-6 text-primary" />, title: t('s2_title'), desc: t('s2_desc') },
         { icon: <Shield className="w-6 h-6 text-primary" />, title: t('s3_title'), desc: t('s3_desc') },
-        { icon: <FileText className="w-6 h-6 text-primary" />, title: t('s4_title'), desc: t('s4_desc') },
+        { icon: <BarChart3 className="w-6 h-6 text-primary" />, title: t('s4_title'), desc: t('s4_desc') },
+        { icon: <Cookie className="w-6 h-6 text-primary" />, title: t('s5_title'), desc: t('s5_desc') },
+        { icon: <FileText className="w-6 h-6 text-primary" />, title: t('s6_title'), desc: t('s6_desc') },
     ];
 
     return (
@@ -72,8 +74,8 @@ export default function PrivacyPage() {
                     <div className="mt-24 pt-12 border-t border-gray-100 text-center">
                         <div className="inline-block px-8 py-6 rounded-[2rem] bg-gray-50 border border-gray-100 italic">
                             <p className="text-gray-500 font-medium">
-                                If you have any questions regarding this privacy policy, please contact us at <br />
-                                <span className="text-primary font-black not-italic text-lg">info@nuqta.ist</span>
+                                {t('contact_text')} <br />
+                                <span className="text-primary font-black not-italic text-lg">{t('contact_email')}</span>
                             </p>
                         </div>
                     </div>
@@ -82,3 +84,4 @@ export default function PrivacyPage() {
         </main>
     );
 }
+
