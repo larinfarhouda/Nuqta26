@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from '@/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,6 +50,19 @@ export default function RegisterPage() {
     const [error, setError] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState(false);
     const [submittedEmail, setSubmittedEmail] = useState('');
+    const [referralSource, setReferralSource] = useState<Record<string, string> | null>(null);
+
+    // Read referral cookie on mount
+    useEffect(() => {
+        try {
+            const cookies = document.cookie.split('; ');
+            const refCookie = cookies.find((c) => c.startsWith('__nuqta_ref='));
+            if (refCookie) {
+                const value = decodeURIComponent(refCookie.split('=').slice(1).join('='));
+                setReferralSource(JSON.parse(value));
+            }
+        } catch { /* ignore parse errors */ }
+    }, []);
 
     const userSchema = createUserSchema(t);
     const vendorSchema = createVendorSchema(t);
@@ -89,7 +102,8 @@ export default function RegisterPage() {
                             country: data.country,
                             city: data.city,
                             phone: data.phone,
-                        })
+                        }),
+                        ...(referralSource && { referral_source: referralSource }),
                     },
                 },
             });
@@ -109,12 +123,18 @@ export default function RegisterPage() {
                     userEmail: data.email,
                     userRole: role,
                     signupMethod: 'email',
-                    additionalInfo: role === 'user' ? {
-                        ...(data.phone ? { Phone: data.phone } : {}),
-                        ...(data.city ? { City: data.city } : {}),
-                        ...(data.gender ? { Gender: data.gender } : {}),
-                        ...(data.age ? { Age: data.age } : {}),
-                    } : undefined,
+                    additionalInfo: {
+                        ...(role === 'user' ? {
+                            ...(data.phone ? { Phone: data.phone } : {}),
+                            ...(data.city ? { City: data.city } : {}),
+                            ...(data.gender ? { Gender: data.gender } : {}),
+                            ...(data.age ? { Age: data.age } : {}),
+                        } : {}),
+                        ...(referralSource?.utm_source ? { 'Referral Source': referralSource.utm_source } : {}),
+                        ...(referralSource?.utm_medium ? { 'Referral Medium': referralSource.utm_medium } : {}),
+                        ...(referralSource?.utm_campaign ? { 'Referral Campaign': referralSource.utm_campaign } : {}),
+                        ...(referralSource?.landing_page ? { 'Landing Page': referralSource.landing_page } : {}),
+                    },
                 }),
             }).catch(() => { /* silently ignore */ });
 

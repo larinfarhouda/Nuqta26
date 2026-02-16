@@ -33,6 +33,7 @@ create table if not exists profiles (
   district text,
   phone text,
   favorites text[],  -- Legacy array, superseded by favorite_events table
+  referral_source jsonb,  -- UTM params / referrer data from registration
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -396,13 +397,14 @@ declare
 begin
   user_role := coalesce(new.raw_user_meta_data->>'role', 'user');
 
-  insert into public.profiles (id, full_name, avatar_url, email, role)
+  insert into public.profiles (id, full_name, avatar_url, email, role, referral_source)
   values (
     new.id,
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'avatar_url',
     new.email,
-    user_role
+    user_role,
+    (new.raw_user_meta_data->'referral_source')::jsonb
   );
 
   if user_role = 'vendor' then

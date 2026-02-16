@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { NotificationService } from '@/services/notification.service';
 import { trackActivity } from '@/lib/track-activity';
+import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
@@ -77,6 +78,38 @@ export async function GET(request: Request) {
                     const diffSeconds = (now.getTime() - createdAt.getTime()) / 1000;
 
                     if (diffSeconds < 60) {
+                        // New user — get referral source
+                        let referralSource: Record<string, string> | null = null;
+
+                        // Try user metadata first (email signup stores it there)
+                        if (user.user_metadata?.referral_source) {
+                            referralSource = user.user_metadata.referral_source;
+                        } else {
+                            // Fall back to cookie (OAuth users)
+                            try {
+                                const cookieStore = await cookies();
+                                const refCookie = cookieStore.get('__nuqta_ref');
+                                if (refCookie?.value) {
+                                    referralSource = JSON.parse(refCookie.value);
+                                }
+                            } catch { /* ignore */ }
+                        }
+
+                        // Save referral source to profiles
+                        if (referralSource) {
+                            await supabase
+                                .from('profiles')
+                                .update({ referral_source: referralSource })
+                                .eq('id', user.id);
+                        }
+
+                        // Build referral info for admin notification
+                        const referralInfo: Record<string, string> = {};
+                        if (referralSource?.utm_source) referralInfo['Referral Source'] = referralSource.utm_source;
+                        if (referralSource?.utm_medium) referralInfo['Referral Medium'] = referralSource.utm_medium;
+                        if (referralSource?.utm_campaign) referralInfo['Referral Campaign'] = referralSource.utm_campaign;
+                        if (referralSource?.landing_page) referralInfo['Landing Page'] = referralSource.landing_page;
+
                         // New user — send admin notification (fire-and-forget)
                         const notificationService = new NotificationService();
                         notificationService.sendNewSignupNotification({
@@ -84,6 +117,7 @@ export async function GET(request: Request) {
                             userEmail: user.email || 'No email',
                             userRole: finalRole === 'vendor' ? 'vendor' : 'user',
                             signupMethod: 'google',
+                            additionalInfo: Object.keys(referralInfo).length > 0 ? referralInfo : undefined,
                         }).catch(() => { /* silently ignore */ });
                     }
                 }
