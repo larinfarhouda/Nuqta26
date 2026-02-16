@@ -37,58 +37,76 @@ export const viewport: Viewport = {
     ],
 };
 
-export const metadata: Metadata = {
-    metadataBase: new URL('https://nuqta.ist'),
-    title: {
-        default: "Nuqta | Istanbul's Arabic Event Hub",
-        template: "%s | Nuqta"
-    },
-    description: "Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.",
-    keywords: ["Istanbul events", "Arabic community Istanbul", "workshops Istanbul", "tickets Istanbul", "Nuqta", "event marketplace", "event ticketing", "Istanbul Arabic events"],
-    applicationName: "Nuqta",
-    authors: [{ name: "Nuqta" }],
-    creator: "Nuqta",
-    publisher: "Nuqta",
-    openGraph: {
-        type: 'website',
-        locale: 'en_US',
-        alternateLocale: ['ar_AR'],
-        url: 'https://nuqta.ist',
-        siteName: 'Nuqta',
-        title: "Nuqta | Istanbul's Arabic Event Hub",
-        description: "Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.",
-        images: [{
-            url: '/images/og-image.png',
-            width: 1200,
-            height: 630,
-            alt: 'Nuqta - Istanbul Event Marketplace'
-        }],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        site: '@nuqta_ist',
-        title: "Nuqta | Istanbul's Arabic Event Hub",
-        description: "Discover and join vibrant community events in Istanbul.",
-    },
-    appleWebApp: {
-        title: "Nuqta",
-        statusBarStyle: 'black-translucent',
-        capable: true,
-    },
-    manifest: '/manifest.json',
-    icons: {
-        icon: [
-            { url: '/icon0.svg', type: 'image/svg+xml' },
-            { url: '/icon1.png', sizes: '192x192', type: 'image/png' }
-        ],
-        apple: { url: '/apple-touch-icon.png', sizes: '180x180' },
-    },
-    // Add verification meta tags here once you have them:
-    // verification: {
-    //     google: 'your-google-verification-code',
-    //     yandex: 'your-yandex-verification-code',
-    // },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+    const { locale } = await params;
+    const isArabic = locale === 'ar';
+
+    return {
+        metadataBase: new URL('https://nuqta.ist'),
+        title: {
+            default: isArabic
+                ? 'نقطة | دليل الفعاليات والأنشطة العربية في إسطنبول'
+                : "Nuqta | Istanbul's Arabic Event Hub",
+            template: "%s | Nuqta"
+        },
+        description: isArabic
+            ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول. ورش عمل، معارض فنية، بازارات وأكثر - كل شيء في مكان واحد.'
+            : 'Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.',
+        keywords: isArabic
+            ? ['فعاليات إسطنبول', 'المجتمع العربي إسطنبول', 'ورش عمل إسطنبول', 'تذاكر إسطنبول', 'نقطة', 'فعاليات عربية']
+            : ['Istanbul events', 'Arabic community Istanbul', 'workshops Istanbul', 'tickets Istanbul', 'Nuqta', 'event marketplace', 'event ticketing', 'Istanbul Arabic events'],
+        applicationName: 'Nuqta',
+        authors: [{ name: 'Nuqta' }],
+        creator: 'Nuqta',
+        publisher: 'Nuqta',
+        openGraph: {
+            type: 'website',
+            locale: isArabic ? 'ar_TR' : 'en_US',
+            alternateLocale: isArabic ? ['en_US'] : ['ar_TR'],
+            url: 'https://nuqta.ist',
+            siteName: 'Nuqta',
+            title: isArabic
+                ? 'نقطة | دليل الفعاليات والأنشطة العربية في إسطنبول'
+                : "Nuqta | Istanbul's Arabic Event Hub",
+            description: isArabic
+                ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول.'
+                : 'Discover and join vibrant community events in Istanbul.',
+            images: [{
+                url: '/images/og-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'Nuqta - Istanbul Event Marketplace'
+            }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            site: '@nuqta_ist',
+            title: isArabic
+                ? 'نقطة | دليل الفعاليات العربية في إسطنبول'
+                : "Nuqta | Istanbul's Arabic Event Hub",
+            description: isArabic
+                ? 'اكتشف أفضل الفعاليات العربية في إسطنبول.'
+                : 'Discover and join vibrant community events in Istanbul.',
+        },
+        appleWebApp: {
+            title: 'Nuqta',
+            statusBarStyle: 'black-translucent',
+            capable: true,
+        },
+        manifest: '/manifest.json',
+        icons: {
+            icon: [
+                { url: '/icon0.svg', type: 'image/svg+xml' },
+                { url: '/icon1.png', sizes: '192x192', type: 'image/png' }
+            ],
+            apple: { url: '/apple-touch-icon.png', sizes: '180x180' },
+        },
+        // Uncomment and add your Google verification code when available
+        // verification: {
+        //     google: 'your-google-verification-code',
+        // },
+    };
+}
 
 export default async function LocaleLayout({
     children,

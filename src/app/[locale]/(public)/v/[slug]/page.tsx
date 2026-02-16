@@ -10,6 +10,29 @@ import {
     createVendorDescription,
     generateImageUrl
 } from '@/lib/seo';
+import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
+import { createClient } from '@/utils/supabase/server';
+
+export async function generateStaticParams() {
+    try {
+        const supabase = await createClient();
+        const { data: vendors } = await supabase
+            .from('vendors')
+            .select('slug')
+            .not('slug', 'is', null);
+
+        const params: { locale: string; slug: string }[] = [];
+        for (const vendor of vendors || []) {
+            if (vendor.slug) {
+                params.push({ locale: 'ar', slug: vendor.slug });
+                params.push({ locale: 'en', slug: vendor.slug });
+            }
+        }
+        return params;
+    } catch {
+        return [];
+    }
+}
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const { slug, locale } = await params;
@@ -88,7 +111,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
 }
 
 export default async function VendorProfilePage({ params }: { params: any }) {
-    const { slug } = await params;
+    const { slug, locale } = await params;
 
     // Handle demo vendor
     if (slug === DEMO_VENDOR_SLUG) {
@@ -106,11 +129,13 @@ export default async function VendorProfilePage({ params }: { params: any }) {
         const jsonLd = {
             '@context': 'https://schema.org',
             '@type': 'LocalBusiness',
+            '@id': `https://nuqta.ist/v/${slug}`,
             name: vendor.business_name,
             image: vendor.company_logo,
-            description: vendor.description_ar,
+            description: locale === 'en' ? ((vendor as any).description_en || vendor.description_ar) : (vendor.description_ar || (vendor as any).description_en),
             url: `https://nuqta.ist/v/${slug}`,
             telephone: vendor.whatsapp_number,
+            priceRange: '$$',
             address: {
                 '@type': 'PostalAddress',
                 addressLocality: 'Istanbul',
@@ -123,11 +148,21 @@ export default async function VendorProfilePage({ params }: { params: any }) {
             } : undefined,
         };
 
+        const breadcrumbSchema = generateLocaleBreadcrumbSchema(locale, [
+            { name: locale === 'ar' ? 'الرئيسية' : 'Home', path: '' },
+            { name: locale === 'ar' ? 'المنظمون' : 'Vendors', path: '' },
+            { name: vendor.business_name, path: `/v/${slug}` },
+        ]);
+
         return (
             <>
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
                 />
                 <VendorProfileClient vendor={vendorWithData} />
             </>
@@ -144,11 +179,13 @@ export default async function VendorProfilePage({ params }: { params: any }) {
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
+        '@id': `https://nuqta.ist/v/${slug}`,
         name: vendor.business_name,
         image: vendor.company_logo,
-        description: vendor.description_ar,
+        description: locale === 'en' ? ((vendor as any).description_en || (vendor as any).description_ar) : ((vendor as any).description_ar || (vendor as any).description_en),
         url: `https://nuqta.ist/v/${slug}`,
         telephone: vendor.whatsapp_number,
+        priceRange: '$$',
         address: {
             '@type': 'PostalAddress',
             addressLocality: (vendor as any).district || 'Istanbul',
@@ -161,11 +198,21 @@ export default async function VendorProfilePage({ params }: { params: any }) {
         } : undefined,
     };
 
+    const breadcrumbSchema = generateLocaleBreadcrumbSchema(locale, [
+        { name: locale === 'ar' ? 'الرئيسية' : 'Home', path: '' },
+        { name: locale === 'ar' ? 'المنظمون' : 'Vendors', path: '' },
+        { name: vendor.business_name, path: `/v/${slug}` },
+    ]);
+
     return (
         <>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
             />
             <VendorProfileClient vendor={vendor} />
         </>

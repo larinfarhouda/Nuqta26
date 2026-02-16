@@ -20,16 +20,36 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { locale } = await params;
 
+    const title = locale === 'ar'
+        ? 'نقطة | دليل الفعاليات والأنشطة العربية في إسطنبول'
+        : "Nuqta | Istanbul's Arabic Event Hub";
+    const description = locale === 'ar'
+        ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول. ورش عمل، معارض فنية، بازارات وأكثر - كل شيء في مكان واحد.'
+        : 'Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.';
+
     return {
+        title,
+        description,
         alternates: {
             canonical: `https://nuqta.ist/${locale}`,
             languages: {
                 'ar': 'https://nuqta.ist/ar',
                 'en': 'https://nuqta.ist/en',
+                'x-default': 'https://nuqta.ist/ar',
             },
         },
         openGraph: {
+            title,
+            description,
             url: `https://nuqta.ist/${locale}`,
+            siteName: 'Nuqta',
+            type: 'website',
+            locale: locale === 'ar' ? 'ar_TR' : 'en_US',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
         },
     };
 }
@@ -51,7 +71,8 @@ const Features = dynamic(() => import('@/components/home/Features'), {
     loading: () => <div className="h-96 bg-gray-50 rounded-3xl animate-pulse" />
 });
 
-export default async function HomePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+export default async function HomePage(props: { params: Promise<{ locale: string }>; searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+    const { locale } = await props.params;
     const searchParams = await props.searchParams;
     const t = await getTranslations('Index');
     const supabase = await createClient();
@@ -98,12 +119,20 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
         "@type": "Organization",
         "name": "Nuqta",
         "url": "https://nuqta.ist",
-        "logo": "https://nuqta.ist/images/logo_nav.png",
+        "logo": "https://nuqta.ist/icon0.svg",
         "sameAs": [
             "https://instagram.com/nuqta_ist",
             "https://twitter.com/nuqta_ist"
         ],
-        "description": "The digital marketplace for events and ticketing in Istanbul's Arabic-speaking community.",
+        "description": locale === 'ar'
+            ? 'المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
+            : "The digital marketplace for events and ticketing in Istanbul's Arabic-speaking community.",
+        "foundingDate": "2024",
+        "inLanguage": ["ar", "en"],
+        "areaServed": {
+            "@type": "City",
+            "name": "Istanbul"
+        },
         "address": {
             "@type": "PostalAddress",
             "addressLocality": "Istanbul",
@@ -112,7 +141,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
         "contactPoint": {
             "@type": "ContactPoint",
             "contactType": "Customer Service",
-            "url": "https://nuqta.ist/contact"
+            "url": `https://nuqta.ist/${locale}/contact`
         }
     };
 
@@ -121,11 +150,12 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
         "@type": "WebSite",
         "name": "Nuqta",
         "url": "https://nuqta.ist",
+        "inLanguage": ["ar", "en"],
         "potentialAction": {
             "@type": "SearchAction",
             "target": {
                 "@type": "EntryPoint",
-                "urlTemplate": "https://nuqta.ist/?search={search_term_string}"
+                "urlTemplate": `https://nuqta.ist/${locale}?search={search_term_string}`
             },
             "query-input": "required name=search_term_string"
         }
@@ -140,9 +170,20 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
             "item": {
                 "@type": "Event",
                 "name": event.title,
-                "url": `https://nuqta.ist/events/${event.slug || event.id}`,
+                "url": `https://nuqta.ist/${locale}/events/${event.slug || event.id}`,
                 "image": event.image_url,
-                "startDate": event.date
+                "startDate": event.date,
+                "location": {
+                    "@type": "Place",
+                    "name": event.location_name || event.district || 'Istanbul',
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": event.district || 'Istanbul',
+                        "addressCountry": "TR"
+                    }
+                },
+                "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+                "eventStatus": "https://schema.org/EventScheduled"
             }
         }))
     } : null;

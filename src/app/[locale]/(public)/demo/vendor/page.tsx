@@ -2,6 +2,27 @@ import VendorDashboard from '@/components/dashboard/VendorDashboard';
 import { getDemoVendorData, getDemoAnalytics, getDemoEvents } from '@/lib/demoData';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/navigation';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+    const { locale } = await params;
+    const isArabic = locale === 'ar';
+
+    return {
+        title: isArabic ? 'تجربة لوحة التحكم | نقطة' : 'Demo Dashboard | Nuqta',
+        description: isArabic
+            ? 'استكشف لوحة تحكم نقطة للمنظمين مع بيانات تجريبية. اكتشف أدوات إدارة الفعاليات والحجوزات.'
+            : 'Explore Nuqta\'s vendor dashboard with demo data. Discover event management and booking tools.',
+        alternates: {
+            canonical: `https://nuqta.ist/${locale}/demo/vendor`,
+            languages: {
+                'ar': 'https://nuqta.ist/ar/demo/vendor',
+                'en': 'https://nuqta.ist/en/demo/vendor',
+                'x-default': 'https://nuqta.ist/ar/demo/vendor',
+            },
+        },
+    };
+}
 
 /**
  * Demo Vendor Dashboard Page

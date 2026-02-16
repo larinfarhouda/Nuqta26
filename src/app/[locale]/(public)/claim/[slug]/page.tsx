@@ -1,6 +1,20 @@
 import { createAdminClient, createClient } from '@/utils/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import ClaimFormClient from '@/components/claim/ClaimFormClient';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
+    const { locale } = await params;
+    const isArabic = locale === 'ar';
+
+    return {
+        title: isArabic ? 'استلام صفحتك | نقطة' : 'Claim Your Page | Nuqta',
+        description: isArabic
+            ? 'استلم صفحة منظم الفعاليات الخاصة بك على نقطة وابدأ بإدارة فعالياتك.'
+            : 'Claim your event organizer page on Nuqta and start managing your events.',
+        robots: { index: false, follow: false },
+    };
+}
 
 export default async function ClaimPage({ params }: { params: any }) {
     const { slug, locale } = await params;

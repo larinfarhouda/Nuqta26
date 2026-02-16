@@ -1,6 +1,10 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
+// Regenerate sitemap on every request to ensure dynamic content is always included
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const BASE_URL = 'https://nuqta.ist';
 const locales = ['ar', 'en'];
 
@@ -48,6 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { route: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
         { route: '/contact', priority: 0.7, changeFrequency: 'monthly' as const },
         { route: '/privacy', priority: 0.5, changeFrequency: 'yearly' as const },
+        { route: '/demo/vendor', priority: 0.6, changeFrequency: 'monthly' as const },
     ];
 
     const sitemapEntries: MetadataRoute.Sitemap = [];

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import dynamic from 'next/dynamic';
+import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
 
 const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'), {
     ssr: true,
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description: t('og_description'),
             images: [
                 {
-                    url: '/og-vendor.png',
+                    url: 'https://nuqta.ist/og-vendor.png',
                     width: 1200,
                     height: 630,
                     alt: t('og_image_alt')
@@ -59,21 +60,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             card: 'summary_large_image',
             title: t('twitter_title'),
             description: t('twitter_description'),
-            images: ['/og-vendor.png']
+            images: ['https://nuqta.ist/og-vendor.png']
         },
         alternates: {
             canonical: `https://nuqta.ist/${locale}/for-vendors`,
             languages: {
                 'ar': 'https://nuqta.ist/ar/for-vendors',
-                'en': 'https://nuqta.ist/en/for-vendors'
+                'en': 'https://nuqta.ist/en/for-vendors',
+                'x-default': 'https://nuqta.ist/ar/for-vendors',
             }
         }
     };
 }
 
-export default async function VendorLandingPage() {
+export default async function VendorLandingPage({ params }: Props) {
+    const { locale } = await params;
+
+    const breadcrumbSchema = generateLocaleBreadcrumbSchema(locale, [
+        { name: locale === 'ar' ? 'الرئيسية' : 'Home', path: '' },
+        { name: locale === 'ar' ? 'للمنظمين' : 'For Vendors', path: '/for-vendors' },
+    ]);
+
     return (
         <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+            />
             {/* JSON-LD Structured Data */}
             <script
                 type="application/ld+json"
@@ -107,13 +120,6 @@ export default async function VendorLandingPage() {
                                 description: 'Unlimited events for large organizations'
                             }
                         ],
-                        aggregateRating: {
-                            '@type': 'AggregateRating',
-                            ratingValue: '4.8',
-                            ratingCount: '300',
-                            bestRating: '5',
-                            worstRating: '1'
-                        },
                         description: 'Professional event management platform for Arab organizers in Turkey. Automated bilingual bookings, verified reviews, and comprehensive event tools.',
                         featureList: [
                             'Automated bilingual email notifications (Arabic/English)',
@@ -159,7 +165,7 @@ export default async function VendorLandingPage() {
                 }}
             />
 
-            {/* Product Schema with Reviews */}
+            {/* Product Schema */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
@@ -178,54 +184,7 @@ export default async function VendorLandingPage() {
                             lowPrice: '0',
                             highPrice: '1999',
                             offerCount: '3'
-                        },
-                        aggregateRating: {
-                            '@type': 'AggregateRating',
-                            ratingValue: '4.8',
-                            reviewCount: '300',
-                            bestRating: '5'
-                        },
-                        review: [
-                            {
-                                '@type': 'Review',
-                                author: {
-                                    '@type': 'Person',
-                                    name: 'Sarah Al-Mansour'
-                                },
-                                reviewRating: {
-                                    '@type': 'Rating',
-                                    ratingValue: '5',
-                                    bestRating: '5'
-                                },
-                                reviewBody: 'After using Nuqta for 3 months, attendance increased 40% and I save 15 hours per event.'
-                            },
-                            {
-                                '@type': 'Review',
-                                author: {
-                                    '@type': 'Person',
-                                    name: 'Muna Al-Kurdi'
-                                },
-                                reviewRating: {
-                                    '@type': 'Rating',
-                                    ratingValue: '5',
-                                    bestRating: '5'
-                                },
-                                reviewBody: 'No-show rate dropped from 20% to 5%, revenue increased 65%. The bilingual system handles everything automatically.'
-                            },
-                            {
-                                '@type': 'Review',
-                                author: {
-                                    '@type': 'Person',
-                                    name: 'Laila Hassan'
-                                },
-                                reviewRating: {
-                                    '@type': 'Rating',
-                                    ratingValue: '5',
-                                    bestRating: '5'
-                                },
-                                reviewBody: 'Got 4.9/5.0 rating from 85 verified attendees. My business grew beyond imagination with the verified reviews system.'
-                            }
-                        ]
+                        }
                     })
                 }}
             />

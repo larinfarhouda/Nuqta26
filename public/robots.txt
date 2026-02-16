@@ -37,5 +37,3 @@ Allow: /_next/image
 # Sitemap location
 Sitemap: https://nuqta.ist/sitemap.xml
 
-# Crawl delay to prevent overload (1 second)
-Crawl-delay: 1

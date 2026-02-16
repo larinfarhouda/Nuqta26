@@ -31,10 +31,18 @@ export function generateLanguageAlternates(path: string): Array<{ hreflang: stri
         }
     });
 
-    return LOCALES.map(locale => ({
+    const alternates = LOCALES.map(locale => ({
         hreflang: locale === 'ar' ? 'ar' : 'en',
         href: `${BASE_URL}/${locale}/${cleanPath}`
     }));
+
+    // Add x-default pointing to Arabic (default locale)
+    alternates.push({
+        hreflang: 'x-default',
+        href: `${BASE_URL}/ar/${cleanPath}`
+    });
+
+    return alternates;
 }
 
 /**
@@ -176,5 +184,49 @@ export function generateBreadcrumbSchema(items: Array<{ name: string; url: strin
             name: item.name,
             item: item.url
         }))
+    };
+}
+
+/**
+ * Generate locale-aware breadcrumb schema
+ */
+export function generateLocaleBreadcrumbSchema(
+    locale: string,
+    items: Array<{ name: string; path: string }>
+) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: items.map((item, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: item.name,
+            item: item.path.startsWith('http') ? item.path : `${BASE_URL}/${locale}${item.path}`
+        }))
+    };
+}
+
+/**
+ * Generate WebPage structured data for static pages
+ */
+export function generateWebPageSchema(options: {
+    name: string;
+    description: string;
+    url: string;
+    locale: string;
+    type?: string;
+}) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': options.type || 'WebPage',
+        name: options.name,
+        description: options.description,
+        url: options.url,
+        inLanguage: options.locale === 'ar' ? 'ar' : 'en',
+        isPartOf: {
+            '@type': 'WebSite',
+            name: 'Nuqta',
+            url: BASE_URL,
+        },
     };
 }
