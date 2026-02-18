@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { Link, usePathname } from '@/navigation';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import LogoutButton from '../auth/LogoutButton';
@@ -11,6 +11,7 @@ export default function Navbar({ user, role }: { user?: any; role?: string }) {
     const tNav = useTranslations('Navigation');
     const locale = useLocale();
     const pathname = usePathname();
+    const router = useRouter();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Close mobile menu when route changes
@@ -67,26 +68,24 @@ export default function Navbar({ user, role }: { user?: any; role?: string }) {
 
                 {/* Language Switch */}
                 <div className="hidden md:flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-inner">
-                    <Link
-                        href={pathname}
-                        locale="en"
-                        className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all ${locale === 'en'
+                    <button
+                        onClick={() => router.replace(pathname, { locale: 'en' })}
+                        className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all cursor-pointer ${locale === 'en'
                             ? 'bg-white text-primary shadow-sm'
                             : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                             }`}
                     >
                         EN
-                    </Link>
-                    <Link
-                        href={pathname}
-                        locale="ar"
-                        className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all ${locale === 'ar'
+                    </button>
+                    <button
+                        onClick={() => router.replace(pathname, { locale: 'ar' })}
+                        className={`text-[10px] font-black px-3 py-1.5 rounded-xl transition-all cursor-pointer ${locale === 'ar'
                             ? 'bg-white text-primary shadow-sm'
                             : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                             }`}
                     >
                         AR
-                    </Link>
+                    </button>
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -118,9 +117,9 @@ export default function Navbar({ user, role }: { user?: any; role?: string }) {
                     )}
 
                     <div className="flex justify-center gap-4 pt-4 border-t">
-                        <Link href={pathname} locale="ar" className="text-sm font-bold text-gray-600">عربي</Link>
+                        <button onClick={() => router.replace(pathname, { locale: 'ar' })} className="text-sm font-bold text-gray-600 cursor-pointer">عربي</button>
                         <span className="text-gray-300">|</span>
-                        <Link href={pathname} locale="en" className="text-sm font-bold text-gray-600">English</Link>
+                        <button onClick={() => router.replace(pathname, { locale: 'en' })} className="text-sm font-bold text-gray-600 cursor-pointer">English</button>
                     </div>
                     <button onClick={() => setMobileMenuOpen(false)} className="absolute top-[-3rem] right-4 p-2 bg-gray-100 rounded-full">
                         <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
