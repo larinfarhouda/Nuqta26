@@ -15,27 +15,8 @@ import {
     generateSpeakableSchema
 } from '@/lib/seo';
 
-export async function generateStaticParams() {
-    try {
-        const supabase = await createClient();
-        const { data: events } = await supabase
-            .from('events')
-            .select('slug')
-            .eq('status', 'published')
-            .not('slug', 'is', null);
-
-        const params: { locale: string; slug: string }[] = [];
-        for (const event of events || []) {
-            if (event.slug) {
-                params.push({ locale: 'ar', slug: event.slug });
-                params.push({ locale: 'en', slug: event.slug });
-            }
-        }
-        return params;
-    } catch {
-        return [];
-    }
-}
+// This page uses cookies() via createClient — must be dynamic
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const { slug, locale } = await params;

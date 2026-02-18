@@ -12,28 +12,9 @@ import {
     generateSpeakableSchema
 } from '@/lib/seo';
 import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
-import { createClient } from '@/utils/supabase/server';
 
-export async function generateStaticParams() {
-    try {
-        const supabase = await createClient();
-        const { data: vendors } = await supabase
-            .from('vendors')
-            .select('slug')
-            .not('slug', 'is', null);
-
-        const params: { locale: string; slug: string }[] = [];
-        for (const vendor of vendors || []) {
-            if (vendor.slug) {
-                params.push({ locale: 'ar', slug: vendor.slug });
-                params.push({ locale: 'en', slug: vendor.slug });
-            }
-        }
-        return params;
-    } catch {
-        return [];
-    }
-}
+// This page uses cookies() via createClient — must be dynamic
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const { slug, locale } = await params;

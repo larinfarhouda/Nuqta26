@@ -19,7 +19,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function ClaimPage({ params }: { params: any }) {
     const { slug, locale } = await params;
 
-    const adminClient = createAdminClient();
+    let adminClient;
+    try {
+        adminClient = createAdminClient();
+    } catch {
+        return notFound();
+    }
 
     // Find prospect vendor by claim_token matching slug
     const { data: prospect } = await adminClient
