@@ -24,10 +24,10 @@ const customJestConfig = {
     ],
     coverageThreshold: {
         global: {
-            branches: 5,     // Realistic for current scope
-            functions: 6,    // Realistic for current scope
-            lines: 6,        // Realistic for current scope
-            statements: 6,   // Realistic for current scope
+            branches: 10,    // Raised after Phase 7-8 test coverage improvements (439 tests)
+            functions: 12,   // Raised after Phase 7-8 test coverage improvements (439 tests)
+            lines: 12,       // Raised after Phase 7-8 test coverage improvements (439 tests)
+            statements: 12,  // Raised after Phase 7-8 test coverage improvements (439 tests)
         },
     },
 }

@@ -738,7 +738,11 @@
         "delete_success": "تم حذف الصورة بنجاح",
         "my_works": "أعمالي",
         "add_image": "إضافة صورة",
-        "no_images": "لا توجد صور بعد"
+        "no_images": "لا توجد صور بعد",
+        "load_error": "فشل تحميل صور المعرض",
+        "retry": "إعادة المحاولة",
+        "error_invalid_type": "نوع الملف غير صالح. يرجى رفع صورة بصيغة JPG، PNG، WebP، أو GIF.",
+        "error_file_too_large": "الملف كبير جداً. الحد الأقصى 5 ميجابايت."
       },
       "events": {
         "revenue": "الإيرادات",

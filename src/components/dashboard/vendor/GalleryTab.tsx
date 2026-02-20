@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2, Plus, Trash2, ImageIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getDemoGallery } from '@/lib/demoData';
 
 export default function GalleryTab({ vendorId, showAlert, demoMode = false }: any) {
     const supabase = createClient();
@@ -14,6 +15,11 @@ export default function GalleryTab({ vendorId, showAlert, demoMode = false }: an
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (demoMode) {
+            setGallery(getDemoGallery());
+            setLoading(false);
+            return;
+        }
         if (vendorId) {
             const load = async () => {
                 setLoading(true);
@@ -33,7 +39,7 @@ export default function GalleryTab({ vendorId, showAlert, demoMode = false }: an
             };
             load();
         }
-    }, [vendorId]);
+    }, [vendorId, demoMode]);
 
 
     const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -207,8 +207,8 @@ describe('EventService', () => {
             ).rejects.toThrow('Title must be at least 3 characters');
         });
 
-        it('should use default status as draft', async () => {
-            const newEvent = mockEvent({ status: 'draft' });
+        it('should use default status as published', async () => {
+            const newEvent = mockEvent({ status: 'published' });
             mockEventRepo.create.mockResolvedValue(newEvent);
 
             const result = await eventService.createEvent('vendor-123', {
@@ -217,7 +217,7 @@ describe('EventService', () => {
             });
 
             expect(mockEventRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-                status: 'draft',
+                status: 'published',
             }));
         });
     });
