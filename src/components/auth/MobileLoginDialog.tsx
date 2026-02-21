@@ -21,16 +21,19 @@ export function MobileLoginDialog({ isOpen, onClose, returnUrl }: MobileLoginDia
 
     return (
         <>
-            {/* Backdrop */}
+            {/* Backdrop - no blur to prevent mobile rendering issues */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 transition-opacity animate-in fade-in duration-200"
+                className="fixed inset-0 bg-black/60 z-50 transition-opacity animate-in fade-in duration-200"
                 onClick={onClose}
             />
 
-            {/* Dialog - Centered Layout */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in zoom-in-95 duration-200">
+            {/* Dialog - Centered Layout, z-[51] to always render above the backdrop */}
+            <div
+                className="fixed inset-0 z-[51] flex items-center justify-center p-4 animate-in zoom-in-95 duration-200"
+                onClick={onClose}
+            >
                 <div
-                    className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl transform overflow-hidden ring-1 ring-black/5"
+                    className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl transform overflow-hidden ring-1 ring-black/5"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Decorative Header Background */}
