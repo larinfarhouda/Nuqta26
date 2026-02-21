@@ -197,7 +197,7 @@ export class EventRepository extends BaseRepository {
     async getAllForSitemap() {
         const { data, error } = await this.client
             .from('events')
-            .select('id, slug, updated_at')
+            .select('id, slug, created_at')
             .eq('status', 'published');
 
         if (error) this.handleError(error, 'EventRepository.getAllForSitemap');

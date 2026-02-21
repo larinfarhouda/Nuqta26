@@ -107,12 +107,16 @@ describe('BookingRepository', () => {
 
     describe('findByIdWithDetails', () => {
         it('should return booking with event and profile data', async () => {
-            const detailed = { ...mockBooking(), events: { title: 'Test' }, profiles: { full_name: 'User' } };
-            mockClient._mocks.single.mockResolvedValueOnce({ data: detailed, error: null });
+            const bookingData = { ...mockBooking(), events: { title: 'Test' } };
+            const profileData = { full_name: 'User', email: 'user@example.com' };
+            // First .single() returns booking+events, second .single() returns profile
+            mockClient._mocks.single
+                .mockResolvedValueOnce({ data: bookingData, error: null })
+                .mockResolvedValueOnce({ data: profileData, error: null });
 
             const result = await bookingRepo.findByIdWithDetails('booking-123');
 
-            expect(result).toEqual(detailed);
+            expect(result).toEqual({ ...bookingData, profiles: profileData });
         });
 
         it('should return null when not found', async () => {
