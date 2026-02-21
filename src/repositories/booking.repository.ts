@@ -115,8 +115,7 @@ export class BookingRepository extends BaseRepository {
             .from('bookings')
             .select(`
         *,
-        events (title, date, location_name, city),
-        profiles!user_id (full_name, email)
+        events (title, date, location_name, city)
       `)
             .eq('id', id)
             .single();
@@ -126,7 +125,23 @@ export class BookingRepository extends BaseRepository {
             this.handleError(error, 'BookingRepository.findByIdWithDetails');
         }
 
-        return data;
+        if (!data) return null;
+
+        // Fetch profile separately since there's no FK between bookings and profiles
+        let profileData = null;
+        if (data.user_id) {
+            const { data: profile } = await this.client
+                .from('profiles')
+                .select('full_name, email')
+                .eq('id', data.user_id)
+                .single();
+            profileData = profile;
+        }
+
+        return {
+            ...data,
+            profiles: profileData
+        };
     }
 
     /**
