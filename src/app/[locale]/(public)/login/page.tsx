@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Mail, Lock, ArrowRight, AlertCircle, Facebook } from 'lucide-react';
 import Image from 'next/image';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 // Schema creator
 const createLoginSchema = (t: any) => z.object({
@@ -35,15 +36,7 @@ export default function LoginPage() {
         resolver: zodResolver(loginSchema),
     });
 
-    const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
-        await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback?locale=${locale}`,
-                // Don't pass role during login - let callback use existing profile role
-            },
-        });
-    };
+
 
     const onSubmit = async (data: LoginFormData) => {
         setIsLoading(true);
@@ -180,26 +173,14 @@ export default function LoginPage() {
 
                     {/* Social Login */}
                     <div className="grid grid-cols-1 gap-4">
-                        <motion.button
-                            whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleOAuthLogin('google')}
-                            className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
+                        <GoogleSignInButton
+                            locale={locale}
+                            onError={(msg) => setError(msg)}
+                            className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                         >
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
                             <span className="text-sm">{t('continue_google')}</span>
-                        </motion.button>
-
-                        {/* Facebook login temporarily hidden */}
-                        {/* <motion.button
-                            whileHover={{ scale: 1.02, backgroundColor: '#166fe5' }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleOAuthLogin('facebook')}
-                            className="p-3 bg-[#1877F2] text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
-                        >
-                            <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
-                            <span className="text-sm">{t('continue_facebook')}</span>
-        </motion.button> */}
+                        </GoogleSignInButton>
                     </div>
 
                     <div className="relative flex items-center gap-4 my-2">

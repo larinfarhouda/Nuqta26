@@ -14,6 +14,7 @@ import { Calendar, UserCircle, MapPin, Check, Globe } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { COUNTRIES } from '@/constants/locations';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 // Schemas
 const createUserSchema = (t: any) => z.object({
@@ -151,23 +152,7 @@ export default function RegisterPage() {
         }
     };
 
-    const handleOAuthLogin = async (provider: 'google' | 'facebook') => {
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider,
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`,
-                    queryParams: {
-                        role: role
-                    }
-                },
-            });
-            if (error) throw error;
-        } catch (err: any) {
-            console.error('OAuth error:', err);
-            setError(t('error_generic'));
-        }
-    };
+
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row bg-white pt-16 md:pt-24">
@@ -329,26 +314,15 @@ export default function RegisterPage() {
 
                                 {/* Social Login */}
                                 <div className="grid grid-cols-1 gap-4 mb-6">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleOAuthLogin('google')}
-                                        className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
+                                    <GoogleSignInButton
+                                        locale={locale}
+                                        role={role}
+                                        onError={(msg) => setError(msg)}
+                                        className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                                     >
                                         <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
                                         <span className="text-sm">{t('continue_google')}</span>
-                                    </motion.button>
-
-                                    {/* Facebook login temporarily hidden */}
-                                    {/* <motion.button
-                                        whileHover={{ scale: 1.02, backgroundColor: '#166fe5' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleOAuthLogin('facebook')}
-                                        className="p-3 bg-[#1877F2] text-white font-bold rounded-xl transition-all shadow-sm hover:shadow-blue-500/25 flex items-center justify-center gap-2 group"
-                                    >
-                                        <Facebook className="w-5 h-5 fill-current group-hover:rotate-12 transition-transform" />
-                                        <span className="text-sm">{t('continue_facebook')}</span>
-                                    </motion.button> */}
+                                    </GoogleSignInButton>
                                 </div>
 
                                 <div className="relative flex items-center gap-4 mb-6">
