@@ -72,27 +72,19 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
 
             // Handle vendor role assignment (fire parallel mutations)
             if (currentRole === 'vendor') {
-                const mutations: Promise<any>[] = [];
-
                 if (finalRole !== 'vendor') {
-                    mutations.push(
-                        supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id)
-                    );
+                    await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
                     finalRole = 'vendor';
                 }
 
                 if (!vendorResult?.data) {
-                    mutations.push(
-                        supabase.from('vendors').insert({
-                            id: user.id,
-                            business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
-                            category: 'other',
-                            subscription_tier: 'starter',
-                        } as any)
-                    );
+                    await supabase.from('vendors').insert({
+                        id: user.id,
+                        business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
+                        category: 'other',
+                        subscription_tier: 'starter',
+                    } as any);
                 }
-
-                if (mutations.length) await Promise.all(mutations);
             }
 
             // Fire-and-forget: new user tracking (don't block redirect)
@@ -177,32 +169,27 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
 });
 
 /** Fire-and-forget: save referral source + send admin notification */
-function handleNewUserTracking(supabase: any, user: any, finalRole: string) {
-    let referralSource: Record<string, string> | null = null;
+async function handleNewUserTracking(supabase: any, user: any, finalRole: string) {
     try {
-        const cookies = document.cookie.split('; ');
-        const refCookie = cookies.find((c) => c.startsWith('__nuqta_ref='));
-        if (refCookie) {
-            referralSource = JSON.parse(decodeURIComponent(refCookie.split('=').slice(1).join('=')));
+        let referralSource: Record<string, string> | null = null;
+        try {
+            const cookies = document.cookie.split('; ');
+            const refCookie = cookies.find((c) => c.startsWith('__nuqta_ref='));
+            if (refCookie) {
+                referralSource = JSON.parse(decodeURIComponent(refCookie.split('=').slice(1).join('=')));
+            }
+        } catch { /* ignore */ }
+
+        if (referralSource) {
+            await supabase.from('profiles').update({ referral_source: referralSource }).eq('id', user.id);
         }
-    } catch { /* ignore */ }
 
-    // Save referral + notify admin in parallel (fire-and-forget)
-    const tasks: Promise<any>[] = [];
+        const referralInfo: Record<string, string> = {};
+        if (referralSource?.utm_source) referralInfo['Referral Source'] = referralSource.utm_source;
+        if (referralSource?.utm_medium) referralInfo['Referral Medium'] = referralSource.utm_medium;
+        if (referralSource?.utm_campaign) referralInfo['Referral Campaign'] = referralSource.utm_campaign;
+        if (referralSource?.landing_page) referralInfo['Landing Page'] = referralSource.landing_page;
 
-    if (referralSource) {
-        tasks.push(
-            supabase.from('profiles').update({ referral_source: referralSource }).eq('id', user.id)
-        );
-    }
-
-    const referralInfo: Record<string, string> = {};
-    if (referralSource?.utm_source) referralInfo['Referral Source'] = referralSource.utm_source;
-    if (referralSource?.utm_medium) referralInfo['Referral Medium'] = referralSource.utm_medium;
-    if (referralSource?.utm_campaign) referralInfo['Referral Campaign'] = referralSource.utm_campaign;
-    if (referralSource?.landing_page) referralInfo['Landing Page'] = referralSource.landing_page;
-
-    tasks.push(
         fetch('/api/notify-signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -213,10 +200,8 @@ function handleNewUserTracking(supabase: any, user: any, finalRole: string) {
                 signupMethod: 'google',
                 additionalInfo: Object.keys(referralInfo).length > 0 ? referralInfo : undefined,
             }),
-        }).catch(() => { })
-    );
-
-    Promise.all(tasks).catch(() => { });
+        }).catch(() => { });
+    } catch { /* silently ignore tracking errors */ }
 }
 
 export default GoogleSignInButton;
