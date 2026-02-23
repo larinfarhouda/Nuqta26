@@ -107,7 +107,7 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                             {t('warning_banner.message')}
                         </p>
                         <a
-                            href="/dashboard/vendor?tab=profile"
+                            href={`/${locale}/dashboard/vendor?tab=profile`}
                             className="inline-block mt-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition-colors"
                         >
                             {t('warning_banner.action')}
