@@ -292,8 +292,12 @@ export default function VendorDashboard({
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.category')}</label>
                                 <select name="category" className="input-field text-gray-900">
-                                    <option value="cultural">{t('vendor.category_cultural')}</option>
-                                    <option value="entertainment">{t('vendor.category_entertainment')}</option>
+                                    <option value="cultural">{t('vendor.cat_cultural')}</option>
+                                    <option value="entertainment">{t('vendor.cat_entertainment')}</option>
+                                    <option value="educational">{t('vendor.cat_educational')}</option>
+                                    <option value="artistic">{t('vendor.cat_artistic')}</option>
+                                    <option value="social">{t('vendor.cat_social')}</option>
+                                    <option value="other">{t('vendor.cat_other')}</option>
                                 </select>
                             </div>
                             <div className="space-y-2">

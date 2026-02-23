@@ -238,8 +238,16 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
                             <label className="text-xs font-bold text-gray-500 uppercase">{t('category')}</label>
                             <div className="relative">
                                 <select {...register('category')} className="input-field appearance-none cursor-pointer">
-                                    <option value="cultural">{t('category_cultural')}</option>
-                                    <option value="entertainment">{t('category_entertainment')}</option>
+                                    <option value="cultural">{t('cat_cultural')}</option>
+                                    <option value="entertainment">{t('cat_entertainment')}</option>
+                                    <option value="artistic">{t('cat_artistic')}</option>
+                                    <option value="educational">{t('cat_educational')}</option>
+                                    <option value="sports">{t('cat_sports')}</option>
+                                    <option value="food">{t('cat_food')}</option>
+                                    <option value="health">{t('cat_health')}</option>
+                                    <option value="beauty">{t('cat_beauty')}</option>
+                                    <option value="fashion">{t('cat_fashion')}</option>
+                                    <option value="other">{t('cat_other')}</option>
                                 </select>
                             </div>
                         </div>

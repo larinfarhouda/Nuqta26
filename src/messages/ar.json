@@ -572,7 +572,8 @@
     "cat_entertainment": "ترفيهي",
     "cat_educational": "تعليمي",
     "cat_artistic": "فني",
-    "cat_social": "اجتماعي"
+    "cat_social": "اجتماعي",
+    "cat_other": "أخرى"
   },
   "StaticPages": {
     "About": {
@@ -683,8 +684,16 @@
         "change_logo": "اضغط لتغيير الشعار",
         "business_name": "اسم النشاط",
         "category": "التصنيف",
-        "category_cultural": "ثقافي",
-        "category_entertainment": "ترفيهي",
+        "cat_cultural": "ثقافي",
+        "cat_artistic": "فني",
+        "cat_educational": "تعليمي",
+        "cat_sports": "رياضي",
+        "cat_food": "طعام",
+        "cat_health": "صحة",
+        "cat_beauty": "جمال",
+        "cat_fashion": "موضة",
+        "cat_entertainment": "ترفيهي",
+        "cat_other": "أخرى",
         "description": "الوصف",
         "save_changes": "حفظ التغييرات",
         "location": "الموقع",
