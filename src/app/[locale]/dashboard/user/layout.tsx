@@ -21,8 +21,16 @@ export default async function UserDashboardLayout({
         return null;
     }
 
-    // Check role and redirect vendors
-    const role = user.user_metadata?.role;
+    // Check role and redirect vendors (OAuth users don't have role in user_metadata)
+    let role = user.user_metadata?.role;
+    if (!role) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        role = profile?.role;
+    }
 
     if (role === 'vendor') {
         redirect({ href: '/dashboard/vendor', locale });

@@ -10,8 +10,17 @@ export default async function PublicLayout({
 }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    // Check role from user metadata
-    const role = user?.user_metadata?.role;
+
+    // Check role from profiles table first (OAuth users don't have it in user_metadata)
+    let role = user?.user_metadata?.role;
+    if (user && !role) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        role = profile?.role;
+    }
 
     return (
         <div className="flex flex-col min-h-screen">
