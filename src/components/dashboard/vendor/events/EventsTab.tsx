@@ -33,7 +33,7 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
     useEffect(() => {
         const fetchCats = async () => {
             const supabase = createClient();
-            const { data } = await supabase.from('categories').select('slug, name_en, name_ar');
+            const { data } = await supabase.from('categories').select('id, slug, name_en, name_ar');
             if (data) setCategories(data);
         };
         fetchCats();
@@ -145,9 +145,13 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                             <div key={event.id} className={`bg-white p-5 rounded-2xl shadow-sm border relative group overflow-hidden ${isExpired ? 'border-red-200 bg-red-50/30' : isSoldOut ? 'border-amber-200 bg-amber-50/30' : 'border-gray-100'}`}>
                                 <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
                                     <div className="flex gap-4 cursor-pointer" onClick={() => setViewEvent(event)}>
-                                        <div className={`w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-xl uppercase ${isExpired ? 'bg-red-100 text-red-600' : isSoldOut ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-primary'}`}>
-                                            {event.title[0]}
-                                        </div>
+                                        {event.image_url ? (
+                                            <img src={event.image_url} alt={event.title} className={`w-16 h-16 rounded-xl flex-shrink-0 object-cover ${isExpired ? 'opacity-60 grayscale' : ''}`} />
+                                        ) : (
+                                            <div className={`w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-xl uppercase ${isExpired ? 'bg-red-100 text-red-600' : isSoldOut ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-primary'}`}>
+                                                {event.title[0]}
+                                            </div>
+                                        )}
                                         <div>
                                             <div className="flex flex-wrap gap-2 mb-1">
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${event.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
@@ -177,30 +181,48 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-6 border-t lg:border-t-0 pt-4 lg:pt-0">
-                                        <div className="text-center hidden md:block">
-                                            <div className="text-xs text-gray-400">{t('tickets')}</div>
-                                            <div className="font-bold text-gray-800">{event.bookings?.[0]?.count || 0} / {event.tickets?.[0]?.quantity || '-'}</div>
-                                        </div>
-                                        <div className="text-center hidden md:block">
-                                            <div className="text-xs text-gray-400">{t('capacity')}</div>
-                                            <div className="font-bold text-gray-800">{event.capacity || '-'}</div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setViewEvent(event)}
-                                                className="px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-primary transition-colors shadow-lg hover:shadow-primary/20"
-                                            >
-                                                {t('manage')}
-                                            </button>
-                                            <button onClick={() => handleDelete(event.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-gray-50 rounded-lg">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => { setEditingEvent(event); setIsFormOpen(true); }} className="p-2 text-primary hover:bg-primary/10 transition-colors bg-gray-50 rounded-lg">
-                                                <Edit3 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
+                                    {/* Stats — mobile-first, computed from real bookings */}
+                                    {(() => {
+                                        const totalQty = Array.isArray(event.tickets) ? event.tickets.reduce((s: number, t: any) => s + (t.quantity || 0), 0) : 0;
+                                        // Real data: count confirmed bookings and sum their revenue
+                                        const confirmedBookings = Array.isArray(event.bookings) ? event.bookings.filter((b: any) => b.status === 'confirmed') : [];
+                                        const totalSold = confirmedBookings.length;
+                                        const revenue = confirmedBookings.reduce((s: number, b: any) => s + (b.total_amount || 0), 0);
+                                        const fillRate = totalQty > 0 ? Math.round((totalSold / totalQty) * 100) : 0;
+                                        const barColor = fillRate >= 70 ? 'bg-green-500' : fillRate >= 30 ? 'bg-amber-500' : 'bg-red-400';
+                                        const textColor = fillRate >= 70 ? 'text-green-600' : fillRate >= 30 ? 'text-amber-600' : 'text-red-500';
+
+                                        return (
+                                            <div className="flex items-center gap-3 sm:gap-4 border-t lg:border-t-0 pt-3 lg:pt-0">
+                                                <div className="flex-1 lg:flex-none lg:min-w-[80px]">
+                                                    <div className="text-[10px] text-gray-400 mb-0.5">{t('sales')}</div>
+                                                    <div className="font-bold text-gray-800 text-sm">{totalSold} / {totalQty}</div>
+                                                    <div className="w-full h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                                        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.min(fillRate, 100)}%` }} />
+                                                    </div>
+                                                    <div className={`text-[10px] font-bold mt-0.5 ${textColor}`}>{fillRate}%</div>
+                                                </div>
+                                                <div className="flex-1 lg:flex-none lg:min-w-[70px]">
+                                                    <div className="text-[10px] text-gray-400 mb-0.5">{t('revenue')}</div>
+                                                    <div className="font-bold text-gray-800 text-sm">₺{revenue.toLocaleString()}</div>
+                                                </div>
+                                                <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={() => setViewEvent(event)}
+                                                        className="px-2.5 sm:px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-primary transition-colors shadow-lg hover:shadow-primary/20"
+                                                    >
+                                                        {t('manage')}
+                                                    </button>
+                                                    <button onClick={() => handleDelete(event.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-gray-50 rounded-lg">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => { setEditingEvent(event); setIsFormOpen(true); }} className="p-2 text-primary hover:bg-primary/10 transition-colors bg-gray-50 rounded-lg">
+                                                        <Edit3 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         );

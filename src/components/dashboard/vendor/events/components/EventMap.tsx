@@ -181,6 +181,12 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
             const pos = { lat: event.location_lat, lng: event.location_long };
             setMapCenter(pos);
             setMarkerPos(pos);
+            setValue('location_lat', pos.lat);
+            setValue('location_long', pos.lng);
+            if (event.location_name) setValue('location_name', event.location_name);
+            if (event.district) setValue('district', event.district);
+            if (event.city) setValue('city', event.city);
+            if (event.country) setValue('country', event.country);
         }
     }, [vendorData, event, setValue]);
 

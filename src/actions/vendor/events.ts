@@ -13,6 +13,26 @@ import {
 } from '@/lib/constants/subscription';
 import { trackActivity } from '@/lib/track-activity';
 
+// --- Helpers ---
+
+function safeParseFloat(value: string | null): number | undefined {
+    if (!value) return undefined;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? undefined : parsed;
+}
+
+function safeParseInt(value: string | null): number | undefined {
+    if (!value) return undefined;
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? undefined : parsed;
+}
+
+function appendTimezone(dateStr: string | null, tz: string): string | undefined {
+    if (!dateStr) return undefined;
+    // datetime-local gives "2026-03-01T19:00", we append seconds + tz offset
+    return `${dateStr}:00${tz}`;
+}
+
 /**
  * Create event (vendor action)
  */
@@ -70,19 +90,21 @@ export async function createEvent(formData: FormData) {
         }
 
         // Parse form data
+        const tzOffset = formData.get('timezone_offset') as string || '+00:00';
         const rawData = {
             title: formData.get('title') as string,
             description: formData.get('description') as string,
             event_type: formData.get('event_type') as string,
-            date: formData.get('date') as string,
-            end_date: formData.get('end_date') as string,
-            location_lat: parseFloat(formData.get('location_lat') as string),
-            location_long: parseFloat(formData.get('location_long') as string),
+            category_id: formData.get('category_id') as string || undefined,
+            date: appendTimezone(formData.get('date') as string, tzOffset) as string,
+            end_date: appendTimezone(formData.get('end_date') as string, tzOffset),
+            location_lat: safeParseFloat(formData.get('location_lat') as string),
+            location_long: safeParseFloat(formData.get('location_long') as string),
             location_name: formData.get('location_name') as string,
             district: formData.get('district') as string,
             city: formData.get('city') as string,
             country: formData.get('country') as string,
-            capacity: parseInt(formData.get('capacity') as string),
+            capacity: safeParseInt(formData.get('capacity') as string),
             is_recurring: formData.get('is_recurring') === 'true',
             recurrence_type: formData.get('recurrence_type') as string,
             recurrence_days: formData.get('recurrence_days') ? JSON.parse(formData.get('recurrence_days') as string) : [],
@@ -190,19 +212,21 @@ export async function updateEvent(eventId: string, formData: FormData) {
         if (!user) return { error: 'Unauthorized' };
 
         // Parse form data
+        const tzOffset = formData.get('timezone_offset') as string || '+00:00';
         const rawData = {
             title: formData.get('title') as string,
             description: formData.get('description') as string,
-            category_id: formData.get('category_id') as string,
-            date: formData.get('date') as string,
-            end_date: formData.get('end_date') as string,
-            location_lat: parseFloat(formData.get('location_lat') as string),
-            location_long: parseFloat(formData.get('location_long') as string),
+            event_type: formData.get('event_type') as string,
+            category_id: formData.get('category_id') as string || undefined,
+            date: appendTimezone(formData.get('date') as string, tzOffset) as string,
+            end_date: appendTimezone(formData.get('end_date') as string, tzOffset),
+            location_lat: safeParseFloat(formData.get('location_lat') as string),
+            location_long: safeParseFloat(formData.get('location_long') as string),
             location_name: formData.get('location_name') as string,
             district: formData.get('district') as string,
             city: formData.get('city') as string,
             country: formData.get('country') as string,
-            capacity: parseInt(formData.get('capacity') as string),
+            capacity: safeParseInt(formData.get('capacity') as string),
             is_recurring: formData.get('is_recurring') === 'true',
             recurrence_type: formData.get('recurrence_type') as string,
             recurrence_days: formData.get('recurrence_days') ? JSON.parse(formData.get('recurrence_days') as string) : [],
@@ -232,12 +256,14 @@ export async function updateEvent(eventId: string, formData: FormData) {
 
         await eventService.updateEvent(eventId, user.id, updateData);
 
-        // Handle tickets (upsert)
+        // Handle tickets (upsert + delete removed)
         const ticketsJson = formData.get('tickets') as string;
         if (ticketsJson) {
             try {
                 const tickets = JSON.parse(ticketsJson);
                 if (Array.isArray(tickets)) {
+                    const keptTicketIds: string[] = [];
+
                     for (const t of tickets) {
                         if (t.id) {
                             await supabase.from('tickets').update({
@@ -245,14 +271,24 @@ export async function updateEvent(eventId: string, formData: FormData) {
                                 price: parseFloat(t.price),
                                 quantity: parseInt(t.quantity)
                             }).eq('id', t.id).eq('event_id', eventId);
+                            keptTicketIds.push(t.id);
                         } else {
-                            await supabase.from('tickets').insert({
+                            const { data: newTicket } = await supabase.from('tickets').insert({
                                 event_id: eventId,
                                 name: t.name,
                                 price: parseFloat(t.price),
                                 quantity: parseInt(t.quantity)
-                            });
+                            }).select('id').single();
+                            if (newTicket) keptTicketIds.push(newTicket.id);
                         }
+                    }
+
+                    // Delete tickets that were removed from the form
+                    if (keptTicketIds.length > 0) {
+                        await supabase.from('tickets')
+                            .delete()
+                            .eq('event_id', eventId)
+                            .not('id', 'in', `(${keptTicketIds.join(',')})`);
                     }
                 }
             } catch (e) {

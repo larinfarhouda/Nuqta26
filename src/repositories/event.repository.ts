@@ -139,10 +139,10 @@ export class EventRepository extends BaseRepository {
     /**
      * Find events by vendor ID
      */
-    async findByVendorId(vendorId: string): Promise<Event[]> {
+    async findByVendorId(vendorId: string) {
         const { data, error } = await this.client
             .from('events')
-            .select('*')
+            .select('*, tickets(*), bulk_discounts(*), bookings(id, status, total_amount)')
             .eq('vendor_id', vendorId)
             .order('date', { ascending: false });
 

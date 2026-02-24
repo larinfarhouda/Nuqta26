@@ -82,21 +82,53 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
     const formatDateForInput = (dateString: string) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        const offset = date.getTimezoneOffset() * 60000;
-        const localDate = new Date(date.getTime() - offset);
-        return localDate.toISOString().slice(0, 16);
+        // Use local date parts directly — avoids manual offset math bugs
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
+
+    // Resolve the category UUID for the select dropdown
+    // For pre-fix events: category_id may be null, but event_type has the slug
+    const resolveEventCategoryId = () => {
+        if (event?.category_id) return event.category_id; // Already a UUID
+        return ''; // Will be resolved in useEffect when categories load
+    };
+
+    // Strip tickets to only form-relevant fields
+    const getEditTickets = () => {
+        if (!event?.tickets || event.tickets.length === 0) {
+            return [{ name: 'تذكرة عامة', price: 0, quantity: 0 }];
+        }
+        return event.tickets.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            price: t.price,
+            quantity: t.quantity,
+        }));
+    };
+
+    // Destructure to exclude tickets and bulk_discounts from spread
+    const { tickets: _eventTickets, bulk_discounts: _eventBulkDiscounts, bookings: _eventBookings, ...eventBaseData } = event || {} as any;
 
     const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         defaultValues: event ? {
-            ...event,
-            event_type: event.category_id || event.event_type, // Use category_id if available, fallback to event_type
+            ...eventBaseData,
+            event_type: resolveEventCategoryId(),
+            description: event.description || '',
+            location_name: event.location_name || '',
+            district: event.district || '',
+            city: event.city || '',
+            country: event.country || '',
             date: formatDateForInput(event.date),
             end_date: formatDateForInput(event.end_date),
             is_recurring: event.is_recurring,
             recurrence_days: event.recurrence_days || [],
-            tickets: (event.tickets && event.tickets.length > 0) ? event.tickets : [{ name: 'تذكرة عامة', price: 0, quantity: 0 }]
+            tickets: getEditTickets(),
         } : {
             is_recurring: false,
             recurrence_days: [],
@@ -112,6 +144,26 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             tickets: [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
         }
     });
+
+    // Sync category dropdown value AFTER categories are loaded
+    // This is needed because <select> options load async — the browser resets
+    // the select to the placeholder if the UUID doesn't match any option yet.
+    useEffect(() => {
+        if (!event || categories.length === 0) return;
+
+        if (event.category_id) {
+            // Post-fix event: re-set the UUID value after options are available
+            setValue('event_type', event.category_id);
+        } else if (event.event_type) {
+            // Pre-fix event: resolve slug → UUID
+            const matchedCat = categories.find(
+                c => c.slug === event.event_type || c.slug === event.event_type?.toLowerCase()
+            );
+            if (matchedCat) {
+                setValue('event_type', matchedCat.id);
+            }
+        }
+    }, [categories, event, setValue]);
 
     const isRecurring = watch('is_recurring');
     const recurrenceType = watch('recurrence_type');
@@ -146,18 +198,39 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
         setValue('recurrence_days', updated);
     };
 
+    // Helper to get timezone offset string like "+03:00" or "-05:00"
+    const getTimezoneOffset = () => {
+        const offset = new Date().getTimezoneOffset();
+        const sign = offset <= 0 ? '+' : '-';
+        const absOffset = Math.abs(offset);
+        const hours = String(Math.floor(absOffset / 60)).padStart(2, '0');
+        const minutes = String(absOffset % 60).padStart(2, '0');
+        return `${sign}${hours}:${minutes}`;
+    };
+
     const onSubmit = async (data: any) => {
         setSubmitting(true);
         const formData = new FormData();
 
+        // Look up the category slug from the selected UUID for event_type backwards compat
+        const selectedCategoryId = data.event_type; // This now holds the UUID
+        const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+
         Object.entries(data).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
                 if (key === 'tickets' || key === 'recurrence_days') formData.append(key, JSON.stringify(value));
+                else if (key === 'event_type') {
+                    // Store the category slug in event_type for backwards compat
+                    formData.append('event_type', selectedCategory?.slug || (value as string));
+                    // Store the UUID in category_id
+                    formData.append('category_id', selectedCategoryId || '');
+                }
                 else formData.append(key, value as string);
             }
         });
 
         formData.append('bulk_discounts', JSON.stringify(bulkDiscounts));
+        formData.append('timezone_offset', getTimezoneOffset());
 
         if (imageFile) {
             formData.append('image', imageFile);
@@ -242,7 +315,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                                     <select {...register('event_type')} className={`input-field appearance-none ${errors.event_type ? 'border-red-500' : ''}`} disabled={categoriesLoading}>
                                         <option value="">{categoriesLoading ? 'جاري التحميل...' : (categoryFetchError ? 'خطأ في تحميل التصنيفات' : 'اختر النوع')}</option>
                                         {categories.map((cat) => (
-                                            <option key={cat.id} value={cat.slug}>
+                                            <option key={cat.id} value={cat.id}>
                                                 {cat.name_ar || cat.name_en}
                                             </option>
                                         ))}

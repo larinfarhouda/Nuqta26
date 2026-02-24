@@ -108,8 +108,8 @@ export class EventService {
             throw new ValidationError('Date is required', 'date');
         }
 
-        // Generate slug from title
-        const slug = this.generateSlug(input.title);
+        // Use provided slug or generate one from title
+        const slug = input.slug || this.generateSlug(input.title);
 
         // Create event
         const event = await this.eventRepo.create({
