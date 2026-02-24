@@ -7,6 +7,7 @@ import { CategoryRepository } from '@/repositories/category.repository';
 import { PublicEventDTO, EventListItemDTO, EventFilters, CreateEventInput, UpdateEventInput } from '@/types/dto/event.dto';
 import { NotFoundError, ValidationError } from '@/lib/errors/app-error';
 import { logger } from '@/lib/logger/logger';
+import { slugify } from '@/utils/slugify';
 
 /**
  * Event Service
@@ -111,7 +112,7 @@ export class EventService {
         }
 
         // Use provided slug or generate one from title
-        const slug = input.slug || this.generateSlug(input.title);
+        const slug = input.slug || `${slugify(input.title)}-${Date.now()}`;
 
         // Create event
         const event = await this.eventRepo.create({
@@ -194,14 +195,4 @@ export class EventService {
         return await this.eventRepo.update(eventId, { status: 'published' });
     }
 
-    /**
-     * Generate slug from title
-     */
-    private generateSlug(title: string): string {
-        return title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '')
-            + '-' + Date.now();
-    }
 }

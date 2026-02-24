@@ -19,7 +19,8 @@ import {
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
-    const { slug, locale } = await params;
+    const { locale } = await params;
+    const slug = decodeURIComponent((await params).slug);
 
     // Check if this is a demo event
     const demoEvents = getDemoEvents();
@@ -97,7 +98,8 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
 }
 
 export default async function EventPage({ params }: { params: any }) {
-    const { slug, locale } = await params;
+    const { locale } = await params;
+    const slug = decodeURIComponent((await params).slug);
 
     // Check if this is a demo event
     const demoEvents = getDemoEvents();

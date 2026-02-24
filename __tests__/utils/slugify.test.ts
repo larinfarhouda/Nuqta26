@@ -52,4 +52,27 @@ describe('slugify', () => {
     it('should preserve hyphens in text', () => {
         expect(slugify('ready-made slug')).toBe('ready-made-slug');
     });
+
+    // === Arabic / Non-Latin support ===
+
+    it('should handle Arabic text', () => {
+        expect(slugify('حفل موسيقي في إسطنبول')).toBe('حفل-موسيقي-في-إسطنبول');
+    });
+
+    it('should handle mixed Arabic and numbers', () => {
+        expect(slugify('فعالية 2026')).toBe('فعالية-2026');
+    });
+
+    it('should handle Turkish characters', () => {
+        // JS toLowerCase() converts İ → i (not locale-aware), ü is preserved
+        expect(slugify('Müzik Konseri İstanbul')).toBe('müzik-konseri-istanbul');
+    });
+
+    it('should handle mixed Arabic and English', () => {
+        expect(slugify('Event حفل 2026')).toBe('event-حفل-2026');
+    });
+
+    it('should handle Arabic with special characters', () => {
+        expect(slugify('حفل! @موسيقي# $رائع%')).toBe('حفل-موسيقي-رائع');
+    });
 });

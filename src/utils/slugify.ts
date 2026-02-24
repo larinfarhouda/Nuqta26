@@ -3,9 +3,8 @@ export function slugify(text: string): string {
         .toString()
         .toLowerCase()
         .trim()
-        .replace(/\s+/g, '-')        // Replace spaces with -
-        .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
-        .replace(/\-\-+/g, '-')      // Replace multiple - with single -
-        .replace(/^-+/, '')          // Trim - from start of text
-        .replace(/-+$/, '');         // Trim - from end of text
+        .replace(/[\s_]+/g, '-')        // Replace spaces and underscores with -
+        .replace(/[^\p{L}\p{N}-]+/gu, '') // Keep all unicode letters, digits, and hyphens
+        .replace(/-{2,}/g, '-')         // Collapse multiple hyphens
+        .replace(/^-+|-+$/g, '');       // Trim hyphens from edges
 }

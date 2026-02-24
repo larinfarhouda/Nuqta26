@@ -53,13 +53,14 @@ export class EventRepository extends BaseRepository {
      */
     async findPublicEvent(idOrSlug: string) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+        const isNumericId = /^-?\d+$/.test(idOrSlug);
 
         let query = this.client
             .from('events')
             .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban, id, subscription_tier, cancellation_policy, return_policy), bulk_discounts(*)')
             .eq('status', 'published');
 
-        if (isUuid) {
+        if (isUuid || isNumericId) {
             query = query.eq('id', idOrSlug);
         } else {
             query = query.eq('slug', idOrSlug);
