@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { MapPin, MessageCircle, Star, Instagram, Globe, CheckCircle, Image as ImageIcon, Calendar, ArrowRight, Share2 } from 'lucide-react';
 import EventCard from '@/components/events/EventCard';
 import { Link } from '@/navigation';
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import VendorEventFilters from '@/components/vendor/VendorEventFilters';
 import { calculateDistance } from '@/utils/distance';
 
@@ -16,15 +17,17 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
     const locale = useLocale();
     const [activeTab, setActiveTab] = useState<'events' | 'gallery' | 'about'>('events');
     const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
-    // Filter states
-    const [filters, setFilters] = useState({
-        search: '',
-        category: '',
-        district: '',
-        userLat: undefined as number | undefined,
-        userLng: undefined as number | undefined,
-    });
+    // Read filter values from URL search params
+    const filters = useMemo(() => ({
+        search: searchParams.get('search') || '',
+        category: searchParams.get('category') || '',
+        district: searchParams.get('district') || '',
+        userLat: searchParams.get('lat') ? Number(searchParams.get('lat')) : undefined,
+        userLng: searchParams.get('lng') ? Number(searchParams.get('lng')) : undefined,
+    }), [searchParams]);
 
     // Refs for scroll handling
     const heroRef = useRef<HTMLDivElement>(null);
@@ -52,7 +55,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
         setActiveTab(id as any);
     };
 
-    // Filter events based on current filters
+    // Filter events based on current URL filters
     const filteredEvents = useMemo(() => {
         if (!vendor.events || vendor.events.length === 0) return [];
 
@@ -101,22 +104,6 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
 
         return result;
     }, [vendor.events, filters]);
-
-    const handleFilterChange = useCallback((newFilters: {
-        search: string;
-        category: string;
-        district: string;
-        userLat?: number;
-        userLng?: number;
-    }) => {
-        setFilters({
-            search: newFilters.search,
-            category: newFilters.category,
-            district: newFilters.district,
-            userLat: newFilters.userLat,
-            userLng: newFilters.userLng,
-        });
-    }, []);
 
     const hasEvents = vendor.events && vendor.events.length > 0;
     const hasGallery = vendor.gallery && vendor.gallery.length > 0;
@@ -289,7 +276,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                     {/* Filters Section */}
                     {hasEvents && (
                         <div className="mb-8 md:mb-12">
-                            <VendorEventFilters onFilterChange={handleFilterChange} />
+                            <VendorEventFilters />
                         </div>
                     )}
 
@@ -330,7 +317,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                     <h3 className="text-lg font-bold text-gray-900">No events match your filters</h3>
                                     <p className="text-gray-500">Try adjusting your search or filter criteria</p>
                                     <button
-                                        onClick={() => setFilters({ search: '', category: '', district: '', userLat: undefined, userLng: undefined })}
+                                        onClick={() => router.push('?', { scroll: false })}
                                         className="mt-4 px-6 py-2 bg-primary text-white rounded-full font-bold text-sm hover:bg-primary/90 transition-colors"
                                     >
                                         Clear filters
