@@ -67,7 +67,9 @@ export class EventService {
                 whatsapp_number: eventData.vendors.whatsapp_number,
                 bank_name: eventData.vendors.bank_name,
                 bank_account_name: eventData.vendors.bank_account_name,
-                bank_iban: eventData.vendors.bank_iban
+                bank_iban: eventData.vendors.bank_iban,
+                cancellation_policy: eventData.vendors.cancellation_policy,
+                return_policy: eventData.vendors.return_policy
             } : null,
             bulk_discounts: eventData.bulk_discounts || [],
             rating: ratingSummary ? {

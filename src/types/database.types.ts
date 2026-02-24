@@ -847,6 +847,7 @@ export type Database = {
           bank_iban: string | null
           bank_name: string | null
           business_name: string
+          cancellation_policy: string | null
           category: string
           company_logo: string | null
           cover_image: string | null
@@ -858,6 +859,7 @@ export type Database = {
           is_verified: boolean | null
           location_lat: number | null
           location_long: number | null
+          return_policy: string | null
           slug: string | null
           status: string | null
           subscription_expires_at: string | null
@@ -873,6 +875,7 @@ export type Database = {
           bank_iban?: string | null
           bank_name?: string | null
           business_name: string
+          cancellation_policy?: string | null
           category: string
           company_logo?: string | null
           cover_image?: string | null
@@ -884,6 +887,7 @@ export type Database = {
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          return_policy?: string | null
           slug?: string | null
           status?: string | null
           subscription_expires_at?: string | null
@@ -899,6 +903,7 @@ export type Database = {
           bank_iban?: string | null
           bank_name?: string | null
           business_name?: string
+          cancellation_policy?: string | null
           category?: string
           company_logo?: string | null
           cover_image?: string | null
@@ -910,6 +915,7 @@ export type Database = {
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          return_policy?: string | null
           slug?: string | null
           status?: string | null
           subscription_expires_at?: string | null

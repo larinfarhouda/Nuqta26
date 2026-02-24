@@ -56,7 +56,7 @@ export class EventRepository extends BaseRepository {
 
         let query = this.client
             .from('events')
-            .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban, id, subscription_tier), bulk_discounts(*)')
+            .select('*, tickets(*), vendors(business_name, company_logo, whatsapp_number, slug, bank_name, bank_account_name, bank_iban, id, subscription_tier, cancellation_policy, return_policy), bulk_discounts(*)')
             .eq('status', 'published');
 
         if (isUuid) {

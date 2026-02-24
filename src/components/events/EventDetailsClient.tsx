@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { Link, useRouter } from '@/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles, XCircle, AlertCircle, ChevronDown } from 'lucide-react';
 import EventBookingForm from '@/components/events/EventBookingForm';
 import InterestWidget from '@/components/events/InterestWidget';
 import MobileBookingBar from '@/components/events/MobileBookingBar';
@@ -40,6 +40,11 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
     const [userReview, setUserReview] = useState<any>(null);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(false);
+    const [policyExpanded, setPolicyExpanded] = useState(false);
+
+    const hasCancellationPolicy = !!event.vendor?.cancellation_policy;
+    const hasReturnPolicy = !!event.vendor?.return_policy;
+    const hasAnyPolicy = hasCancellationPolicy || hasReturnPolicy;
 
     const handleShare = async () => {
         try {
@@ -223,7 +228,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('when')}</span>
-                                            <span className="text-sm font-black text-gray-900 capitalize">{new Date(event.date).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                                            <span className="text-sm font-black text-gray-900 capitalize">{new Date(event.date).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</span>
                                         </div>
                                     </div>
                                     <div className="h-px bg-gray-200/50 w-full" />
@@ -234,8 +239,8 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('time')}</span>
                                             <span className="text-sm font-black text-gray-900 capitalize" dir="ltr">
-                                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                                {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
+                                                {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}`}
                                             </span>
                                         </div>
                                     </div>
@@ -316,6 +321,54 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                             {event.description || t('default_description')}
                         </div>
                     </div>
+
+                    {/* Cancellation & Return Policy Section */}
+                    {hasAnyPolicy && (
+                        <div className="space-y-4 px-2">
+                            <button
+                                onClick={() => setPolicyExpanded(!policyExpanded)}
+                                className="w-full flex items-center justify-between group"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{t('cancellation_return_policy')}</h2>
+                                </div>
+                                <div className={`p-2 rounded-xl bg-gray-50 group-hover:bg-gray-100 transition-all ${policyExpanded ? 'rotate-180' : ''}`}>
+                                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                                </div>
+                            </button>
+
+                            {policyExpanded && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-4 overflow-hidden"
+                                >
+                                    {hasCancellationPolicy && (
+                                        <div className="bg-violet-50/50 border border-violet-100 rounded-2xl p-5">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <ShieldCheck className="w-4 h-4 text-violet-600" />
+                                                <h4 className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('cancellation_policy')}</h4>
+                                            </div>
+                                            <p className="text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line">
+                                                {event.vendor.cancellation_policy}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {hasReturnPolicy && (
+                                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-5">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <ShieldCheck className="w-4 h-4 text-blue-600" />
+                                                <h4 className="text-xs font-black text-blue-700 uppercase tracking-widest">{t('return_policy')}</h4>
+                                            </div>
+                                            <p className="text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line">
+                                                {event.vendor.return_policy}
+                                            </p>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Map Preview - Colorful Inset */}
                     {event.location_lat && (

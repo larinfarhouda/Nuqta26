@@ -40,6 +40,8 @@ export interface PublicEventDTO {
         bank_name: string | null;
         bank_account_name: string | null;
         bank_iban: string | null;
+        cancellation_policy: string | null;
+        return_policy: string | null;
     } | null;
     bulk_discounts: BulkDiscount[];
     rating?: {

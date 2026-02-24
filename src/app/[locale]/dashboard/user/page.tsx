@@ -73,7 +73,7 @@ export default async function UserOverviewPage({
                                     <div className="flex flex-col gap-1 text-sm text-gray-500 mb-4">
                                         <div className="flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
-                                            <span>{new Date(booking.event?.date).toLocaleDateString(locale)} at {new Date(booking.event?.date).toLocaleTimeString(locale)}</span>
+                                            <span>{new Date(booking.event?.date).toLocaleDateString(locale, { timeZone: 'UTC' })} at {new Date(booking.event?.date).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</span>
                                         </div>
                                         {booking.event?.location_name && (
                                             <div className="flex items-center gap-2">

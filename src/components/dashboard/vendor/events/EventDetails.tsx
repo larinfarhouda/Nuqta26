@@ -68,7 +68,7 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
                 <div>
                     <h2 className="text-2xl font-black text-gray-900">{event.title}</h2>
                     <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                        <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(event.date).toLocaleDateString(locale)}</span>
+                        <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(event.date).toLocaleDateString(locale, { timeZone: 'UTC' })} · {new Date(event.date).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</span>
                         {event.location_name && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {event.location_name}</span>}
                     </div>
                 </div>

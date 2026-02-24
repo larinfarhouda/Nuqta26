@@ -193,7 +193,7 @@ export default async function VendorProfilePage({
                                             <h3 className="text-base md:text-xl font-black text-gray-900 line-clamp-1 group-hover:text-primary transition-colors tracking-tight">{event.title}</h3>
                                             <div className="flex items-center gap-2 mt-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">{new Date(event.date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                <p className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">{new Date(event.date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>
                                             </div>
                                         </div>
                                     </Link>

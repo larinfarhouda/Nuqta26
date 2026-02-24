@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createBooking } from '@/actions/public/events';
 import { validateDiscountCode } from '@/actions/public/discounts';
-import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock, Copy, Check } from 'lucide-react';
+import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock, Copy, Check, ShieldCheck, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
@@ -13,6 +13,9 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     const t = useTranslations('Events');
     const [selectedTicket, setSelectedTicket] = useState(tickets[0]?.id);
     const [quantity, setQuantity] = useState(1);
+    const [policyOpen, setPolicyOpen] = useState(false);
+
+    const hasPolicy = !!(event.vendor?.cancellation_policy || event.vendor?.return_policy);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<'IDLE' | 'BANK_INFO' | 'SUCCESS' | 'ERROR'>('IDLE');
     const [errorMsg, setErrorMsg] = useState('');
@@ -319,13 +322,13 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                 </div>
                 <div>
                     <h4 className="font-bold text-gray-900 text-sm mb-1">
-                        {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}
                     </h4>
                     <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
                         <Clock className="w-3.5 h-3.5" />
                         <span dir="ltr">
-                            {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                            {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                            {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
+                            {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}`}
                         </span>
                     </div>
                 </div>
@@ -481,21 +484,21 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`p-6 rounded-2xl border ${existingBookingId
-                                    ? 'bg-amber-50 border-amber-200'
-                                    : 'bg-rose-50 border-rose-100'
+                                ? 'bg-amber-50 border-amber-200'
+                                : 'bg-rose-50 border-rose-100'
                                 }`}
                         >
                             <div className="flex items-start gap-4">
                                 <div className={`p-2 rounded-xl ${existingBookingId
-                                        ? 'bg-amber-100 text-amber-600'
-                                        : 'bg-rose-100 text-rose-600'
+                                    ? 'bg-amber-100 text-amber-600'
+                                    : 'bg-rose-100 text-rose-600'
                                     }`}>
                                     <AlertCircle className="w-5 h-5" />
                                 </div>
                                 <div className="flex-1">
                                     <p className={`font-bold text-sm ${existingBookingId
-                                            ? 'text-amber-900'
-                                            : 'text-rose-600'
+                                        ? 'text-amber-900'
+                                        : 'text-rose-600'
                                         }`}>
                                         {errorMsg}
                                     </p>
@@ -511,6 +514,37 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                                 </div>
                             </div>
                         </motion.div>
+                    )}
+
+                    {/* Policy Notice Above Book Button */}
+                    {hasPolicy && (
+                        <div className="rounded-2xl border border-violet-100 bg-violet-50/50 overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => setPolicyOpen(!policyOpen)}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                            >
+                                <ShieldCheck className="w-4 h-4 text-violet-600 shrink-0" />
+                                <span className="flex-1 text-xs font-bold text-violet-700">{t('policy_applies')}</span>
+                                <ChevronDown className={`w-4 h-4 text-violet-400 transition-transform ${policyOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {policyOpen && (
+                                <div className="px-4 pb-4 space-y-3">
+                                    {event.vendor?.cancellation_policy && (
+                                        <div>
+                                            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-1">{t('cancellation_policy')}</p>
+                                            <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{event.vendor.cancellation_policy}</p>
+                                        </div>
+                                    )}
+                                    {event.vendor?.return_policy && (
+                                        <div>
+                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">{t('return_policy')}</p>
+                                            <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{event.vendor.return_policy}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     <button

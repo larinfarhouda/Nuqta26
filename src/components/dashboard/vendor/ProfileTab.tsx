@@ -5,10 +5,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createClient } from '@/utils/supabase/client';
-import { Loader2, Edit3, CheckCircle, AlertCircle, ImageIcon, Layout, ExternalLink, Camera } from 'lucide-react';
+import { Loader2, Edit3, CheckCircle, AlertCircle, ImageIcon, Layout, ExternalLink, Camera, ShieldCheck } from 'lucide-react';
 import NextImage from 'next/image';
 import { useTranslations } from 'next-intl';
 import { slugify } from '@/utils/slugify';
+import LocationPicker from '@/components/ui/LocationPicker';
 import { useEffect } from 'react';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { COUNTRIES } from '@/constants/locations';
@@ -27,6 +28,10 @@ const detailsSchema = (t: any) => z.object({
     bank_iban: z.string()
         .min(16, t('validation.bank_iban_min'))
         .regex(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/, t('validation.bank_iban_format')),
+    cancellation_policy: z.string().optional().or(z.literal("")),
+    return_policy: z.string().optional().or(z.literal("")),
+    location_lat: z.number().optional().nullable(),
+    location_long: z.number().optional().nullable(),
 });
 
 // CITIES moved to constants/locations.ts
@@ -83,12 +88,19 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
     };
 
     const handleLocationSubmit = async () => {
-        if (!vendorData?.lat || !vendorData?.lng) return;
-        const { error } = await supabase.from('vendors').update({
-            location_lat: vendorData.lat,
-            location_long: vendorData.lng
-        }).eq('id', vendorData.id);
-        if (!error) showAlert(t("location_success"), 'success');
+        const lat = watch('location_lat');
+        const lng = watch('location_long');
+        if (!lat && !lng) return;
+        const updateData: any = {};
+        if (lat && lng) {
+            updateData.location_lat = lat;
+            updateData.location_long = lng;
+        }
+        const { error } = await supabase.from('vendors').update(updateData).eq('id', vendorData.id);
+        if (!error) {
+            setVendorData((prev: any) => ({ ...prev, ...updateData }));
+            showAlert(t("location_success"), 'success');
+        } else showAlert(error.message, 'error');
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover') => {
@@ -200,72 +212,72 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
             {/* 3. Form Sections Grid */}
             <form onSubmit={handleSubmit(onDetailsSubmit)} className="grid md:grid-cols-2 gap-8">
 
-                {/* Left Column: Core Identity */}
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                    <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
-                        <div className="p-2 bg-primary/5 rounded-xl text-primary"><Layout className="w-5 h-5" /></div>
-                        <h3 className="font-bold text-gray-900">{t('brand_identity')}</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                        {/* Name */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('business_name')}</label>
-                            <input
-                                {...register('business_name')}
-                                className={`input-field py-3 font-bold text-lg text-gray-900 ${errors.business_name ? 'border-red-500 focus:ring-red-500' : ''}`}
-                            />
-                            <ErrorMessage message={errors.business_name?.message as string} />
+                {/* Left Column: Brand Identity + Contact + Policies */}
+                <div className="space-y-8">
+                    {/* Brand Identity */}
+                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                        <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
+                            <div className="p-2 bg-primary/5 rounded-xl text-primary"><Layout className="w-5 h-5" /></div>
+                            <h3 className="font-bold text-gray-900">{t('brand_identity')}</h3>
                         </div>
 
-                        {/* Slug / Link */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('profile_link')}</label>
-                            <div className={`bg-gray-50 rounded-xl p-1 flex items-center text-sm border ${errors.slug ? 'border-red-500' : 'border-gray-200'}`}>
-                                <span className="text-gray-400 font-medium px-3 select-none">nuqta.ist/v/</span>
+                        <div className="space-y-4">
+                            {/* Name */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('business_name')}</label>
                                 <input
-                                    {...register('slug')}
-                                    className="flex-1 bg-transparent border-none outline-none text-gray-900 font-mono focus:ring-0 p-2"
-                                    placeholder="my-brand"
+                                    {...register('business_name')}
+                                    className={`input-field py-3 font-bold text-lg text-gray-900 ${errors.business_name ? 'border-red-500 focus:ring-red-500' : ''}`}
+                                />
+                                <ErrorMessage message={errors.business_name?.message as string} />
+                            </div>
+
+                            {/* Slug / Link */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('profile_link')}</label>
+                                <div className={`bg-gray-50 rounded-xl p-1 flex items-center text-sm border ${errors.slug ? 'border-red-500' : 'border-gray-200'}`}>
+                                    <span className="text-gray-400 font-medium px-3 select-none">nuqta.ist/v/</span>
+                                    <input
+                                        {...register('slug')}
+                                        className="flex-1 bg-transparent border-none outline-none text-gray-900 font-mono focus:ring-0 p-2"
+                                        placeholder="my-brand"
+                                    />
+                                </div>
+                                <ErrorMessage message={errors.slug?.message as string} />
+                                {!errors.slug && <p className="text-[10px] text-gray-400 font-medium">{t('profile_link_helper')}</p>}
+                            </div>
+
+                            {/* Category */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('category')}</label>
+                                <div className="relative">
+                                    <select {...register('category')} className="input-field appearance-none cursor-pointer">
+                                        <option value="cultural">{t('cat_cultural')}</option>
+                                        <option value="entertainment">{t('cat_entertainment')}</option>
+                                        <option value="artistic">{t('cat_artistic')}</option>
+                                        <option value="educational">{t('cat_educational')}</option>
+                                        <option value="sports">{t('cat_sports')}</option>
+                                        <option value="food">{t('cat_food')}</option>
+                                        <option value="health">{t('cat_health')}</option>
+                                        <option value="beauty">{t('cat_beauty')}</option>
+                                        <option value="fashion">{t('cat_fashion')}</option>
+                                        <option value="other">{t('cat_other')}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase">{t('description')}</label>
+                                <textarea
+                                    {...register('description_ar')}
+                                    className="input-field min-h-[140px] text-gray-900 leading-relaxed resize-none p-4"
+                                    placeholder={t('description_placeholder')}
                                 />
                             </div>
-                            <ErrorMessage message={errors.slug?.message as string} />
-                            {!errors.slug && <p className="text-[10px] text-gray-400 font-medium">{t('profile_link_helper')}</p>}
-                        </div>
-
-                        {/* Category */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('category')}</label>
-                            <div className="relative">
-                                <select {...register('category')} className="input-field appearance-none cursor-pointer">
-                                    <option value="cultural">{t('cat_cultural')}</option>
-                                    <option value="entertainment">{t('cat_entertainment')}</option>
-                                    <option value="artistic">{t('cat_artistic')}</option>
-                                    <option value="educational">{t('cat_educational')}</option>
-                                    <option value="sports">{t('cat_sports')}</option>
-                                    <option value="food">{t('cat_food')}</option>
-                                    <option value="health">{t('cat_health')}</option>
-                                    <option value="beauty">{t('cat_beauty')}</option>
-                                    <option value="fashion">{t('cat_fashion')}</option>
-                                    <option value="other">{t('cat_other')}</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase">{t('description')}</label>
-                            <textarea
-                                {...register('description_ar')}
-                                className="input-field min-h-[140px] text-gray-900 leading-relaxed resize-none p-4"
-                                placeholder={t('description_placeholder')}
-                            />
                         </div>
                     </div>
-                </div>
 
-                {/* Right Column: Contact & Location */}
-                <div className="space-y-8">
                     {/* Contact / Socials */}
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
@@ -302,6 +314,39 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
                         </div>
                     </div>
 
+                    {/* Cancellation & Return Policy */}
+                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                        <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
+                            <div className="p-2 bg-violet-50 rounded-xl text-violet-600"><ShieldCheck className="w-5 h-5" /></div>
+                            <h3 className="font-bold text-gray-900">{t('policies_title')}</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-[11px] text-gray-500 font-medium bg-gray-50 p-3 rounded-xl border border-gray-100 italic">
+                                {t('policies_note')}
+                            </p>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase">{t('cancellation_policy')}</label>
+                                <textarea
+                                    {...register('cancellation_policy')}
+                                    className="input-field min-h-[100px] text-gray-900 leading-relaxed resize-none p-4"
+                                    placeholder={t('cancellation_policy_placeholder')}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase">{t('return_policy')}</label>
+                                <textarea
+                                    {...register('return_policy')}
+                                    className="input-field min-h-[100px] text-gray-900 leading-relaxed resize-none p-4"
+                                    placeholder={t('return_policy_placeholder')}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Bank Details + Location + Verification */}
+                <div className="space-y-8">
                     {/* Bank Transfer Details */}
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
@@ -375,7 +420,20 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
                                 <option value="" disabled>{t('select_district')}</option>
                                 {COUNTRIES.flatMap(c => c.cities).map(d => <option key={d.id} value={d.id}>{d.name_ar}</option>)}
                             </select>
-                            <button type="button" onClick={handleLocationSubmit} disabled={!vendorData?.district} className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold rounded-xl transition-colors text-sm">
+
+                            {/* Google Maps Location Picker (Optional) */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase">{t('specific_location')}</label>
+                                <p className="text-[10px] text-gray-400 font-medium">{t('specific_location_note')}</p>
+                                <LocationPicker
+                                    setValue={setValue}
+                                    initialLat={vendorData?.location_lat || undefined}
+                                    initialLng={vendorData?.location_long || undefined}
+                                    className="h-[250px]"
+                                />
+                            </div>
+
+                            <button type="button" onClick={handleLocationSubmit} className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold rounded-xl transition-colors text-sm">
                                 {t('update_location')}
                             </button>
                         </div>

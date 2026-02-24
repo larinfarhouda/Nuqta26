@@ -209,6 +209,15 @@ export default function LocationPicker({ setValue, initialLat, initialLng, class
         setValue('district', district, { shouldValidate: true });
         setValue('city', city, { shouldValidate: true });
         setValue('country', country, { shouldValidate: true });
+
+        // Set coordinates from the geocoded result
+        const location = results[0].geometry?.location;
+        if (location) {
+            const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+            const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+            setValue('location_lat', lat, { shouldValidate: true });
+            setValue('location_long', lng, { shouldValidate: true });
+        }
     };
 
     const handleGeocoding = (lat: number, lng: number) => {
@@ -225,6 +234,8 @@ export default function LocationPicker({ setValue, initialLat, initialLng, class
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
             setMarkerPos({ lat, lng });
+            setValue('location_lat', lat, { shouldValidate: true });
+            setValue('location_long', lng, { shouldValidate: true });
             handleGeocoding(lat, lng);
         }
     }, [setValue]);
@@ -254,6 +265,8 @@ export default function LocationPicker({ setValue, initialLat, initialLng, class
         setMapCenter({ lat, lng });
         setMarkerPos({ lat, lng });
         setAddressLabel(address);
+        setValue('location_lat', lat, { shouldValidate: true });
+        setValue('location_long', lng, { shouldValidate: true });
 
         // usePlacesAutocomplete's placeDetails is compatible with extractAddressComponents if passed as array
         extractAddressComponents([placeDetails]);
@@ -261,6 +274,8 @@ export default function LocationPicker({ setValue, initialLat, initialLng, class
 
     const onMarkerDragEnd = (lat: number, lng: number) => {
         setMarkerPos({ lat, lng });
+        setValue('location_lat', lat, { shouldValidate: true });
+        setValue('location_long', lng, { shouldValidate: true });
         handleGeocoding(lat, lng);
     };
 

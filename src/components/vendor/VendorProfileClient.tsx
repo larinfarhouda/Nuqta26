@@ -195,12 +195,10 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                 transition={{ delay: 0.3 }}
                                 className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs md:text-sm font-medium text-gray-300"
                             >
-                                {vendor.district && (
-                                    <div className="flex items-center gap-1.5">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
-                                        <span>{vendor.district}, {tVendor('districts.' + vendor.district) || vendor.district}</span>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-1.5">
+                                    <MapPin className="w-4 h-4 text-gray-400" />
+                                    <span>Istanbul, Turkey</span>
+                                </div>
                                 <div className="w-1 h-1 rounded-full bg-gray-600 hidden md:block" />
                                 <div className="flex items-center gap-1.5 text-amber-400">
                                     <Star className="w-4 h-4 fill-current" />
@@ -404,18 +402,40 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                             </div>
                             <div className="md:col-span-4 space-y-4">
                                 <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <h4 className="font-bold text-gray-900 mb-2">Location</h4>
-                                    {vendor.district ? (
-                                        <div className="flex items-start gap-2 text-gray-600 text-sm">
-                                            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                                            <span>{vendor.district}, Istanbul<br />Turkey</span>
+                                    <h4 className="font-bold text-gray-900 mb-3">{t('location_title')}</h4>
+                                    {vendor.location_lat && vendor.location_long ? (
+                                        <div className="space-y-3">
+                                            <div className="relative h-[180px] w-full rounded-xl overflow-hidden border border-gray-200">
+                                                <Image
+                                                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${vendor.location_lat},${vendor.location_long}&zoom=15&size=400x200&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&markers=color:0xF26522%7C${vendor.location_lat},${vendor.location_long}&style=feature:all|element:all|saturation:-20|lightness:10`}
+                                                    alt="Location"
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                            <div className="flex items-start gap-2 text-gray-600 text-sm">
+                                                <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                                                <span>Istanbul, Turkey</span>
+                                            </div>
+                                            <a
+                                                href={`https://www.google.com/maps/dir/?api=1&destination=${vendor.location_lat},${vendor.location_long}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <MapPin className="w-4 h-4 text-primary" />
+                                                {t('get_directions')}
+                                            </a>
                                         </div>
                                     ) : (
-                                        <span className="text-gray-400 text-sm">Online / Various Locations</span>
+                                        <div className="flex items-start gap-2 text-gray-600 text-sm">
+                                            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                                            <span>Istanbul, Turkey</span>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <h4 className="font-bold text-gray-900 mb-2">Joined</h4>
+                                    <h4 className="font-bold text-gray-900 mb-2">{t('joined_title')}</h4>
                                     <div className="flex items-center gap-2 text-gray-600 text-sm">
                                         <Calendar className="w-4 h-4" />
                                         <span>Since 2024</span>

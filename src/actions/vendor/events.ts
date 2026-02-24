@@ -27,10 +27,12 @@ function safeParseInt(value: string | null): number | undefined {
     return isNaN(parsed) ? undefined : parsed;
 }
 
-function appendTimezone(dateStr: string | null, tz: string): string | undefined {
+function appendTimezone(dateStr: string | null, _tz: string): string | undefined {
     if (!dateStr) return undefined;
-    // datetime-local gives "2026-03-01T19:00", we append seconds + tz offset
-    return `${dateStr}:00${tz}`;
+    // datetime-local gives "2026-03-01T19:00" — this IS the intended display time.
+    // Tag as UTC so Supabase stores it verbatim (no offset conversion).
+    // Display side must also use UTC to avoid browser tz shift.
+    return `${dateStr}:00+00:00`;
 }
 
 /**

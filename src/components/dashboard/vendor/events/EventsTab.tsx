@@ -175,7 +175,7 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                                             </div>
                                             <h4 className="font-bold text-gray-900 text-lg line-clamp-1 group-hover:text-primary transition-colors">{event.title}</h4>
                                             <div className="flex gap-3 text-xs text-gray-500 mt-1">
-                                                <span className={`flex items-center gap-1 ${isExpired ? 'text-red-500' : ''}`}><Calendar className="w-3 h-3" /> {new Date(event.date).toLocaleDateString(locale)}</span>
+                                                <span className={`flex items-center gap-1 ${isExpired ? 'text-red-500' : ''}`}><Calendar className="w-3 h-3" /> {new Date(event.date).toLocaleDateString(locale, { timeZone: 'UTC' })} · {new Date(event.date).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</span>
                                                 {event.location_name && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {event.location_name}</span>}
                                             </div>
                                         </div>
