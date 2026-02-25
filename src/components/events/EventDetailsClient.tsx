@@ -254,6 +254,11 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                             <span className="text-sm font-black text-gray-900 underline underline-offset-4 decoration-primary/30">
                                                 {event.district && event.city ? `${event.district}, ${event.city}` : (event.location_name || t('default_location'))}
                                             </span>
+                                            {event.location_details && (
+                                                <span className="text-xs text-gray-500 font-medium italic mt-1">
+                                                    {event.location_details}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -377,6 +382,19 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                 <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{t('location_context')}</h2>
                                 <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
                             </div>
+                            {(event.location_name || event.location_details) && (
+                                <div className="flex items-start gap-2 -mt-3">
+                                    <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                                    <div className="flex flex-col">
+                                        {event.location_name && (
+                                            <span className="text-sm font-semibold text-gray-700">{event.location_name}</span>
+                                        )}
+                                        {event.location_details && (
+                                            <span className="text-xs text-gray-500 italic mt-0.5">{event.location_details}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             <div className="relative h-[350px] md:h-[450px] w-full rounded-[2.5rem] overflow-hidden border-8 border-white shadow-2xl shadow-primary/5 group">
                                 <Image
                                     src={`https://maps.googleapis.com/maps/api/staticmap?center=${event.location_lat},${event.location_long}&zoom=15&size=800x400&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&markers=color:0xF26522%7C${event.location_lat},${event.location_long}&style=feature:all|element:all|saturation:-20|lightness:10`}

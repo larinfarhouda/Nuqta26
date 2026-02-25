@@ -414,6 +414,7 @@ export type Database = {
           is_recurring: boolean | null
           location_lat: number | null
           location_long: number | null
+          location_details: string | null
           location_name: string | null
           prospect_vendor_id: string | null
           recurrence_days: string[] | null
@@ -442,6 +443,7 @@ export type Database = {
           is_recurring?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          location_details?: string | null
           location_name?: string | null
           prospect_vendor_id?: string | null
           recurrence_days?: string[] | null
@@ -470,6 +472,7 @@ export type Database = {
           is_recurring?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          location_details?: string | null
           location_name?: string | null
           prospect_vendor_id?: string | null
           recurrence_days?: string[] | null
@@ -859,6 +862,8 @@ export type Database = {
           is_verified: boolean | null
           location_lat: number | null
           location_long: number | null
+          location_details: string | null
+          location_name: string | null
           return_policy: string | null
           slug: string | null
           status: string | null
@@ -887,6 +892,8 @@ export type Database = {
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          location_details?: string | null
+          location_name?: string | null
           return_policy?: string | null
           slug?: string | null
           status?: string | null
@@ -915,6 +922,8 @@ export type Database = {
           is_verified?: boolean | null
           location_lat?: number | null
           location_long?: number | null
+          location_details?: string | null
+          location_name?: string | null
           return_policy?: string | null
           slug?: string | null
           status?: string | null

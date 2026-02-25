@@ -16,6 +16,7 @@ export interface PublicEventDTO {
     date: string;
     end_date: string | null;
     location_name: string | null;
+    location_details: string | null;
     city: string | null;
     district: string | null;
     country: string | null;
@@ -95,6 +96,7 @@ export interface CreateEventInput {
     date: string;
     end_date?: string;
     location_name?: string;
+    location_details?: string;
     city?: string;
     district?: string;
     country?: string;

@@ -703,6 +703,8 @@
                 "update_location": "Update Location",
                 "specific_location": "Specific Location (Optional)",
                 "specific_location_note": "Pin your exact location on the map so customers can find you easily.",
+                "location_details": "Additional Location Details (Optional)",
+                "location_details_placeholder": "e.g. 3rd floor, next to Fatih Mosque, side entrance",
                 "verification": "Verification & Documents",
                 "tax_record": "Tax Record",
                 "verified": "Verified",

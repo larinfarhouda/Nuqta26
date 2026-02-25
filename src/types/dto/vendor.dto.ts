@@ -18,8 +18,10 @@ export interface PublicVendorDTO {
     category: string;
     instagram: string | null;
     banner_url: string | null;
+    location_name: string | null;
     location_lat: number | null;
     location_long: number | null;
+    location_details: string | null;
     gallery: GalleryItem[];
     events: VendorEventItem[];
 }

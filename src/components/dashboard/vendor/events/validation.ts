@@ -17,6 +17,7 @@ export const createEventValidationSchema = (t: (key: string) => string, isEditin
 
         // Location
         location_name: z.string().optional(),
+        location_details: z.string().max(200).optional(),
         location_lat: z.number().nullable().refine(val => val !== null, t('location_required')),
         location_long: z.number().nullable().refine(val => val !== null, t('location_required')),
         district: z.string().optional(),

@@ -121,6 +121,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             event_type: resolveEventCategoryId(),
             description: event.description || '',
             location_name: event.location_name || '',
+            location_details: event.location_details || '',
             district: event.district || '',
             city: event.city || '',
             country: event.country || '',
@@ -133,6 +134,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             is_recurring: false,
             recurrence_days: [],
             location_name: '',
+            location_details: '',
             district: '',
             city: '',
             country: '',
@@ -416,6 +418,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                     <input type="hidden" {...register('location_lat')} />
                     <input type="hidden" {...register('location_long')} />
                     <input type="hidden" {...register('location_name')} />
+                    <input type="hidden" {...register('location_details')} />
                     <input type="hidden" {...register('district')} />
                     <input type="hidden" {...register('city')} />
                     <input type="hidden" {...register('country')} />

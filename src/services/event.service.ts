@@ -47,6 +47,7 @@ export class EventService {
             date: eventData.date,
             end_date: eventData.end_date,
             location_name: eventData.location_name,
+            location_details: eventData.location_details || null,
             city: eventData.city,
             district: eventData.district,
             country: eventData.country,

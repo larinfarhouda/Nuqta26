@@ -69,7 +69,7 @@ export class VendorRepository extends BaseRepository {
             .from('events')
             .select(`
         id, slug, title, description, date, 
-        location_name, city, district, image_url, category_id
+        location_name, location_details, city, district, image_url, category_id
       `)
             .eq('vendor_id', vendorId)
             .eq('status', 'published')

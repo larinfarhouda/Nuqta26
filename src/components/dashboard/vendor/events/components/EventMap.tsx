@@ -166,6 +166,7 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
 
     const watchedDistrict = watch('district');
     const watchedCity = watch('city');
+    const watchedLocationDetails = watch('location_details') || '';
 
     // ... (UseEffect and extractAddressComponents and handleGeocoding kept same) ...
 
@@ -308,6 +309,31 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
                     </div>
                 </div>
             )}
+
+            {/* Location Details - Additional address info */}
+            <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-600">
+                    تفاصيل إضافية عن الموقع <span className="text-xs font-normal text-gray-400">(اختياري)</span>
+                </label>
+                <textarea
+                    value={watchedLocationDetails}
+                    onChange={(e) => {
+                        if (e.target.value.length <= 200) {
+                            setValue('location_details', e.target.value);
+                        }
+                    }}
+                    className="input-field min-h-[70px] text-gray-900 leading-relaxed resize-none p-4 text-sm"
+                    placeholder="مثال: الطابق الثالث، بجانب مسجد الفاتح، المدخل الجانبي"
+                    rows={2}
+                    maxLength={200}
+                />
+                <div className="flex justify-end">
+                    <span className={`text-[10px] font-bold ${watchedLocationDetails.length > 180 ? 'text-amber-500' : 'text-gray-300'}`}>
+                        {watchedLocationDetails.length}/200
+                    </span>
+                </div>
+            </div>
         </div>
     );
 }
+

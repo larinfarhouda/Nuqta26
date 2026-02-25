@@ -209,6 +209,7 @@ export default function LocationPicker({ setValue, initialLat, initialLng, class
         setValue('district', district, { shouldValidate: true });
         setValue('city', city, { shouldValidate: true });
         setValue('country', country, { shouldValidate: true });
+        setValue('location_name', formattedAddress, { shouldValidate: true });
 
         // Set coordinates from the geocoded result
         const location = results[0].geometry?.location;

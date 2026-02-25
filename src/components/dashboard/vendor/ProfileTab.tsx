@@ -32,6 +32,7 @@ const detailsSchema = (t: any) => z.object({
     return_policy: z.string().optional().or(z.literal("")),
     location_lat: z.number().optional().nullable(),
     location_long: z.number().optional().nullable(),
+    location_details: z.string().max(200).optional().or(z.literal("")),
 });
 
 // CITIES moved to constants/locations.ts
@@ -95,6 +96,14 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
         if (lat && lng) {
             updateData.location_lat = lat;
             updateData.location_long = lng;
+        }
+        const locationDetails = watch('location_details');
+        if (locationDetails !== undefined) {
+            updateData.location_details = locationDetails || null;
+        }
+        const locationName = watch('location_name');
+        if (locationName !== undefined) {
+            updateData.location_name = locationName || null;
         }
         const { error } = await supabase.from('vendors').update(updateData).eq('id', vendorData.id);
         if (!error) {
@@ -431,6 +440,23 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
                                     initialLng={vendorData?.location_long || undefined}
                                     className="h-[250px]"
                                 />
+                            </div>
+
+                            {/* Location Details */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-400 uppercase">{t('location_details')}</label>
+                                <textarea
+                                    {...register('location_details')}
+                                    className="input-field min-h-[70px] text-gray-900 leading-relaxed resize-none p-4 text-sm"
+                                    placeholder={t('location_details_placeholder')}
+                                    maxLength={200}
+                                    rows={2}
+                                />
+                                <div className="flex justify-end">
+                                    <span className={`text-[10px] font-bold ${(watch('location_details') || '').length > 180 ? 'text-amber-500' : 'text-gray-300'}`}>
+                                        {(watch('location_details') || '').length}/200
+                                    </span>
+                                </div>
                             </div>
 
                             <button type="button" onClick={handleLocationSubmit} className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold rounded-xl transition-colors text-sm">

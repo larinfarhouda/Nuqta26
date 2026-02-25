@@ -705,6 +705,8 @@
         "update_location": "تحديث الموقع",
         "specific_location": "الموقع المحدد (اختياري)",
         "specific_location_note": "حدد موقعك الدقيق على الخريطة ليتمكن العملاء من الوصول إليك بسهولة.",
+        "location_details": "تفاصيل إضافية عن الموقع (اختياري)",
+        "location_details_placeholder": "مثال: الطابق الثالث، بجانب مسجد الفاتح، المدخل الجانبي",
         "verification": "التحقق والمستندات",
         "tax_record": "السجل الضريبي",
         "verified": "تم التحقق",

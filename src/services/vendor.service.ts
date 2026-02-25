@@ -46,8 +46,10 @@ export class VendorService {
             category: vendor.category,
             instagram: vendor.instagram,
             banner_url: vendor.cover_image,
+            location_name: vendor.location_name || null,
             location_lat: vendor.location_lat,
             location_long: vendor.location_long,
+            location_details: vendor.location_details || null,
             gallery,
             events
         };

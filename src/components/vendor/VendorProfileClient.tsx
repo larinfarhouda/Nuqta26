@@ -402,7 +402,12 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                             </div>
                                             <div className="flex items-start gap-2 text-gray-600 text-sm">
                                                 <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                                                <span>Istanbul, Turkey</span>
+                                                <div className="flex flex-col">
+                                                    <span>{vendor.location_name || 'Istanbul, Turkey'}</span>
+                                                    {vendor.location_details && (
+                                                        <span className="text-xs text-gray-500 italic mt-0.5">{vendor.location_details}</span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <a
                                                 href={`https://www.google.com/maps/dir/?api=1&destination=${vendor.location_lat},${vendor.location_long}`}
@@ -417,7 +422,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                     ) : (
                                         <div className="flex items-start gap-2 text-gray-600 text-sm">
                                             <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                                            <span>Istanbul, Turkey</span>
+                                            <span>{vendor.location_name || 'Istanbul, Turkey'}</span>
                                         </div>
                                     )}
                                 </div>
