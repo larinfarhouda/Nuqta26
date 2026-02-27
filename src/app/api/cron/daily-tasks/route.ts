@@ -108,11 +108,12 @@ async function sendEventReminders(
             const results = await Promise.allSettled(
                 batch.map(async (booking) => {
                     const event = booking.events as any;
-                    const email = booking.contact_email;
-                    const name = booking.contact_name || 'Guest';
+                    const profile = (booking as any).profiles;
+                    const email = booking.contact_email || profile?.email;
+                    const name = booking.contact_name || profile?.full_name || 'Guest';
 
                     if (!email) {
-                        logger.warn('Booking has no contact email, skipping', { bookingId: booking.id });
+                        logger.warn('Booking has no contact or profile email, skipping', { bookingId: booking.id });
                         throw new Error('No contact email');
                     }
 
@@ -202,11 +203,12 @@ async function sendReviewRequests(
             const results = await Promise.allSettled(
                 batch.map(async (booking) => {
                     const event = booking.events as any;
-                    const email = booking.contact_email;
-                    const name = booking.contact_name || 'Guest';
+                    const profile = (booking as any).profiles;
+                    const email = booking.contact_email || profile?.email;
+                    const name = booking.contact_name || profile?.full_name || 'Guest';
 
                     if (!email) {
-                        logger.warn('Booking has no contact email, skipping review request', { bookingId: booking.id });
+                        logger.warn('Booking has no contact or profile email, skipping review request', { bookingId: booking.id });
                         throw new Error('No contact email');
                     }
 
