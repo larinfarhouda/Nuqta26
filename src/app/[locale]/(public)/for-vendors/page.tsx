@@ -9,22 +9,22 @@ const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'
 });
 
 const VendorBenefits = dynamic(() => import('@/components/vendor-landing/VendorBenefits'), {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorTestimonials = dynamic(() => import('@/components/vendor-landing/VendorTestimonials'), {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorFAQ = dynamic(() => import('@/components/vendor-landing/VendorFAQ'), {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorPricing = dynamic(() => import('@/components/vendor-landing/VendorPricing'), {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
 });
 

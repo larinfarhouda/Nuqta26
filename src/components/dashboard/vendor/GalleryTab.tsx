@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2, Plus, Trash2, ImageIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import NextImage from 'next/image';
 import { getDemoGallery } from '@/lib/demoData';
 
 export default function GalleryTab({ vendorId, showAlert, demoMode = false }: any) {
@@ -130,7 +131,13 @@ export default function GalleryTab({ vendorId, showAlert, demoMode = false }: an
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 {gallery.map((img, index) => (
                     <div key={img.id} className="aspect-square rounded-2xl overflow-hidden relative group shadow-sm">
-                        <img src={img.image_url} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover" />
+                        <NextImage
+                            src={img.image_url}
+                            alt={`Gallery image ${index + 1}`}
+                            fill
+                            sizes="(max-width: 1024px) 50vw, 33vw"
+                            className="object-cover"
+                        />
                         <button
                             onClick={() => handleDelete(img.id, img.image_url)}
                             className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full lg:opacity-0 group-hover:opacity-100 transition-opacity shadow-md"

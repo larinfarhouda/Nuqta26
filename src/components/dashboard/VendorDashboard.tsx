@@ -394,44 +394,8 @@ export default function VendorDashboard({
                 </div>
             )}
 
-            {/* Global Styles */}
-            <style jsx global>{`
-                .input-field {
-                    width: 100%;
-                    padding: 1rem;
-                    background: #f9fafb;
-                    color: #111827; /* Force dark text */
-                    border: 1px solid #e5e7eb;
-                    border-radius: 1rem;
-                    font-weight: 500;
-                    outline: none;
-                    transition: all 0.2s;
-                }
-                .input-field:focus {
-                    background: white;
-                    border-color: #2CA58D;
-                    box-shadow: 0 0 0 4px rgba(44, 165, 141, 0.1);
-                }
-                .btn-primary {
-                    background: #2CA58D;
-                    color: white;
-                    font-weight: bold;
-                    padding: 0.75rem 1.5rem;
-                    border-radius: 1rem;
-                    transition: all 0.2s;
-                }
-                .btn-primary:hover {
-                    background: #258f7a;
-                    box-shadow: 0 10px 25px -5px rgba(44, 165, 141, 0.4);
-                }
-                .scrollbar-hide::-webkit-scrollbar {
-                    display: none;
-                }
-                .scrollbar-hide {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-            `}</style>
+
+
         </div>
     );
 }

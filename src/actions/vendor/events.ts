@@ -266,26 +266,36 @@ export async function updateEvent(eventId: string, formData: FormData) {
             try {
                 const tickets = JSON.parse(ticketsJson);
                 if (Array.isArray(tickets)) {
-                    const keptTicketIds: string[] = [];
+                    const existingTickets = tickets.filter((t: any) => t.id);
+                    const newTickets = tickets.filter((t: any) => !t.id);
 
-                    for (const t of tickets) {
-                        if (t.id) {
-                            await supabase.from('tickets').update({
+                    // Batch: update existing + insert new in parallel
+                    const [updateResults, insertResult] = await Promise.all([
+                        // Update all existing tickets concurrently
+                        Promise.all(existingTickets.map((t: any) =>
+                            supabase.from('tickets').update({
                                 name: t.name,
                                 price: parseFloat(t.price),
                                 quantity: parseInt(t.quantity)
-                            }).eq('id', t.id).eq('event_id', eventId);
-                            keptTicketIds.push(t.id);
-                        } else {
-                            const { data: newTicket } = await supabase.from('tickets').insert({
-                                event_id: eventId,
-                                name: t.name,
-                                price: parseFloat(t.price),
-                                quantity: parseInt(t.quantity)
-                            }).select('id').single();
-                            if (newTicket) keptTicketIds.push(newTicket.id);
-                        }
-                    }
+                            }).eq('id', t.id).eq('event_id', eventId)
+                        )),
+                        // Batch insert all new tickets at once
+                        newTickets.length > 0
+                            ? supabase.from('tickets').insert(
+                                newTickets.map((t: any) => ({
+                                    event_id: eventId,
+                                    name: t.name,
+                                    price: parseFloat(t.price),
+                                    quantity: parseInt(t.quantity)
+                                }))
+                            ).select('id')
+                            : Promise.resolve({ data: [] as any[] }),
+                    ]);
+
+                    const keptTicketIds = [
+                        ...existingTickets.map((t: any) => t.id),
+                        ...(insertResult.data || []).map((t: any) => t.id),
+                    ];
 
                     // Delete tickets that were removed from the form
                     if (keptTicketIds.length > 0) {

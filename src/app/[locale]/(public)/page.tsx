@@ -77,7 +77,7 @@ export default async function HomePage(props: { params: Promise<{ locale: string
     const searchParams = await props.searchParams;
     const t = await getTranslations('Index');
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+
 
     // Parse filters
     const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
@@ -90,17 +90,30 @@ export default async function HomePage(props: { params: Promise<{ locale: string
     const lng = typeof searchParams.lng === 'string' ? Number(searchParams.lng) : undefined;
     const radius = typeof searchParams.radius === 'string' ? Number(searchParams.radius) : undefined;
 
-    const allEvents = await getPublicEvents({
-        search,
-        location,
-        date: date as 'today' | 'tomorrow' | 'weekend' | 'week' | undefined,
-        category,
-        minPrice,
-        maxPrice,
-        lat,
-        lng,
-        radius
-    });
+    // Run independent queries in parallel for faster page load
+    const [allEvents, { data: districtsData }, { data: { user: authUser } }] = await Promise.all([
+        getPublicEvents({
+            search,
+            location,
+            date: date as 'today' | 'tomorrow' | 'weekend' | 'week' | undefined,
+            category,
+            minPrice,
+            maxPrice,
+            lat,
+            lng,
+            radius
+        }),
+        supabase
+            .from('events')
+            .select('district')
+            .not('district', 'is', null)
+            .eq('status', 'published'),
+        supabase.auth.getUser(),
+    ]);
+
+    // Favorites depend on auth — fetch only if logged in
+    const favoriteIds = authUser ? await getUserFavoriteIds() : [];
+    const favoritesSet = new Set(favoriteIds);
 
     // Filter out events that finished more than 1 day ago,
     // and push recently-past events to the end of the list
@@ -128,18 +141,8 @@ export default async function HomePage(props: { params: Promise<{ locale: string
             return aDate.getTime() - bDate.getTime();
         });
 
-    // Fetch unique districts
-    const { data: districtsData } = await supabase
-        .from('events')
-        .select('district')
-        .not('district', 'is', null)
-        .eq('status', 'published');
-
     const uniqueDistricts = Array.from(new Set(districtsData?.map(d => d.district).filter(Boolean))) as string[];
     uniqueDistricts.sort();
-
-    const favoriteIds = await getUserFavoriteIds();
-    const favoritesSet = new Set(favoriteIds);
 
     // Organization and WebSite schemas are now in root layout.tsx
 

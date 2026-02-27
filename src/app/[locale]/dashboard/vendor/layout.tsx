@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from '@/navigation';
 import { getTranslations } from 'next-intl/server';
 import LogoutButton from '@/components/auth/LogoutButton';
+import Image from 'next/image';
 
 export default async function VendorDashboardLayout({
     children,
@@ -23,14 +24,17 @@ export default async function VendorDashboardLayout({
         return null;
     }
 
-    // Check role from profiles table (OAuth users don't have it in user_metadata)
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    const role = profile?.role || user.user_metadata?.role;
+    // Fast path: use metadata role if available, skip DB query
+    let role = user.user_metadata?.role;
+    if (!role) {
+        // Fallback: check profiles table (needed for OAuth users)
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        role = profile?.role;
+    }
 
     if (role !== 'vendor') {
         redirect({ href: '/', locale });
@@ -48,10 +52,12 @@ export default async function VendorDashboardLayout({
                     {/* Logo Area */}
                     <div className="flex items-center gap-3">
                         <div className="relative w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center">
-                            <img
+                            <Image
                                 src="/nuqta_logo_transparent.png"
                                 alt="Nuqta Logo"
-                                className="w-full h-full object-contain drop-shadow-sm"
+                                fill
+                                className="object-contain drop-shadow-sm"
+                                priority
                             />
                         </div>
                         <div className="flex flex-col">

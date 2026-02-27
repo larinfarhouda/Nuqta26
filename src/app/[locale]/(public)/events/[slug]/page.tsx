@@ -117,13 +117,14 @@ export default async function EventPage({ params }: { params: any }) {
         return <EventDetailsClient event={demoEvent} user={null} />;
     }
 
-    const event = await getCachedEvent(slug);
-
-    if (!event) return notFound();
-
     // Run event fetch (from cache) and user auth in parallel — they're independent
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const [event, { data: { user } }] = await Promise.all([
+        getCachedEvent(slug),
+        supabase.auth.getUser(),
+    ]);
+
+    if (!event) return notFound();
 
     // Get interest data for prospect events
     let interestData: { isInterested: boolean; interestCount: number } | undefined;

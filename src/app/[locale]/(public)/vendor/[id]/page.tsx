@@ -15,30 +15,29 @@ export default async function VendorProfilePage({
     const supabase = await createClient();
     const t = await getTranslations('VendorProfile');
 
-    const { data: vendor } = await supabase
-        .from('vendors')
-        .select('*, profiles(*)')
-        .eq('id', id)
-        .single();
+    // Run all 3 independent queries in parallel for faster page load
+    const [{ data: vendor }, { data: events }, { data: reviewData }] = await Promise.all([
+        supabase
+            .from('vendors')
+            .select('*, profiles(*)')
+            .eq('id', id)
+            .single(),
+        supabase
+            .from('events')
+            .select('*, category:categories(*)')
+            .eq('vendor_id', id)
+            .eq('status', 'published')
+            .order('date', { ascending: true }),
+        supabase
+            .from('event_reviews')
+            .select('rating, events!inner(vendor_id)')
+            .eq('events.vendor_id', id)
+            .eq('is_flagged', false),
+    ]);
 
     if (!vendor) {
         return notFound();
     }
-
-    // Fetch vendor's events
-    const { data: events } = await supabase
-        .from('events')
-        .select('*, category:categories(*)')
-        .eq('vendor_id', id)
-        .eq('status', 'published')
-        .order('date', { ascending: true });
-
-    // Fetch vendor-wide rating (average across all events)
-    const { data: reviewData } = await supabase
-        .from('event_reviews')
-        .select('rating, events!inner(vendor_id)')
-        .eq('events.vendor_id', id)
-        .eq('is_flagged', false);
 
     const vendorRating = reviewData && reviewData.length > 0
         ? {
@@ -77,6 +76,7 @@ export default async function VendorProfilePage({
                     src={vendor.company_logo || '/images/hero_community.png'}
                     alt="Cover"
                     fill
+                    sizes="100vw"
                     className="object-cover opacity-40 blur-3xl scale-125"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-primary/10 to-transparent" />
@@ -90,6 +90,7 @@ export default async function VendorProfilePage({
                                 src={vendor.company_logo || '/images/logo_nav.png'}
                                 alt={vendor.business_name}
                                 fill
+                                sizes="(max-width: 768px) 112px, 192px"
                                 className="object-cover rounded-[2.2rem] md:rounded-[3.6rem]"
                             />
                             {vendor.is_verified && (
@@ -198,6 +199,8 @@ export default async function VendorProfilePage({
                                                 src={event.image_url || '/images/hero_community.png'}
                                                 alt={event.title}
                                                 fill
+                                                sizes="(max-width: 768px) 50vw, 33vw"
+                                                loading="lazy"
                                                 className="object-cover grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />

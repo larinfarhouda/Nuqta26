@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Calendar, MapPin, Users, Activity, Trash2, Edit3, XCircle, AlertCircle } from 'lucide-react';
+import NextImage from 'next/image';
 import { getVendorEvents, deleteEvent } from '@/actions/vendor/events';
 import EventDetails from './EventDetails';
 import EventForm from './EventForm';
@@ -21,7 +22,6 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
     const loadEvents = async () => {
         setLoading(true);
         if (demoMode) {
-            // Use demo data instead of fetching from database
             setEvents(getDemoEvents());
         } else {
             const data = await getVendorEvents();
@@ -30,14 +30,20 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
         setLoading(false);
     };
 
+    // Fetch events and categories in parallel for faster tab load
     useEffect(() => {
-        const fetchCats = async () => {
+        const loadAll = async () => {
+            setLoading(true);
             const supabase = createClient();
-            const { data } = await supabase.from('categories').select('id, slug, name_en, name_ar');
-            if (data) setCategories(data);
+            const [eventsData, { data: catsData }] = await Promise.all([
+                demoMode ? Promise.resolve(getDemoEvents()) : getVendorEvents(),
+                supabase.from('categories').select('id, slug, name_en, name_ar'),
+            ]);
+            setEvents(eventsData);
+            if (catsData) setCategories(catsData);
+            setLoading(false);
         };
-        fetchCats();
-        loadEvents();
+        loadAll();
     }, []);
 
     const getCategoryName = (slug: string) => {
@@ -146,7 +152,9 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                                 <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
                                     <div className="flex gap-4 cursor-pointer" onClick={() => setViewEvent(event)}>
                                         {event.image_url ? (
-                                            <img src={event.image_url} alt={event.title} className={`w-16 h-16 rounded-xl flex-shrink-0 object-cover ${isExpired ? 'opacity-60 grayscale' : ''}`} />
+                                            <div className={`relative w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden ${isExpired ? 'opacity-60 grayscale' : ''}`}>
+                                                <NextImage src={event.image_url} alt={event.title} fill sizes="64px" className="object-cover" />
+                                            </div>
                                         ) : (
                                             <div className={`w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-xl uppercase ${isExpired ? 'bg-red-100 text-red-600' : isSoldOut ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-primary'}`}>
                                                 {event.title[0]}
