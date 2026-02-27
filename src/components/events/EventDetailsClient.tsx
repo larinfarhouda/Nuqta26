@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { Link, useRouter } from '@/navigation';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles, XCircle, AlertCircle, ChevronDown } from 'lucide-react';
 import EventBookingForm from '@/components/events/EventBookingForm';
@@ -15,7 +16,7 @@ import { getEventStatus } from '@/utils/eventStatus';
 import ReviewStats from '@/components/reviews/ReviewStats';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import ReviewList from '@/components/reviews/ReviewList';
-import { getEventRatingSummary, checkCanReviewEvent, getUserReviewForEvent } from '@/actions/public/reviews';
+import { checkCanReviewEvent, getUserReviewForEvent } from '@/actions/public/reviews';
 
 type EventDetailsClientProps = {
     event: any;
@@ -31,16 +32,29 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
     const tReviews = useTranslations('Reviews');
     const locale = useLocale();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const bookingRef = useRef<HTMLDivElement>(null);
+    const reviewSectionRef = useRef<HTMLDivElement>(null);
 
-    // Review state
-    const [reviewStats, setReviewStats] = useState<any>(null);
+    // Review state — use server-provided rating data as initial value (no duplicate fetch)
+    const [reviewStats, setReviewStats] = useState<any>(
+        event.rating ? {
+            average_rating: event.rating.average,
+            review_count: event.rating.count,
+            rating_1_count: event.rating.rating_1_count || 0,
+            rating_2_count: event.rating.rating_2_count || 0,
+            rating_3_count: event.rating.rating_3_count || 0,
+            rating_4_count: event.rating.rating_4_count || 0,
+            rating_5_count: event.rating.rating_5_count || 0,
+        } : null
+    );
     const [canReview, setCanReview] = useState(false);
     const [reviewReason, setReviewReason] = useState('');
     const [userReview, setUserReview] = useState<any>(null);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [editingReview, setEditingReview] = useState(false);
     const [policyExpanded, setPolicyExpanded] = useState(false);
+    const [shouldAutoScroll, setShouldAutoScroll] = useState(false);
 
     const hasCancellationPolicy = !!event.vendor?.cancellation_policy;
     const hasReturnPolicy = !!event.vendor?.return_policy;
@@ -85,28 +99,36 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
     const isBookable = eventStatus === 'active';
     const isProspectEvent = !!event.prospect_vendor_id;
 
-    // Fetch review data on component mount
+    // Scroll to review section immediately on mount when ?review=true (don't wait for async data)
+    useEffect(() => {
+        if (searchParams.get('review') === 'true') {
+            // Small delay to let the DOM render the review section
+            setTimeout(() => {
+                reviewSectionRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+            }, 200);
+        }
+    }, [searchParams]);
+
+    // Fetch user-specific review data on mount (rating already from server)
     useEffect(() => {
         async function fetchReviewData() {
-            // Get rating summary
-            const summaryResult = await getEventRatingSummary(event.id);
-            if (summaryResult.success) {
-                setReviewStats(summaryResult.data);
+            if (!user) return;
+
+            const canReviewResult = await checkCanReviewEvent(event.id);
+            setCanReview(canReviewResult.canReview);
+            setReviewReason(canReviewResult.reason || '');
+
+            // Get user's existing review if they have one
+            if (canReviewResult.reason === 'already_reviewed') {
+                const userReviewResult = await getUserReviewForEvent(event.id);
+                if (userReviewResult.success && userReviewResult.data) {
+                    setUserReview(userReviewResult.data);
+                }
             }
 
-            // Check if user can review (only if logged in)
-            if (user) {
-                const canReviewResult = await checkCanReviewEvent(event.id);
-                setCanReview(canReviewResult.canReview);
-                setReviewReason(canReviewResult.reason || '');
-
-                // Get user's existing review if they have one
-                if (canReviewResult.reason === 'already_reviewed') {
-                    const userReviewResult = await getUserReviewForEvent(event.id);
-                    if (userReviewResult.success && userReviewResult.data) {
-                        setUserReview(userReviewResult.data);
-                    }
-                }
+            // Auto-open review form if arriving from email link
+            if (searchParams.get('review') === 'true' && canReviewResult.canReview) {
+                setShowReviewForm(true);
             }
         }
 
@@ -289,11 +311,15 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{t('elite_organizer')}</p>
                                     <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2 group-hover/vendor:text-primary transition-colors">{event.vendor?.business_name || t('default_partner')}</h3>
                                     <div className="flex items-center justify-center sm:justify-start gap-4">
-                                        <div className="flex items-center gap-1.5 text-amber-500">
-                                            <Star className="w-4 h-4 fill-current" />
-                                            <span className="text-sm font-black text-gray-900">4.98</span>
-                                        </div>
-                                        <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                        {event.vendor_rating && event.vendor_rating.count > 0 && (
+                                            <>
+                                                <div className="flex items-center gap-1.5 text-amber-500">
+                                                    <Star className="w-4 h-4 fill-current" />
+                                                    <span className="text-sm font-black text-gray-900">{event.vendor_rating.average.toFixed(2)}</span>
+                                                </div>
+                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                            </>
+                                        )}
                                         <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                             {t('super_partner')}
@@ -418,7 +444,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                     )}
 
                     {/* Reviews Section */}
-                    <div className="space-y-8 pt-8">
+                    <div className="space-y-8 pt-8" ref={reviewSectionRef}>
                         <div className="flex items-center gap-4">
                             <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{tReviews('title')}</h2>
                             <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />

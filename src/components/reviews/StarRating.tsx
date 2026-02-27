@@ -52,44 +52,49 @@ export default function StarRating({
     };
 
     return (
-        <div className={`flex items-center gap-1 ${className}`}>
-            <div className="flex items-center gap-0.5" dir="ltr">
+        <div className={`inline-flex items-center gap-1 ${className}`}>
+            <div className="inline-flex items-center gap-0.5" dir="ltr">
                 {Array.from({ length: maxRating }, (_, i) => {
                     const starValue = i + 1;
                     const isFilled = starValue <= displayRating;
                     const isPartial = !isFilled && starValue - 0.5 <= displayRating;
 
-                    return (
-                        <button
-                            key={i}
-                            type="button"
-                            disabled={!interactive}
-                            onClick={() => handleClick(starValue)}
-                            onMouseEnter={() => handleMouseEnter(starValue)}
-                            onMouseLeave={handleMouseLeave}
+                    const starContent = isPartial ? (
+                        <div className="relative">
+                            <Star className={`${sizeClasses[size]} text-gray-300`} />
+                            <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+                                <Star className={`${sizeClasses[size]} text-amber-400 fill-amber-400`} />
+                            </div>
+                        </div>
+                    ) : (
+                        <Star
                             className={`
-                ${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}
-                ${!interactive && 'pointer-events-none'}
-                relative
-              `}
-                            aria-label={`${starValue} star${starValue > 1 ? 's' : ''}`}
-                        >
-                            {isPartial ? (
-                                <div className="relative">
-                                    <Star className={`${sizeClasses[size]} text-gray-300`} />
-                                    <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
-                                        <Star className={`${sizeClasses[size]} text-amber-400 fill-amber-400`} />
-                                    </div>
-                                </div>
-                            ) : (
-                                <Star
-                                    className={`
                     ${sizeClasses[size]}
                     ${isFilled ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}
                     ${interactive && hoverRating !== null && starValue <= hoverRating ? 'text-amber-300 fill-amber-300' : ''}
                   `}
-                                />
-                            )}
+                        />
+                    );
+
+                    if (!interactive) {
+                        return (
+                            <span key={i} className="inline-flex">
+                                {starContent}
+                            </span>
+                        );
+                    }
+
+                    return (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => handleClick(starValue)}
+                            onMouseEnter={() => handleMouseEnter(starValue)}
+                            onMouseLeave={handleMouseLeave}
+                            className="p-0 leading-none cursor-pointer hover:scale-110 transition-transform relative"
+                            aria-label={`${starValue} star${starValue > 1 ? 's' : ''}`}
+                        >
+                            {starContent}
                         </button>
                     );
                 })}

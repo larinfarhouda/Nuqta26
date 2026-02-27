@@ -35,12 +35,15 @@ export class UserRepository extends BaseRepository {
         full_name: string | null;
         avatar_url: string | null;
         phone: string | null;
+        email: string | null;
+        age: number | null;
+        gender: string | null;
     }>> {
         if (userIds.length === 0) return [];
 
         const { data, error } = await this.client
             .from('profiles')
-            .select('id, full_name, avatar_url, phone')
+            .select('id, full_name, avatar_url, phone, email, age, gender')
             .in('id', userIds);
 
         if (error) this.handleError(error, 'UserRepository.findByIds');

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {
-    Loader2, BarChart3,
+    Loader2, BarChart3, Star,
     Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles
 } from 'lucide-react';
 import NextImage from 'next/image';
@@ -39,6 +39,10 @@ const GalleryTab = dynamic(() => import('./vendor/GalleryTab'), {
 });
 
 const DiscountsTab = dynamic(() => import('./vendor/discounts/DiscountsTab'), {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+});
+
+const ReviewsTab = dynamic(() => import('./vendor/reviews/ReviewsTab'), {
     loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 });
 
@@ -108,7 +112,7 @@ export default function VendorDashboard({
         }
         return null;
     });
-    const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS'>('ANALYTICS');
+    const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS' | 'REVIEWS'>('ANALYTICS');
     const [pendingBookingsCount, setPendingBookingsCount] = useState(initialPendingBookingsCount);
     const [activeEventsCount, setActiveEventsCount] = useState(initialActiveEventsCount);
 
@@ -133,7 +137,7 @@ export default function VendorDashboard({
     // Sync tab with URL parameter on mount (client-side only)
     useEffect(() => {
         const tab = searchParams.get('tab')?.toUpperCase();
-        const validTabs = ['ANALYTICS', 'EVENTS', 'CUSTOMERS', 'BOOKINGS', 'PROFILE', 'GALLERY', 'DISCOUNTS'];
+        const validTabs = ['ANALYTICS', 'EVENTS', 'CUSTOMERS', 'BOOKINGS', 'PROFILE', 'GALLERY', 'DISCOUNTS', 'REVIEWS'];
         if (tab && validTabs.includes(tab)) {
             setActiveTab(tab as any);
         }
@@ -252,7 +256,8 @@ export default function VendorDashboard({
                             { id: 'BOOKINGS', icon: Sparkles, label: t('vendor.tabs.bookings') },
                             { id: 'CUSTOMERS', icon: Users, label: t('vendor.tabs.customers') },
                             { id: 'GALLERY', icon: ImageIcon, label: t('vendor.tabs.gallery') },
-                            { id: 'DISCOUNTS', icon: Settings, label: t('vendor.tabs.discounts') }, // Using settings icon for now or Lucide has Tag/Ticket
+                            { id: 'REVIEWS', icon: Star, label: t('vendor.tabs.reviews') },
+                            { id: 'DISCOUNTS', icon: Settings, label: t('vendor.tabs.discounts') },
                             { id: 'PROFILE', icon: Settings, label: t('vendor.tabs.settings') },
                         ].map((tab) => (
                             <button
@@ -371,6 +376,7 @@ export default function VendorDashboard({
                         {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}
                         {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} demoMode={demoMode} />}
                         {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} />}
+                        {activeTab === 'REVIEWS' && <ReviewsTab demoMode={demoMode} />}
                         {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} demoMode={demoMode} />}
                     </div>
                 )}

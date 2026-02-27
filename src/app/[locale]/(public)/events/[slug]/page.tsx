@@ -6,6 +6,7 @@ import { hasExpressedInterest, getEventInterestCount } from '@/actions/public/in
 import { trackPageView } from '@/actions/public/track';
 import { Metadata } from 'next';
 import { getDemoEvents } from '@/lib/demoData';
+import { cache } from 'react';
 import {
     generateCanonicalUrl,
     generateLanguageAlternates,
@@ -14,6 +15,12 @@ import {
     generateImageUrl,
     generateSpeakableSchema
 } from '@/lib/seo';
+
+// Deduplicate getPublicEvent across generateMetadata + EventPage
+// React cache() ensures only one DB call per request
+const getCachedEvent = cache(async (slug: string) => {
+    return getPublicEvent(slug);
+});
 
 // This page uses cookies() via createClient — must be dynamic
 export const dynamic = 'force-dynamic';
@@ -58,7 +65,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
         };
     }
 
-    const event = await getPublicEvent(slug);
+    const event = await getCachedEvent(slug);
 
     if (!event) {
         return {
@@ -110,10 +117,11 @@ export default async function EventPage({ params }: { params: any }) {
         return <EventDetailsClient event={demoEvent} user={null} />;
     }
 
-    const event = await getPublicEvent(slug);
+    const event = await getCachedEvent(slug);
 
     if (!event) return notFound();
 
+    // Run event fetch (from cache) and user auth in parallel — they're independent
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

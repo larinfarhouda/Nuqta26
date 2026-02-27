@@ -98,6 +98,8 @@ export class BookingRepository extends BaseRepository {
         total_amount,
         created_at,
         status,
+        contact_phone,
+        contact_email,
         events (event_type)
       `)
             .eq('vendor_id', vendorId)
@@ -312,5 +314,49 @@ export class BookingRepository extends BaseRepository {
             .in('id', bookingIds);
 
         if (error) this.handleError(error, 'BookingRepository.markReminderSent');
+    }
+
+    /**
+     * Find confirmed bookings for events that ended between yesterdayStart and yesterdayEnd
+     * that haven't had a review request sent yet.
+     * Uses end_date if available, otherwise falls back to date (event start).
+     */
+    async findBookingsForReviewRequest(yesterdayStart: string, yesterdayEnd: string) {
+        const { data, error } = await this.client
+            .from('bookings')
+            .select(`
+                id,
+                user_id,
+                contact_email,
+                contact_name,
+                events!inner (
+                    id,
+                    title,
+                    date,
+                    end_date,
+                    slug
+                )
+            `)
+            .eq('status', 'confirmed')
+            .eq('review_request_sent', false)
+            .gte('events.date', yesterdayStart)
+            .lte('events.date', yesterdayEnd);
+
+        if (error) this.handleError(error, 'BookingRepository.findBookingsForReviewRequest');
+        return data || [];
+    }
+
+    /**
+     * Batch mark bookings as review request sent
+     */
+    async markReviewRequestSent(bookingIds: string[]) {
+        if (bookingIds.length === 0) return;
+
+        const { error } = await this.client
+            .from('bookings')
+            .update({ review_request_sent: true } as any)
+            .in('id', bookingIds);
+
+        if (error) this.handleError(error, 'BookingRepository.markReviewRequestSent');
     }
 }

@@ -5,6 +5,7 @@ import BookingVendorTemplate from '@/components/emails/BookingVendorTemplate';
 import WelcomeTemplate from '@/components/emails/WelcomeTemplate';
 import EventReminderTemplate from '@/components/emails/EventReminderTemplate';
 import ReviewReceivedTemplate from '@/components/emails/ReviewReceivedTemplate';
+import ReviewRequestTemplate from '@/components/emails/ReviewRequestTemplate';
 import EventSoldOutTemplate from '@/components/emails/EventSoldOutTemplate';
 import NewSignupAdminTemplate from '@/components/emails/NewSignupAdminTemplate';
 import React from 'react';
@@ -208,17 +209,30 @@ export class NotificationService {
         customerEmail: string;
         customerName: string;
         eventTitle: string;
-        eventId: string;
+        eventSlug: string;
+        locale?: 'en' | 'ar';
     }) {
+        const locale = params.locale || 'ar';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
+        const reviewUrl = `${baseUrl}/${locale}/events/${params.eventSlug}?review=true`;
+
         logger.info('NotificationService: Sending review request', {
-            email: params.customerEmail
+            email: params.customerEmail,
+            eventSlug: params.eventSlug
         });
 
         try {
             await sendEmail({
                 to: params.customerEmail,
-                subject: `How was ${params.eventTitle}?`,
-                react: null // TODO: Create ReviewRequestTemplate
+                subject: locale === 'ar'
+                    ? `كيف كانت تجربتك في ${params.eventTitle}؟`
+                    : `How was ${params.eventTitle}?`,
+                react: React.createElement(ReviewRequestTemplate, {
+                    userName: params.customerName,
+                    eventName: params.eventTitle,
+                    reviewUrl,
+                    locale,
+                })
             });
 
             logger.info('Review request sent successfully');

@@ -71,7 +71,7 @@ export class AnalyticsRepository extends BaseRepository {
             .from('bookings')
             .select('user_id')
             .eq('vendor_id', vendorId)
-            .eq('status', 'confirmed');
+            .neq('status', 'cancelled');
 
         if (error) this.handleError(error, 'AnalyticsRepository.getCustomerLoyalty');
 
@@ -110,7 +110,7 @@ export class AnalyticsRepository extends BaseRepository {
             .from('bookings')
             .select('user_id')
             .eq('vendor_id', vendorId)
-            .eq('status', 'confirmed');
+            .neq('status', 'cancelled');
 
         if (bookingsError) this.handleError(bookingsError, 'AnalyticsRepository.getCustomerDemographics.bookings');
 

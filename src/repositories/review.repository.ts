@@ -89,6 +89,49 @@ export class ReviewRepository extends BaseRepository {
     }
 
     /**
+     * Get rating summary across ALL events for a vendor
+     */
+    async getVendorRatingSummary(vendorId: string) {
+        const { data, error } = await this.client
+            .from('event_reviews')
+            .select('rating, events!inner(vendor_id)')
+            .eq('events.vendor_id', vendorId)
+            .eq('is_flagged', false);
+
+        if (error) this.handleError(error, 'ReviewRepository.getVendorRatingSummary');
+
+        if (!data || data.length === 0) {
+            return { average: 0, count: 0 };
+        }
+
+        const total = data.reduce((sum: number, r: any) => sum + r.rating, 0);
+        return {
+            average: total / data.length,
+            count: data.length,
+        };
+    }
+
+    /**
+     * Get all reviews across all events for a vendor
+     */
+    async getVendorReviews(vendorId: string, limit: number = 50) {
+        const { data, error } = await this.client
+            .from('event_reviews')
+            .select(`
+                *,
+                profiles:user_id (full_name, avatar_url),
+                events!inner(title, vendor_id)
+            `)
+            .eq('events.vendor_id', vendorId)
+            .eq('is_flagged', false)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) this.handleError(error, 'ReviewRepository.getVendorReviews');
+        return data || [];
+    }
+
+    /**
      * Get user's review for an event
      */
     async findByUserAndEvent(userId: string, eventId: string): Promise<Review | null> {

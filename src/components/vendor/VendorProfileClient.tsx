@@ -4,6 +4,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MapPin, MessageCircle, Star, Instagram, Globe, CheckCircle, Image as ImageIcon, Calendar, ArrowRight, Share2 } from 'lucide-react';
+import StarRating from '@/components/reviews/StarRating';
+import ReviewCard from '@/components/reviews/ReviewCard';
 import EventCard from '@/components/events/EventCard';
 import { Link } from '@/navigation';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -15,7 +17,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
     const t = useTranslations('VendorProfile');
     const tVendor = useTranslations('Vendor');
     const locale = useLocale();
-    const [activeTab, setActiveTab] = useState<'events' | 'gallery' | 'about'>('events');
+    const [activeTab, setActiveTab] = useState<'events' | 'gallery' | 'reviews' | 'about'>('events');
     const [isHeaderSticky, setIsHeaderSticky] = useState(false);
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -107,6 +109,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
 
     const hasEvents = vendor.events && vendor.events.length > 0;
     const hasGallery = vendor.gallery && vendor.gallery.length > 0;
+    const hasReviews = vendor.reviews && vendor.reviews.length > 0;
 
     return (
         <div className="min-h-screen bg-gray-50 pb-24 md:pb-0 relative">
@@ -187,14 +190,14 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                     <span>Istanbul, Turkey</span>
                                 </div>
                                 <div className="w-1 h-1 rounded-full bg-gray-600 hidden md:block" />
-                                <div className="flex items-center gap-1.5 text-amber-400">
-                                    <Star className="w-4 h-4 fill-current" />
-                                    <span className="text-white font-bold">
-                                        {t.rich('elite_rating', {
-                                            rating: vendor.rating || '4.9'
-                                        })}
-                                    </span>
-                                </div>
+                                {vendor.rating && vendor.rating.count > 0 && (
+                                    <div className="flex items-center gap-1.5 text-amber-400">
+                                        <Star className="w-4 h-4 fill-current" />
+                                        <span className="text-white font-bold">
+                                            {vendor.rating.average.toFixed(1)} ({vendor.rating.count})
+                                        </span>
+                                    </div>
+                                )}
                             </motion.div>
                         </div>
 
@@ -233,6 +236,12 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                             className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'gallery' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
                         >
                             {t('view_gallery')}
+                        </button>
+                        <button
+                            onClick={() => scrollToSection('reviews')}
+                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'reviews' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                        >
+                            {t('reviews_tab')} {vendor.rating?.count ? `(${vendor.rating.count})` : ''}
                         </button>
                         <button
                             onClick={() => scrollToSection('about')}
@@ -373,6 +382,126 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                     )}
                 </div>
 
+                {/* Section: Reviews */}
+                <div id="reviews" className="scroll-mt-32">
+                    <div className="flex items-center gap-3 mb-6 md:mb-8">
+                        <div className="p-2 bg-amber-50 rounded-xl text-amber-500"><Star className="w-6 h-6 fill-current" /></div>
+                        <h2 className="text-2xl md:text-3xl font-black text-gray-900">{t('reviews_tab')}</h2>
+                        {vendor.rating?.count > 0 && (
+                            <span className="text-sm font-bold text-gray-500">({vendor.rating.count})</span>
+                        )}
+                    </div>
+
+                    {hasReviews ? (
+                        <div className="space-y-6">
+                            {/* Rating Summary Card with Distribution */}
+                            {vendor.rating && vendor.rating.count > 0 && (() => {
+                                // Compute distribution from reviews
+                                const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+                                vendor.reviews.forEach((r: any) => {
+                                    const rounded = Math.round(r.rating) as 1 | 2 | 3 | 4 | 5;
+                                    if (dist[rounded] !== undefined) dist[rounded]++;
+                                });
+                                const total = vendor.rating.count;
+
+                                return (
+                                    <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-4 md:p-8 rounded-2xl md:rounded-[2rem] shadow-xl">
+                                        <div className="flex flex-row gap-4 md:gap-8 items-center">
+                                            {/* Average Rating */}
+                                            <div className="flex flex-col items-center justify-center shrink-0">
+                                                <div className="text-3xl md:text-6xl font-black text-gray-900 mb-1" dir="ltr">
+                                                    {vendor.rating.average.toFixed(1)}
+                                                </div>
+                                                <StarRating rating={vendor.rating.average} size="sm" />
+                                                <p className="text-[9px] md:text-xs font-black text-gray-500 uppercase tracking-widest mt-1 md:mt-3">
+                                                    {vendor.rating.count} {vendor.rating.count === 1 ? 'review' : 'reviews'}
+                                                </p>
+                                            </div>
+
+                                            {/* Rating Distribution */}
+                                            <div className="flex-1 space-y-1 md:space-y-2">
+                                                <p className="text-[9px] md:text-xs font-black text-gray-400 uppercase tracking-widest mb-2 md:mb-4">
+                                                    {t('rating_distribution')}
+                                                </p>
+                                                {[5, 4, 3, 2, 1].map((rating) => {
+                                                    const count = dist[rating as keyof typeof dist] || 0;
+                                                    const percentage = (count / total) * 100;
+                                                    return (
+                                                        <div key={rating} className="flex items-center gap-1.5 md:gap-3">
+                                                            <div className="flex items-center gap-0.5 w-8 md:w-16 justify-end" dir="ltr">
+                                                                <span className="text-[10px] md:text-xs font-black text-gray-700">{rating}</span>
+                                                                <Star className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-400 fill-amber-400" />
+                                                            </div>
+                                                            <div className="flex-1 h-1.5 md:h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500 rounded-full"
+                                                                    style={{ width: `${percentage}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-[10px] md:text-xs font-bold text-gray-500 w-5 md:w-8 text-left" dir="ltr">
+                                                                {count}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Review Cards */}
+                            <div className="space-y-3 md:space-y-4">
+                                {vendor.reviews.map((review: any) => (
+                                    <div key={review.id} className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                        {/* Header: user info + stars */}
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center shrink-0">
+                                                <span className="text-xs md:text-sm font-black text-primary">
+                                                    {(review.profiles?.full_name || 'U')[0].toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="font-bold text-sm text-gray-900 truncate">
+                                                        {review.profiles?.full_name || 'Anonymous'}
+                                                    </p>
+                                                    <span className="text-[10px] md:text-xs text-gray-400 shrink-0">
+                                                        {new Date(review.created_at).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-1">
+                                                    <StarRating rating={review.rating} size="sm" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Comment */}
+                                        {review.comment && (
+                                            <p className="text-sm text-gray-700 leading-relaxed font-medium mb-3">
+                                                {review.comment}
+                                            </p>
+                                        )}
+
+                                        {/* Event label */}
+                                        {review.events?.title && (
+                                            <div className="flex items-center gap-2 pt-2 md:pt-3 border-t border-gray-100">
+                                                <Calendar className="w-3 h-3 text-gray-400 shrink-0" />
+                                                <span className="text-[10px] md:text-xs font-bold text-gray-400 truncate">{review.events.title}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-[2rem] p-8 text-center border border-gray-200">
+                            <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-400 font-bold">{t('no_reviews_yet')}</p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Section: About */}
                 <div id="about" className="scroll-mt-32 pb-20">
                     <div className="bg-white rounded-[2.5rem] p-6 md:p-10 border border-gray-100 shadow-xl shadow-gray-200/50">
@@ -426,13 +555,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <h4 className="font-bold text-gray-900 mb-2">{t('joined_title')}</h4>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Calendar className="w-4 h-4" />
-                                        <span>Since 2024</span>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
                     </div>

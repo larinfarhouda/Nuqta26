@@ -83,7 +83,9 @@ export class BookingService {
                     total_spent: 0,
                     bookings_count: 0,
                     last_booking: booking.created_at,
-                    types_preferred: new Set()
+                    types_preferred: new Set(),
+                    contact_phone: null as string | null,
+                    contact_email: null as string | null,
                 });
             }
 
@@ -95,6 +97,10 @@ export class BookingService {
                 customer.last_booking = booking.created_at;
             }
 
+            // Keep the latest contact info from bookings
+            if ((booking as any).contact_phone) customer.contact_phone = (booking as any).contact_phone;
+            if ((booking as any).contact_email) customer.contact_email = (booking as any).contact_email;
+
             if (booking.events?.event_type) {
                 customer.types_preferred.add(booking.events.event_type);
             }
@@ -104,14 +110,17 @@ export class BookingService {
         const userIds = Array.from(customerMap.keys());
         const profiles = await this.userRepo.findByIds(userIds);
 
-        // Combine data
+        // Combine data — use booking contact info as fallback
         const customers = profiles.map(profile => {
             const customerData = customerMap.get(profile.id);
             return {
                 id: profile.id,
                 name: profile.full_name || 'Unknown',
+                email: profile.email || customerData.contact_email || null,
                 avatar: profile.avatar_url,
-                phone: profile.phone,
+                phone: profile.phone || customerData.contact_phone || null,
+                age: profile.age || null,
+                gender: profile.gender || null,
                 total_spent: customerData.total_spent,
                 bookings_count: customerData.bookings_count,
                 last_booking: customerData.last_booking,

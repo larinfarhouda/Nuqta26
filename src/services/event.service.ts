@@ -35,8 +35,11 @@ export class EventService {
             return null;
         }
 
-        // Get rating summary
-        const ratingSummary = await this.reviewRepo.getRatingSummary(eventData.id);
+        // Get event rating + vendor-wide rating in parallel
+        const [ratingSummary, vendorRating] = await Promise.all([
+            this.reviewRepo.getRatingSummary(eventData.id),
+            this.reviewRepo.getVendorRatingSummary(eventData.vendor_id),
+        ]);
 
         // Build DTO
         return {
@@ -76,7 +79,16 @@ export class EventService {
             bulk_discounts: eventData.bulk_discounts || [],
             rating: ratingSummary ? {
                 average: (ratingSummary as any).average_rating || (ratingSummary as any).average || 0,
-                count: (ratingSummary as any).review_count || (ratingSummary as any).count || 0
+                count: (ratingSummary as any).review_count || (ratingSummary as any).count || 0,
+                rating_1_count: (ratingSummary as any).rating_1_count || 0,
+                rating_2_count: (ratingSummary as any).rating_2_count || 0,
+                rating_3_count: (ratingSummary as any).rating_3_count || 0,
+                rating_4_count: (ratingSummary as any).rating_4_count || 0,
+                rating_5_count: (ratingSummary as any).rating_5_count || 0,
+            } : undefined,
+            vendor_rating: vendorRating && vendorRating.count > 0 ? {
+                average: vendorRating.average,
+                count: vendorRating.count,
             } : undefined
         };
     }

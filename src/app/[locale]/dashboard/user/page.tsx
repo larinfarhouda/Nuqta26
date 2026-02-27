@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Link } from '@/navigation';
 import BookingPaymentDialog from '@/components/dashboard/user/BookingPaymentDialog';
 import DeleteBookingButton from '@/components/dashboard/user/DeleteBookingButton';
+import { createClient } from '@/utils/supabase/server';
 
 import { getTranslations } from 'next-intl/server';
 
@@ -15,6 +16,27 @@ export default async function UserOverviewPage({
     const { locale } = await params;
     const bookings = await getUserBookings();
     const t = await getTranslations('Dashboard.user');
+
+    // Get event IDs the user already reviewed (for past confirmed bookings)
+    const pastConfirmedEventIds = bookings
+        .filter((b: any) => b.status === 'confirmed' && new Date(b.event?.date) < new Date())
+        .map((b: any) => b.event_id);
+
+    let reviewedEventIds = new Set<string>();
+    if (pastConfirmedEventIds.length > 0) {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data: reviews } = await supabase
+                .from('event_reviews')
+                .select('event_id')
+                .eq('user_id', user.id)
+                .in('event_id', pastConfirmedEventIds);
+            if (reviews) {
+                reviewedEventIds = new Set(reviews.map(r => r.event_id));
+            }
+        }
+    }
 
     return (
         <div className="space-y-8">
@@ -48,63 +70,83 @@ export default async function UserOverviewPage({
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {bookings.map((booking: any) => (
-                        <div key={booking.id} className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 flex flex-col md:flex-row gap-6 shadow-sm hover:shadow-md transition-shadow">
-                            {/* Event Image */}
-                            <div className="w-full md:w-48 h-32 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0">
-                                {booking.event?.image_url ? (
-                                    <Image src={booking.event.image_url} alt="Event" fill className="object-cover" />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-xs text-gray-400">{t('no_image')}</div>
-                                )}
-                            </div>
+                    {bookings.map((booking: any) => {
+                        const isPastEvent = new Date(booking.event?.date) < new Date();
+                        const isPastConfirmed = booking.status === 'confirmed' && isPastEvent;
+                        const hasReviewed = reviewedEventIds.has(booking.event_id);
 
-                            {/* Details */}
-                            <div className="flex-1 flex flex-col justify-between">
-                                <div>
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">{booking.event?.title}</h3>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                            {t(`status.${booking.status}`)}
-                                        </span>
-                                    </div>
+                        return (
+                            <div key={booking.id} className={`rounded-2xl border p-4 md:p-6 flex flex-col md:flex-row gap-6 shadow-sm hover:shadow-md transition-shadow ${isPastEvent ? 'bg-gray-50 border-gray-200 opacity-80' : 'bg-white border-gray-100'}`}>
+                                {/* Event Image */}
+                                <div className="w-full md:w-48 h-32 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0">
+                                    {booking.event?.image_url ? (
+                                        <Image src={booking.event.image_url} alt="Event" fill className={`object-cover ${isPastEvent ? 'grayscale opacity-70' : ''}`} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-xs text-gray-400">{t('no_image')}</div>
+                                    )}
+                                </div>
 
-                                    <div className="flex flex-col gap-1 text-sm text-gray-500 mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>{new Date(booking.event?.date).toLocaleDateString(locale, { timeZone: 'UTC' })} at {new Date(booking.event?.date).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</span>
+                                {/* Details */}
+                                <div className="flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="text-xl font-bold text-gray-900 mb-2">{booking.event?.title}</h3>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                {t(`status.${booking.status}`)}
+                                            </span>
                                         </div>
-                                        {booking.event?.location_name && (
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-4 h-4" />
-                                                <span>{booking.event.location_name}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center gap-4 pt-4 border-t border-gray-50 mt-auto">
-                                    <div className="text-xs text-gray-400">
-                                        {t('booking_id')}: <span className="font-mono">{booking.id.slice(0, 8)}</span>
+                                        <div className="flex flex-col gap-1 text-sm text-gray-500 mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-4 h-4" />
+                                                <span>{new Date(booking.event?.date).toLocaleDateString(locale, { timeZone: 'UTC' })} at {new Date(booking.event?.date).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' })}</span>
+                                            </div>
+                                            {booking.event?.location_name && (
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="w-4 h-4" />
+                                                    <span>{booking.event.location_name}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="ml-auto flex items-center gap-4">
-                                        {(booking.status === 'pending_payment' || booking.status === 'payment_submitted') && (
-                                            <>
-                                                {booking.status === 'pending_payment' && (
-                                                    <BookingPaymentDialog booking={booking} />
-                                                )}
-                                                <DeleteBookingButton bookingId={booking.id} />
-                                            </>
-                                        )}
-                                        <Link href={`/events/${booking.event_id}`} className="text-sm font-bold text-primary hover:underline">
-                                            {t('view_details')}
-                                        </Link>
+
+                                    <div className="flex items-center gap-4 pt-4 border-t border-gray-50 mt-auto">
+                                        <div className="text-xs text-gray-400">
+                                            {t('booking_id')}: <span className="font-mono">{booking.id.slice(0, 8)}</span>
+                                        </div>
+                                        <div className="ml-auto flex items-center gap-4">
+                                            {(booking.status === 'pending_payment' || booking.status === 'payment_submitted') && (
+                                                <>
+                                                    {booking.status === 'pending_payment' && (
+                                                        <BookingPaymentDialog booking={booking} />
+                                                    )}
+                                                    <DeleteBookingButton bookingId={booking.id} />
+                                                </>
+                                            )}
+                                            {isPastConfirmed && (
+                                                hasReviewed ? (
+                                                    <span className="px-4 py-2 bg-green-50 text-green-700 text-sm font-bold rounded-xl border border-green-200">
+                                                        {t('reviewed')}
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        href={`/events/${booking.event?.slug || booking.event_id}?review=true`}
+                                                        className="px-4 py-2 bg-amber-50 text-amber-700 text-sm font-bold rounded-xl hover:bg-amber-100 transition shadow-sm border border-amber-200"
+                                                    >
+                                                        {t('leave_review')}
+                                                    </Link>
+                                                )
+                                            )}
+                                            <Link href={`/events/${booking.event_id}`} className="text-sm font-bold text-primary hover:underline">
+                                                {t('view_details')}
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

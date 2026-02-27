@@ -517,6 +517,9 @@
         "elite_rating": "{rating} Elite Rating",
         "inquire_whatsapp": "Inquire via WhatsApp",
         "view_gallery": "View Full Gallery",
+        "reviews_tab": "Reviews",
+        "no_reviews_yet": "No reviews yet.",
+        "rating_distribution": "Rating Distribution",
         "our_mission": "Our Mission",
         "mission_default": "Dedicated to creating safe, cultural, and exciting spaces for Istanbul's community. We believe in the power of shared moments and elite service standards.",
         "stats": {
@@ -655,7 +658,9 @@
             "delete_booking": "Delete Booking",
             "deleting": "Deleting...",
             "confirm_delete_booking": "Are you sure you want to delete this booking? This action cannot be undone.",
-            "delete_failed": "Failed to delete booking"
+            "delete_failed": "Failed to delete booking",
+            "leave_review": "⭐ Leave a Review",
+            "reviewed": "✓ Reviewed"
         },
         "vendor": {
             "title": "Vendor Dashboard",
@@ -665,6 +670,7 @@
                 "bookings": "Bookings",
                 "customers": "Customers",
                 "gallery": "Gallery",
+                "reviews": "Reviews",
                 "discounts": "Discounts",
                 "settings": "Settings"
             },
@@ -765,6 +771,12 @@
                 "error_invalid_type": "Invalid file type. Please upload JPG, PNG, WebP, or GIF.",
                 "error_file_too_large": "File is too large. Maximum size is 5MB."
             },
+            "reviews": {
+                "title": "Reviews",
+                "subtitle": "See what your customers are saying",
+                "filter_all": "All Events",
+                "no_reviews": "No reviews yet"
+            },
             "events": {
                 "revenue": "Revenue",
                 "attendees": "Attendees",
@@ -802,6 +814,9 @@
                 "delete_error": "Error deleting event",
                 "expired": "Expired",
                 "sold_out": "Sold Out",
+                "average_rating": "Average Rating",
+                "reviews_title": "Reviews",
+                "no_event_reviews": "No reviews for this event yet",
                 "form": {
                     "validation": {
                         "title_required": "Title is required",
@@ -840,10 +855,14 @@
                 "loading": "Loading...",
                 "table": {
                     "customer": "Customer",
+                    "contact": "Contact Info",
+                    "demographics": "Demographics",
                     "bookings": "Bookings",
                     "total_spent": "Total Spent",
                     "last_booking": "Last Booking",
-                    "interests": "Interests"
+                    "years_old": "yrs",
+                    "male": "Male",
+                    "female": "Female"
                 },
                 "vip_tooltip": "VIP Customer (Recurring)",
                 "currency": "₺",
@@ -981,7 +1000,7 @@
         "upload_receipt": "Upload Receipt",
         "receipt_format": "JPG, PNG or PDF (Max 5MB)",
         "payment_verification_note": "The organizer will verify your payment within 24 hours.",
-        "high_demand": "High Demand: {count} People booked today",
+        "high_demand": "High Demand: Limited spots left",
         "base_price": "Base Price",
         "bulk_discount": "Bulk Discount",
         "promo_code": "Promo Code",

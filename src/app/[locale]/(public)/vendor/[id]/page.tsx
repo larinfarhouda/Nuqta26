@@ -33,6 +33,20 @@ export default async function VendorProfilePage({
         .eq('status', 'published')
         .order('date', { ascending: true });
 
+    // Fetch vendor-wide rating (average across all events)
+    const { data: reviewData } = await supabase
+        .from('event_reviews')
+        .select('rating, events!inner(vendor_id)')
+        .eq('events.vendor_id', id)
+        .eq('is_flagged', false);
+
+    const vendorRating = reviewData && reviewData.length > 0
+        ? {
+            average: reviewData.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewData.length,
+            count: reviewData.length,
+        }
+        : null;
+
     const whatsappLink = vendor.whatsapp_number ? `https://wa.me/${vendor.whatsapp_number}` : '#';
 
     return (
@@ -106,10 +120,12 @@ export default async function VendorProfilePage({
                             <MapPin className="w-4 h-4 text-primary" />
                             <span>{t('istanbul_hub')}</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-[10px] md:text-sm font-black text-gray-500 uppercase tracking-widest bg-white/50 px-4 py-2 rounded-full border border-white">
-                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                            <span className="text-gray-900">{t('elite_rating')}</span>
-                        </div>
+                        {vendorRating && vendorRating.count > 0 && (
+                            <div className="flex items-center gap-2.5 text-[10px] md:text-sm font-black text-gray-500 uppercase tracking-widest bg-white/50 px-4 py-2 rounded-full border border-white">
+                                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                                <span className="text-gray-900">{vendorRating.average.toFixed(1)} ({vendorRating.count})</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="pt-10 md:pt-16 flex flex-col sm:flex-row justify-center gap-4 relative z-10">

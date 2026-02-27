@@ -1,14 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Users, Receipt, Calendar, MapPin, Phone, Mail, CheckCircle, XCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Users, Receipt, Calendar, MapPin, Phone, Mail, CheckCircle, XCircle, AlertCircle, TrendingUp, Star } from 'lucide-react';
 import { getEventBookings } from '@/actions/vendor/events';
+import { getEventReviewsForVendor } from '@/actions/vendor/reviews';
 import { updateBookingStatus } from '@/actions/vendor/bookings';
 import { useTranslations, useLocale } from 'next-intl';
 import { getDemoBookings } from '@/lib/demoData';
+import StarRating from '@/components/reviews/StarRating';
 
 export default function EventDetails({ event, onBack, demoMode = false }: { event: any, onBack: () => void, demoMode?: boolean }) {
     const [bookings, setBookings] = useState<any[]>([]);
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [eventRating, setEventRating] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<string | null>(null);
     const t = useTranslations('Dashboard.vendor.events');
@@ -21,13 +25,17 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
     const loadBookings = async () => {
         setLoading(true);
         if (demoMode) {
-            // Filter demo bookings for this specific event
             const allDemoBookings = getDemoBookings();
             const eventBookings = allDemoBookings.filter(b => b.event_id === event.id);
             setBookings(eventBookings as any);
         } else {
-            const data = await getEventBookings(event.id);
+            const [data, reviewsData] = await Promise.all([
+                getEventBookings(event.id),
+                getEventReviewsForVendor(event.id),
+            ]);
             setBookings(data);
+            setReviews(reviewsData.reviews);
+            setEventRating(reviewsData.rating);
         }
         setLoading(false);
     };
@@ -75,7 +83,7 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('capacity')}</div>
                     <div className="flex items-baseline gap-2">
@@ -111,6 +119,17 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
                     <div className="text-2xl font-black text-amber-500 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
                         {pendingCount}
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('average_rating')}</div>
+                    <div className="flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                        <span className="text-2xl font-black text-gray-900">
+                            {eventRating.count > 0 ? eventRating.average.toFixed(1) : '—'}
+                        </span>
+                        <span className="text-xs text-gray-400 font-bold">({eventRating.count})</span>
                     </div>
                 </div>
             </div>
@@ -229,6 +248,56 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Reviews Section */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-400" />
+                        {t('reviews_title')}
+                    </h3>
+                    <span className="text-xs font-bold bg-gray-200 text-gray-600 px-2 py-1 rounded-lg">{reviews.length}</span>
+                </div>
+
+                {reviews.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+                        <Star className="w-8 h-8 mb-2 opacity-20" />
+                        <p className="text-sm font-medium">{t('no_event_reviews')}</p>
+                    </div>
+                ) : (
+                    <div className="p-4 space-y-3">
+                        {reviews.map((review: any) => (
+                            <div key={review.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center shrink-0">
+                                        <span className="text-xs font-black text-primary">
+                                            {(review.profiles?.full_name || 'U')[0].toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="font-bold text-sm text-gray-900 truncate">
+                                                {review.profiles?.full_name || 'Anonymous'}
+                                            </p>
+                                            <span className="text-[10px] text-gray-400 shrink-0">
+                                                {new Date(review.created_at).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                            </span>
+                                        </div>
+                                        <div className="mt-0.5">
+                                            <StarRating rating={review.rating} size="sm" />
+                                        </div>
+                                    </div>
+                                </div>
+                                {review.comment && (
+                                    <p className="text-sm text-gray-700 leading-relaxed font-medium">
+                                        {review.comment}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

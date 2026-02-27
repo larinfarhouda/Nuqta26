@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { VendorRepository } from '@/repositories/vendor.repository';
 import { TicketRepository } from '@/repositories/ticket.repository';
 import { CategoryRepository } from '@/repositories/category.repository';
+import { ReviewRepository } from '@/repositories/review.repository';
 import { VendorService } from '@/services/vendor.service';
 import { logger } from '@/lib/logger/logger';
 
@@ -18,12 +19,25 @@ export async function getPublicVendor(slug: string) {
         const vendorRepo = new VendorRepository(supabase);
         const ticketRepo = new TicketRepository(supabase);
         const categoryRepo = new CategoryRepository(supabase);
+        const reviewRepo = new ReviewRepository(supabase);
 
         // Create service and fetch vendor
         const vendorService = new VendorService(vendorRepo, ticketRepo, categoryRepo);
         const vendor = await vendorService.getPublicVendor(slug);
 
-        return vendor;
+        if (!vendor) return null;
+
+        // Fetch vendor-wide rating + reviews in parallel
+        const [vendorRating, vendorReviews] = await Promise.all([
+            reviewRepo.getVendorRatingSummary(vendor.id),
+            reviewRepo.getVendorReviews(vendor.id),
+        ]);
+
+        return {
+            ...vendor,
+            rating: vendorRating && vendorRating.count > 0 ? vendorRating : null,
+            reviews: vendorReviews,
+        };
     } catch (error) {
         logger.error('Failed to get public vendor', { slug, error });
         return null;

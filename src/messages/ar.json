@@ -517,6 +517,9 @@
     "elite_rating": "{rating} تقييم مميز",
     "inquire_whatsapp": "تواصل عبر واتساب",
     "view_gallery": "عرض المعرض الكامل",
+    "reviews_tab": "التقييمات",
+    "no_reviews_yet": "لا توجد تقييمات بعد.",
+    "rating_distribution": "توزيع التقييمات",
     "our_mission": "مهمتنا",
     "mission_default": "ملتزمون بخلق مساحات آمنة وثقافية ومثيرة لمجتمع إسطنبول. نؤمن بقوة اللحظات المشتركة ومعايير الخدمة المميزة.",
     "stats": {
@@ -656,7 +659,9 @@
       "delete_booking": "حذف الحجز",
       "deleting": "جاري الحذف...",
       "confirm_delete_booking": "هل أنت متأكد من حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.",
-      "delete_failed": "فشل حذف الحجز"
+      "delete_failed": "فشل حذف الحجز",
+      "leave_review": "⭐ شاركنا رأيك",
+      "reviewed": "✓ تم التقييم"
     },
     "vendor": {
       "title": "لوحة تحكم البائع",
@@ -666,6 +671,7 @@
         "bookings": "الحجوزات",
         "customers": "العملاء",
         "gallery": "المعرض",
+        "reviews": "التقييمات",
         "discounts": "الخصومات",
         "settings": "الإعدادات"
       },
@@ -767,6 +773,12 @@
         "error_invalid_type": "نوع الملف غير صالح. يرجى رفع صورة بصيغة JPG، PNG، WebP، أو GIF.",
         "error_file_too_large": "الملف كبير جداً. الحد الأقصى 5 ميجابايت."
       },
+      "reviews": {
+        "title": "التقييمات",
+        "subtitle": "شاهد ما يقوله عملاؤك",
+        "filter_all": "كل الفعاليات",
+        "no_reviews": "لا توجد تقييمات بعد"
+      },
       "events": {
         "revenue": "الإيرادات",
         "attendees": "الحضور",
@@ -804,6 +816,9 @@
         "delete_error": "خطأ أثناء الحذف",
         "expired": "منتهي",
         "sold_out": "مكتمل",
+        "average_rating": "متوسط التقييم",
+        "reviews_title": "التقييمات",
+        "no_event_reviews": "لا توجد تقييمات لهذه الفعالية بعد",
         "form": {
           "validation": {
             "title_required": "العنوان مطلوب",
@@ -842,10 +857,14 @@
         "loading": "جاري التحميل...",
         "table": {
           "customer": "العميل",
+          "contact": "معلومات التواصل",
+          "demographics": "المعلومات",
           "bookings": "مرات الحجز",
           "total_spent": "إجمالي الإنفاق",
           "last_booking": "آخر حجز",
-          "interests": "الاهتمامات"
+          "years_old": "سنة",
+          "male": "ذكر",
+          "female": "أنثى"
         },
         "vip_tooltip": "عميل مميز (مكرر)",
         "currency": "₺",
@@ -984,7 +1003,7 @@
     "upload_receipt": "رفع وصل التحويل",
     "receipt_format": "JPG, PNG أو PDF (بحد أقصى 5 ميجابايت)",
     "payment_verification_note": "سيقوم المنظم بمراجعة الدفع خلال 24 ساعة.",
-    "high_demand": "طلب مرتفع: {count} شخص حجزوا اليوم",
+    "high_demand": "طلب مرتفع: متبقي مقاعد محدودة",
     "base_price": "السعر الأساسي",
     "bulk_discount": "خصم المجموعات",
     "promo_code": "كود الخصم",

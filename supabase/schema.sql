@@ -397,13 +397,18 @@ declare
 begin
   user_role := coalesce(new.raw_user_meta_data->>'role', 'user');
 
-  insert into public.profiles (id, full_name, avatar_url, email, role, referral_source)
+  insert into public.profiles (id, full_name, avatar_url, email, role, phone, age, gender, country, city, referral_source)
   values (
     new.id,
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'avatar_url',
     new.email,
     user_role,
+    new.raw_user_meta_data->>'phone',
+    (nullif(new.raw_user_meta_data->>'age', ''))::int,
+    new.raw_user_meta_data->>'gender',
+    new.raw_user_meta_data->>'country',
+    new.raw_user_meta_data->>'city',
     (new.raw_user_meta_data->'referral_source')::jsonb
   );
 
@@ -435,6 +440,11 @@ begin
       full_name = coalesce(new.raw_user_meta_data->>'full_name', full_name),
       avatar_url = coalesce(new.raw_user_meta_data->>'avatar_url', avatar_url),
       role = coalesce(new.raw_user_meta_data->>'role', role),
+      phone = coalesce(new.raw_user_meta_data->>'phone', phone),
+      age = coalesce((nullif(new.raw_user_meta_data->>'age', ''))::int, age),
+      gender = coalesce(new.raw_user_meta_data->>'gender', gender),
+      country = coalesce(new.raw_user_meta_data->>'country', country),
+      city = coalesce(new.raw_user_meta_data->>'city', city),
       updated_at = now()
   where id = new.id;
   return new;
