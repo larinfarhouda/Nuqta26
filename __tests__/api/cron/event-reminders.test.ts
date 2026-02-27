@@ -160,7 +160,7 @@ describe('Event Reminders Cron', () => {
         expect(mockSendEmail).toHaveBeenCalledTimes(1);
     });
 
-    it('should skip bookings without contact email', async () => {
+    it('should skip bookings without contact email and count as failed', async () => {
         const mockBookings = [
             {
                 id: 'booking-1',
@@ -188,7 +188,8 @@ describe('Event Reminders Cron', () => {
 
         expect(res.status).toBe(200);
         expect(body.total).toBe(1);
-        // Still counts as "fulfilled" (no error), just no email sent
+        expect(body.sent).toBe(0);
+        expect(body.failed).toBe(1);
         expect(mockSendEmail).not.toHaveBeenCalled();
     });
 

@@ -83,7 +83,7 @@ export async function GET(request: Request) {
 
                     if (!email) {
                         logger.warn('Booking has no contact email, skipping', { bookingId: booking.id });
-                        return;
+                        throw new Error('No contact email');
                     }
 
                     // Build Google Maps URL if coordinates exist
