@@ -4,27 +4,22 @@ import dynamic from 'next/dynamic';
 import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
 
 const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'), {
-    ssr: true,
     loading: () => <div className="h-screen w-full animate-pulse bg-gray-50" />
 });
 
 const VendorBenefits = dynamic(() => import('@/components/vendor-landing/VendorBenefits'), {
-    ssr: false,
     loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorTestimonials = dynamic(() => import('@/components/vendor-landing/VendorTestimonials'), {
-    ssr: false,
     loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorFAQ = dynamic(() => import('@/components/vendor-landing/VendorFAQ'), {
-    ssr: false,
     loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorPricing = dynamic(() => import('@/components/vendor-landing/VendorPricing'), {
-    ssr: false,
     loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
 });
 
