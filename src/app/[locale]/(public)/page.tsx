@@ -90,7 +90,7 @@ export default async function HomePage(props: { params: Promise<{ locale: string
     const lng = typeof searchParams.lng === 'string' ? Number(searchParams.lng) : undefined;
     const radius = typeof searchParams.radius === 'string' ? Number(searchParams.radius) : undefined;
 
-    const events = await getPublicEvents({
+    const allEvents = await getPublicEvents({
         search,
         location,
         date: date as 'today' | 'tomorrow' | 'weekend' | 'week' | undefined,
@@ -101,6 +101,32 @@ export default async function HomePage(props: { params: Promise<{ locale: string
         lng,
         radius
     });
+
+    // Filter out events that finished more than 1 day ago,
+    // and push recently-past events to the end of the list
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const events = allEvents
+        .filter((event: any) => {
+            const eventDate = new Date(event.date);
+            // Keep events that haven't finished more than 1 day ago
+            return eventDate >= oneDayAgo;
+        })
+        .sort((a: any, b: any) => {
+            const aDate = new Date(a.date);
+            const bDate = new Date(b.date);
+            const aIsPast = aDate < now;
+            const bIsPast = bDate < now;
+
+            // Upcoming events come first, past events go to the end
+            if (aIsPast !== bIsPast) {
+                return aIsPast ? 1 : -1;
+            }
+
+            // Within same group, sort by date ascending
+            return aDate.getTime() - bDate.getTime();
+        });
 
     // Fetch unique districts
     const { data: districtsData } = await supabase
