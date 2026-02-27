@@ -361,7 +361,7 @@ export class NotificationService {
         });
 
         const dateStr = new Date(params.eventDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Istanbul'
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
         });
 
         const html = `
