@@ -23,6 +23,7 @@
     "@next/bundle-analyzer": "^16.1.4",
     "@next/third-parties": "^16.1.4",
     "@react-email/components": "^1.0.6",
+    "@react-email/render": "^2.0.4",
     "@react-google-maps/api": "^2.20.8",
     "@sentry/nextjs": "^10.39.0",
     "@supabase/ssr": "^0.8.0",

@@ -4,7 +4,8 @@ import { BookingRepository } from '@/repositories/booking.repository';
 import { NotificationService } from '@/services/notification.service';
 import { logger } from '@/lib/logger/logger';
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 2;
+const BATCH_DELAY_MS = 600; // Delay between batches to respect Resend's 2 req/s rate limit
 
 /**
  * GET /api/cron/daily-tasks
@@ -87,6 +88,7 @@ async function sendEventReminders(
 ) {
     let sentCount = 0;
     let failedCount = 0;
+    const errors: Array<{ bookingId: string, error: string }> = [];
 
     try {
         logger.info('Reminder date range', { tomorrowStart, tomorrowEnd });
@@ -144,8 +146,8 @@ async function sendEventReminders(
                     }
 
                     await notificationService.sendEventReminder({
-                        customerEmail: email,
-                        customerName: name,
+                        customerEmail: email!,
+                        customerName: name || 'Guest',
                         eventTitle: event.title,
                         eventDate: event.date,
                         eventTime,
@@ -163,22 +165,29 @@ async function sendEventReminders(
                     successfulIds.push(batch[index].id);
                 } else {
                     failedCount++;
+                    const errMsg = result.reason?.message || String(result.reason);
+                    errors.push({ bookingId: batch[index].id, error: errMsg });
                     logger.error('Failed to send reminder', {
                         bookingId: batch[index].id,
-                        error: result.reason?.message,
+                        error: errMsg,
                     });
                 }
             });
+
+            // Add delay between batches to respect Resend rate limit
+            if (i + BATCH_SIZE < bookings.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
         }
 
         if (successfulIds.length > 0) {
             await bookingRepo.markReminderSent(successfulIds);
         }
 
-        return { total: bookings.length, sent: sentCount, failed: failedCount };
+        return { total: bookings.length, sent: sentCount, failed: failedCount, errors };
     } catch (error) {
         logger.error('Event reminders task failed', { error });
-        return { total: 0, sent: sentCount, failed: failedCount, error: 'Task failed' };
+        return { total: 0, sent: sentCount, failed: failedCount, error: 'Task failed', details: String(error) };
     }
 }
 
@@ -239,8 +248,8 @@ async function sendReviewRequests(
                     }
 
                     await notificationService.sendReviewRequest({
-                        customerEmail: email,
-                        customerName: name,
+                        customerEmail: email!,
+                        customerName: name || 'Guest',
                         eventTitle: event.title,
                         eventSlug: event.slug,
                         locale: 'ar',
@@ -260,6 +269,11 @@ async function sendReviewRequests(
                     });
                 }
             });
+
+            // Add delay between batches to respect Resend rate limit
+            if (i + BATCH_SIZE < bookings.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
         }
 
         if (successfulIds.length > 0) {

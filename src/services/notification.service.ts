@@ -213,6 +213,7 @@ export class NotificationService {
         locale?: 'en' | 'ar';
     }) {
         const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
         const reviewUrl = `${baseUrl}/${locale}/events/${params.eventSlug}?review=true`;
 
@@ -221,23 +222,42 @@ export class NotificationService {
             eventSlug: params.eventSlug
         });
 
+        const html = `
+<!DOCTYPE html>
+<html dir="${isAr ? 'rtl' : 'ltr'}" lang="${locale}">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:24px;">
+  <div style="background:white;border-radius:16px;padding:32px;border:1px solid #e5e7eb;">
+    <h1 style="font-size:20px;color:#111827;margin-bottom:16px;">${isAr ? 'كيف كانت تجربتك؟ ⭐' : 'How was your experience? ⭐'}</h1>
+    <p style="color:#374151;font-size:16px;line-height:1.6;">${isAr ? `مرحباً ${params.customerName}،` : `Hi ${params.customerName},`}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;">${isAr ? `نأمل أنك استمتعت بفعالية <strong>${params.eventTitle}</strong>! رأيك يهمنا ويساعد الآخرين في اتخاذ قرارهم.` : `We hope you enjoyed <strong>${params.eventTitle}</strong>! Your feedback helps others and means a lot to us.`}</p>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="${reviewUrl}" style="background:#0d9488;color:white;font-weight:bold;padding:14px 32px;border-radius:12px;text-decoration:none;display:inline-block;font-size:16px;">${isAr ? 'اكتب تقييمك' : 'Write a Review'}</a>
+    </div>
+    <p style="font-size:14px;color:#6b7280;text-align:center;">${isAr ? 'شكراً لمشاركتك! 💚' : 'Thank you for your time! 💚'}</p>
+  </div>
+</div>
+</body>
+</html>`;
+
         try {
-            await sendEmail({
+            const result = await sendEmail({
                 to: params.customerEmail,
-                subject: locale === 'ar'
+                subject: isAr
                     ? `كيف كانت تجربتك في ${params.eventTitle}؟`
                     : `How was ${params.eventTitle}?`,
-                react: React.createElement(ReviewRequestTemplate, {
-                    userName: params.customerName,
-                    eventName: params.eventTitle,
-                    reviewUrl,
-                    locale,
-                })
+                html,
             });
+
+            if (!result.success) {
+                throw new Error(`Email send failed: ${(result.error as any)?.message || (result.error as any)?.name || String(result.error)}`);
+            }
 
             logger.info('Review request sent successfully');
         } catch (error) {
             logger.error('Failed to send review request', { error, params });
+            throw error;
         }
     }
 
@@ -331,31 +351,65 @@ export class NotificationService {
         bookingId: string;
         locale?: 'en' | 'ar';
     }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        const ticketUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist'}/dashboard/bookings/${params.bookingId}`;
+
         logger.info('NotificationService: Sending event reminder', {
             email: params.customerEmail,
             eventTitle: params.eventTitle
         });
 
+        const dateStr = new Date(params.eventDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Istanbul'
+        });
+
+        const html = `
+<!DOCTYPE html>
+<html dir="${isAr ? 'rtl' : 'ltr'}" lang="${locale}">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:24px;">
+  <div style="background:white;border-radius:16px;padding:32px;border:1px solid #e5e7eb;">
+    <h1 style="font-size:20px;color:#111827;margin-bottom:16px;">${isAr ? 'نراك غداً! 👋' : 'See you tomorrow! 👋'}</h1>
+    <p style="color:#374151;font-size:16px;line-height:1.6;">${isAr ? `مرحباً ${params.customerName}،` : `Hi ${params.customerName},`}</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;">${isAr ? 'هذا تذكير ودي بأن لديك فعالية قادمة غداً. نحن متشوقون لرؤيتك هناك!' : "This is a friendly reminder that you have an upcoming event tomorrow. We can't wait to see you there!"}</p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+    <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="font-size:12px;font-weight:bold;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #e5e7eb;padding-bottom:8px;">${isAr ? 'تفاصيل الفعالية' : 'Event Details'}</p>
+      <h3 style="font-size:18px;color:#115e59;margin:12px 0;">${params.eventTitle}</h3>
+      <p style="margin:4px 0;color:#111827;"><strong style="color:#6b7280;">${isAr ? 'التاريخ' : 'Date'}:</strong> ${dateStr}</p>
+      ${params.eventTime ? `<p style="margin:4px 0;color:#111827;"><strong style="color:#6b7280;">${isAr ? 'الوقت' : 'Time'}:</strong> ${params.eventTime}</p>` : ''}
+      <p style="margin:4px 0;color:#111827;"><strong style="color:#6b7280;">${isAr ? 'الموقع' : 'Location'}:</strong> ${params.location}</p>
+      ${params.locationUrl ? `<p style="margin:4px 0;"><a href="${params.locationUrl}" style="color:#0d9488;font-size:14px;">${isAr ? 'عرض على الخريطة' : 'View on Map'}</a></p>` : ''}
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="${ticketUrl}" style="background:#0d9488;color:white;font-weight:bold;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;">${isAr ? 'عرض الحجز والتذاكر' : 'View Booking & Tickets'}</a>
+    </div>
+    <p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:24px;">Reference: ${params.bookingId}</p>
+    <p style="font-size:12px;color:#9ca3af;text-align:center;">${isAr ? 'تحتاج مساعدة؟ تواصل مع المنظم مباشرة أو قم بالرد على هذا البريد.' : 'Need help? Contact the organizer directly or reply to this email.'}</p>
+  </div>
+</div>
+</body>
+</html>`;
+
         try {
-            await sendEmail({
+            const result = await sendEmail({
                 to: params.customerEmail,
-                subject: `Reminder: ${params.eventTitle} is tomorrow!`,
-                react: React.createElement(EventReminderTemplate, {
-                    userName: params.customerName,
-                    eventName: params.eventTitle,
-                    eventDate: params.eventDate,
-                    eventTime: params.eventTime,
-                    location: params.location,
-                    locationUrl: params.locationUrl,
-                    bookingId: params.bookingId,
-                    ticketUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist'}/dashboard/bookings/${params.bookingId}`,
-                    locale: params.locale || 'en',
-                })
+                subject: isAr
+                    ? `تذكير: ${params.eventTitle} غداً!`
+                    : `Reminder: ${params.eventTitle} is tomorrow!`,
+                html,
             });
+
+            if (!result.success) {
+                throw new Error(`Email send failed: ${(result.error as any)?.message || (result.error as any)?.name || String(result.error)}`);
+            }
 
             logger.info('Event reminder sent successfully');
         } catch (error) {
             logger.error('Failed to send event reminder', { error, params });
+            throw error;
         }
     }
 

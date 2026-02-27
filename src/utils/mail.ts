@@ -7,13 +7,14 @@ const resend = process.env.RESEND_API_KEY
 interface SendEmailParams {
     to: string | string[];
     subject: string;
-    react: React.ReactNode;
+    react?: React.ReactNode;
+    html?: string;
 }
 
-export async function sendEmail({ to, subject, react }: SendEmailParams) {
+export async function sendEmail({ to, subject, react, html }: SendEmailParams) {
     if (!process.env.RESEND_API_KEY || !resend) {
         console.warn('RESEND_API_KEY is not set. Email not sent.');
-        return { success: false, error: 'Missing API Key' };
+        return { success: false, error: { message: 'Missing API Key' } };
     }
 
     const fromEmail = 'Nuqta <no-reply@nuqta.ist>';
@@ -26,19 +27,20 @@ export async function sendEmail({ to, subject, react }: SendEmailParams) {
     }
 
     try {
-        // Timeout after 10 seconds to prevent hanging
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Email sending timed out')), 10000)
-        );
-
-        const emailPromise = resend.emails.send({
+        // Build email payload - prefer html if provided, fall back to react
+        const emailPayload: any = {
             from: fromEmail,
             to,
             subject,
-            react,
-        });
+        };
 
-        const { data, error } = await Promise.race([emailPromise, timeoutPromise]) as any;
+        if (html) {
+            emailPayload.html = html;
+        } else if (react) {
+            emailPayload.react = react;
+        }
+
+        const { data, error } = await resend.emails.send(emailPayload);
 
         if (error) {
             console.error('Error sending email:', error);
