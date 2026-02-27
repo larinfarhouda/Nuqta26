@@ -224,28 +224,28 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
             {/* 2. Sticky Navigation Bar */}
             <div className={`sticky top-20 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200 transition-all duration-300 ${isHeaderSticky ? 'shadow-md py-2' : 'py-3'}`}>
                 <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-1 md:gap-6 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+                    <div className="flex items-center gap-2 md:gap-6 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 flex-nowrap min-w-0">
                         <button
                             onClick={() => scrollToSection('events')}
-                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                            className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'events' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
                         >
                             {t('active_catalog')}
                         </button>
                         <button
                             onClick={() => scrollToSection('gallery')}
-                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'gallery' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                            className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'gallery' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
                         >
                             {t('view_gallery')}
                         </button>
                         <button
                             onClick={() => scrollToSection('reviews')}
-                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'reviews' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                            className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'reviews' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
                         >
                             {t('reviews_tab')} {vendor.rating?.count ? `(${vendor.rating.count})` : ''}
                         </button>
                         <button
                             onClick={() => scrollToSection('about')}
-                            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'about' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                            className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeTab === 'about' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
                         >
                             {t('our_mission')}
                         </button>
@@ -306,7 +306,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                             )}
 
                             {filteredEvents.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                                     {filteredEvents.map((event: any, i: number) => (
                                         <motion.div
                                             key={event.id}

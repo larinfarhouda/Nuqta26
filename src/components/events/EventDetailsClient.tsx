@@ -140,7 +140,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
             <BackgroundShapes />
 
             {/* 1. Header Navigation - Ambient Glass - Positioned below main Navbar */}
-            <div className="sticky top-24 z-40 bg-white/60 backdrop-blur-2xl border-b border-white/20 px-4 md:px-6 py-4">
+            <div className="sticky top-16 md:top-24 z-40 bg-white/60 backdrop-blur-2xl border-b border-white/20 px-4 md:px-6 py-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <Link href="/" className="p-2 -ml-2 hover:bg-white/50 rounded-full transition-colors flex items-center gap-2 text-sm font-black text-gray-900 group">
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
@@ -294,12 +294,12 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                             <Image src="/images/logo_nav.png" alt="Nuqta" width={100} height={100} className="object-contain" />
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 relative z-10">
                             <Link
                                 href={event.vendor?.slug ? `/v/${event.vendor.slug}` : `/vendor/${event.vendor_id}`}
-                                className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left text-gray-900 group/vendor cursor-pointer hover:opacity-80 transition-opacity"
+                                className="flex flex-row items-center gap-4 sm:gap-6 text-start text-gray-900 group/vendor cursor-pointer hover:opacity-80 transition-opacity"
                             >
-                                <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white transition-transform group-hover/vendor:scale-105">
+                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white transition-transform group-hover/vendor:scale-105 shrink-0">
                                     <Image
                                         src={event.vendor?.company_logo || '/images/logo_nav.png'}
                                         alt="Vendor"
@@ -310,7 +310,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                 <div>
                                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{t('elite_organizer')}</p>
                                     <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2 group-hover/vendor:text-primary transition-colors">{event.vendor?.business_name || t('default_partner')}</h3>
-                                    <div className="flex items-center justify-center sm:justify-start gap-4">
+                                    <div className="flex items-center justify-start gap-4 flex-wrap">
                                         {event.vendor_rating && event.vendor_rating.count > 0 && (
                                             <>
                                                 <div className="flex items-center gap-1.5 text-amber-500">

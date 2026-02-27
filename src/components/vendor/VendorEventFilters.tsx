@@ -171,7 +171,7 @@ export default function VendorEventFilters() {
 
             {/* Categories - Horizontal Scroll */}
             <div className="relative">
-                <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-2 no-scrollbar">
+                <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-2 no-scrollbar flex-nowrap">
                     {categories.map((cat) => {
                         const isActive = selectedCategory === cat.slug;
                         const name = locale === 'ar' && cat.name_ar ? cat.name_ar : cat.name_en;
@@ -181,7 +181,7 @@ export default function VendorEventFilters() {
                                 key={cat.id}
                                 onClick={() => handleCategoryClick(cat.slug)}
                                 className={cn(
-                                    "flex flex-col items-center gap-2 min-w-[70px] md:min-w-[80px] p-3 md:p-4 rounded-2xl transition-all",
+                                    "flex flex-col items-center gap-2 min-w-[70px] md:min-w-[80px] p-3 md:p-4 rounded-2xl transition-all shrink-0",
                                     isActive
                                         ? "bg-primary text-white shadow-lg shadow-primary/20"
                                         : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
@@ -203,7 +203,7 @@ export default function VendorEventFilters() {
             </div>
 
             {/* Additional Filters Row */}
-            <div className="flex flex-wrap items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar flex-nowrap">
                 {/* District Filter */}
                 <div className="relative flex-1 min-w-[150px]">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
