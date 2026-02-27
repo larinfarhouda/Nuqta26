@@ -56,14 +56,13 @@ export async function GET(request: Request) {
     yesterdayEndDate.setHours(23, 59, 59, 999);
     const yesterdayEnd = yesterdayEndDate.toISOString();
 
-    // ─── Task 1: Event Reminders ─────────────────────────────────────────
     const reminderResult = await sendEventReminders(
-        bookingRepo, notificationService, tomorrowStart, tomorrowEnd
+        supabase, bookingRepo, notificationService, tomorrowStart, tomorrowEnd
     );
 
     // ─── Task 2: Review Requests ─────────────────────────────────────────
     const reviewResult = await sendReviewRequests(
-        bookingRepo, notificationService, yesterdayStart, yesterdayEnd
+        supabase, bookingRepo, notificationService, yesterdayStart, yesterdayEnd
     );
 
     const summary = {
@@ -80,6 +79,7 @@ export async function GET(request: Request) {
 // ─── Event Reminders ─────────────────────────────────────────────────────────
 
 async function sendEventReminders(
+    supabase: any,
     bookingRepo: BookingRepository,
     notificationService: NotificationService,
     tomorrowStart: string,
@@ -108,9 +108,19 @@ async function sendEventReminders(
             const results = await Promise.allSettled(
                 batch.map(async (booking) => {
                     const event = booking.events as any;
-                    const profile = (booking as any).profiles;
-                    const email = booking.contact_email || profile?.email;
-                    const name = booking.contact_name || profile?.full_name || 'Guest';
+                    let email = booking.contact_email;
+                    let name = booking.contact_name;
+
+                    // Fall back to profile data if contact fields are missing
+                    if (!email || !name) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('email, full_name')
+                            .eq('id', booking.user_id)
+                            .single();
+                        if (!email) email = profile?.email;
+                        if (!name) name = profile?.full_name || 'Guest';
+                    }
 
                     if (!email) {
                         logger.warn('Booking has no contact or profile email, skipping', { bookingId: booking.id });
@@ -175,6 +185,7 @@ async function sendEventReminders(
 // ─── Review Requests ─────────────────────────────────────────────────────────
 
 async function sendReviewRequests(
+    supabase: any,
     bookingRepo: BookingRepository,
     notificationService: NotificationService,
     yesterdayStart: string,
@@ -203,9 +214,19 @@ async function sendReviewRequests(
             const results = await Promise.allSettled(
                 batch.map(async (booking) => {
                     const event = booking.events as any;
-                    const profile = (booking as any).profiles;
-                    const email = booking.contact_email || profile?.email;
-                    const name = booking.contact_name || profile?.full_name || 'Guest';
+                    let email = booking.contact_email;
+                    let name = booking.contact_name;
+
+                    // Fall back to profile data if contact fields are missing
+                    if (!email || !name) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('email, full_name')
+                            .eq('id', booking.user_id)
+                            .single();
+                        if (!email) email = profile?.email;
+                        if (!name) name = profile?.full_name || 'Guest';
+                    }
 
                     if (!email) {
                         logger.warn('Booking has no contact or profile email, skipping review request', { bookingId: booking.id });

@@ -282,10 +282,6 @@ export class BookingRepository extends BaseRepository {
                 user_id,
                 contact_email,
                 contact_name,
-                profiles:user_id (
-                    email,
-                    full_name
-                ),
                 events!inner (
                     id,
                     title,
@@ -333,10 +329,6 @@ export class BookingRepository extends BaseRepository {
                 user_id,
                 contact_email,
                 contact_name,
-                profiles:user_id (
-                    email,
-                    full_name
-                ),
                 events!inner (
                     id,
                     title,
