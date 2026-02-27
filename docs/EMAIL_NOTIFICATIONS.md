@@ -67,11 +67,12 @@ This document provides a complete overview of all email notifications implemente
 - **Content**: Welcome message, call-to-action
 - **Status**: ⚠️ Template ready, needs trigger on user registration
 
-#### 7. **Event Reminder Email**
-- **Service Method**: `NotificationService.sendEventReminder()`
+#### 7. **Event Reminder Email** ✨ BILINGUAL
+- **Trigger**: Vercel Cron Job runs daily at 18:00 UTC (21:00 Istanbul)
+- **Location**: `/src/app/api/cron/event-reminders/route.ts`
 - **Template**: `EventReminderTemplate` (bilingual: EN/AR)
-- **Content**: Event details, date, time, location, ticket link
-- **Status**: ⚠️ Template ready, needs scheduled job (24h before event)
+- **Content**: Event details, date, time, location with map link, ticket link
+- **Status**: ✅ ACTIVE (via daily cron, 24h before event)
 
 #### 8. **Review Request Email**
 - **Service Method**: `NotificationService.sendReviewRequest()`
@@ -136,10 +137,8 @@ class NotificationService {
 ### 1. Add Welcome Email Trigger
 Add to user registration flow in `/src/app/[locale]/(public)/register/page.tsx` after successful registration
 
-### 2. Implement Event Reminder Scheduler
-Create a cron job or scheduled function to:
-- Query confirmed bookings for events happening in 24 hours
-- Send `EventReminderTemplate` to each customer
+### ~~2. Implement Event Reminder Scheduler~~ ✅ DONE
+~~Create a cron job or scheduled function~~ — Implemented via Vercel Cron (`vercel.json`) + `/api/cron/event-reminders`
 
 ### 3. Create Review Request Template
 - Design a template for requesting reviews
@@ -155,8 +154,8 @@ Create a cron job or scheduled function to:
 ## 📊 Current Statistics
 
 - **Total Templates**: 9
-- **Active Notifications**: 5
-- **Ready But Not Triggered**: 3
+- **Active Notifications**: 6
+- **Ready But Not Triggered**: 2
 - **Managed by Supabase**: 1+
 - **Email Service**: Resend (via `/src/utils/mail.ts`)
 
@@ -183,5 +182,5 @@ These are automatically handled by Supabase Auth and configured in Supabase Dash
 
 ---
 
-**Last Updated**: 2026-01-30
-**Status**: 5/9 notifications fully active
+**Last Updated**: 2026-02-27
+**Status**: 6/9 notifications fully active

@@ -266,4 +266,51 @@ export class BookingRepository extends BaseRepository {
 
         return data;
     }
+
+    /**
+     * Find confirmed bookings for events happening between tomorrowStart and tomorrowEnd
+     * that haven't had a reminder sent yet.
+     * Single optimized query joining bookings → events → profiles.
+     */
+    async findBookingsForReminder(tomorrowStart: string, tomorrowEnd: string) {
+        const { data, error } = await this.client
+            .from('bookings')
+            .select(`
+                id,
+                user_id,
+                contact_email,
+                contact_name,
+                events!inner (
+                    id,
+                    title,
+                    date,
+                    end_date,
+                    location_name,
+                    location_lat,
+                    location_long,
+                    slug
+                )
+            `)
+            .eq('status', 'confirmed')
+            .eq('reminder_sent', false)
+            .gte('events.date', tomorrowStart)
+            .lte('events.date', tomorrowEnd);
+
+        if (error) this.handleError(error, 'BookingRepository.findBookingsForReminder');
+        return data || [];
+    }
+
+    /**
+     * Batch mark bookings as reminder sent
+     */
+    async markReminderSent(bookingIds: string[]) {
+        if (bookingIds.length === 0) return;
+
+        const { error } = await this.client
+            .from('bookings')
+            .update({ reminder_sent: true } as any)
+            .in('id', bookingIds);
+
+        if (error) this.handleError(error, 'BookingRepository.markReminderSent');
+    }
 }
