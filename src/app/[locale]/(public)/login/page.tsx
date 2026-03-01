@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Mail, Lock, ArrowRight, AlertCircle, Facebook } from 'lucide-react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 // Schema creator
@@ -25,6 +26,8 @@ export default function LoginPage() {
     const locale = useLocale();
     const supabase = createClient();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [resendStatus, setResendStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -69,8 +72,10 @@ export default function LoginPage() {
 
                 const role = profile?.role || user.user_metadata?.role || 'user';
 
-                // Use hard navigation to ensure server re-renders with updated auth state
-                if (role === 'vendor') {
+                // If we have a redirect URL (e.g. from booking flow), go back there
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                } else if (role === 'vendor') {
                     window.location.href = '/dashboard/vendor';
                 } else if (role === 'admin') {
                     window.location.href = '/admin';
@@ -78,8 +83,7 @@ export default function LoginPage() {
                     window.location.href = '/';
                 }
             } else {
-                // Use hard navigation to ensure server re-renders with updated auth state
-                window.location.href = '/';
+                window.location.href = redirectUrl || '/';
             }
 
         } catch (err: any) {
@@ -175,6 +179,7 @@ export default function LoginPage() {
                     <div className="grid grid-cols-1 gap-4">
                         <GoogleSignInButton
                             locale={locale}
+                            redirectUrl={redirectUrl || undefined}
                             onError={(msg) => setError(msg)}
                             className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                         >

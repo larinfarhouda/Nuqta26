@@ -1,39 +1,152 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/navigation';
-import { X, LogIn, UserPlus, ShieldCheck } from 'lucide-react';
+import { X, ShieldCheck, LogIn, Loader2, Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 interface MobileLoginDialogProps {
     isOpen: boolean;
     onClose: () => void;
+    onAuthSuccess?: () => void;
     returnUrl?: string;
 }
 
-export function MobileLoginDialog({ isOpen, onClose, returnUrl }: MobileLoginDialogProps) {
+export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }: MobileLoginDialogProps) {
     const t = useTranslations('Events');
     const tAuth = useTranslations('Auth');
+    const locale = useLocale();
+    const supabase = createClient();
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [fullName, setFullName] = useState('');
+    const [registerSuccess, setRegisterSuccess] = useState(false);
 
     if (!isOpen) return null;
 
     const loginUrl = returnUrl ? `/login?redirect=${encodeURIComponent(returnUrl)}` : '/login';
     const registerUrl = returnUrl ? `/register?redirect=${encodeURIComponent(returnUrl)}` : '/register';
 
+    const handleInlineLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return;
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (signInError) throw signInError;
+
+            // Auth succeeded — trigger callback so booking form can retry
+            if (onAuthSuccess) {
+                onAuthSuccess();
+            } else {
+                // Fallback: reload the page to pick up auth state
+                window.location.reload();
+            }
+        } catch (err: any) {
+            const message = err.message || '';
+            if (message.includes('Email not confirmed')) {
+                setError(tAuth('error_email_not_confirmed'));
+            } else if (message.includes('Invalid login credentials')) {
+                setError(tAuth('error_invalid_credentials'));
+            } else {
+                setError(tAuth('error_generic'));
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleInlineRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password || !fullName) return;
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const { error: signUpError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=user${returnUrl ? `&next=${encodeURIComponent(returnUrl)}` : ''}`,
+                    data: {
+                        role: 'user',
+                        full_name: fullName,
+                    },
+                },
+            });
+
+            if (signUpError) throw signUpError;
+
+            setRegisterSuccess(true);
+
+            // Notify admin (fire-and-forget)
+            fetch('/api/notify-signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userName: fullName,
+                    userEmail: email,
+                    userRole: 'user',
+                    signupMethod: 'email',
+                }),
+            }).catch(() => { });
+        } catch (err: any) {
+            const message = err.message || '';
+            if (message.includes('User already registered')) {
+                setError(tAuth('error_user_already_registered'));
+            } else {
+                setError(tAuth('error_generic'));
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleAuthSuccess = () => {
+        // Google sign-in handles its own redirect when redirectUrl is provided
+        // But for the inline case where we want auto-retry, trigger the callback
+        if (onAuthSuccess) {
+            // Small delay to let auth state propagate
+            setTimeout(() => onAuthSuccess(), 500);
+        }
+    };
+
+    const switchMode = (newMode: 'login' | 'register') => {
+        setMode(newMode);
+        setError(null);
+        setEmail('');
+        setPassword('');
+        setFullName('');
+        setRegisterSuccess(false);
+    };
+
     return (
         <>
-            {/* Backdrop - no blur to prevent mobile rendering issues */}
+            {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-black/60 z-50 transition-opacity animate-in fade-in duration-200"
                 onClick={onClose}
             />
 
-            {/* Dialog - Centered Layout, z-[51] to always render above the backdrop */}
+            {/* Dialog */}
             <div
                 className="fixed inset-0 z-[51] flex items-center justify-center p-4 animate-in zoom-in-95 duration-200"
                 onClick={onClose}
             >
                 <div
-                    className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl transform overflow-hidden ring-1 ring-black/5"
+                    className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[90vh] overflow-y-auto"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Decorative Header Background */}
@@ -43,7 +156,7 @@ export function MobileLoginDialog({ isOpen, onClose, returnUrl }: MobileLoginDia
                     <div className="relative pt-8 px-8 pb-4 text-center">
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 p-2 rounded-full bg-white/50 hover:bg-white transition-colors"
+                            className="absolute top-4 right-4 p-2 rounded-full bg-white/50 hover:bg-white transition-colors z-10"
                             aria-label="Close"
                         >
                             <X className="w-5 h-5 text-gray-500" />
@@ -63,39 +176,139 @@ export function MobileLoginDialog({ isOpen, onClose, returnUrl }: MobileLoginDia
 
                     {/* Content */}
                     <div className="p-8 pt-2 space-y-4">
-                        {/* Login Button */}
-                        <Link
-                            href={loginUrl}
-                            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-primary text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-95 group"
-                        >
-                            <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            <span>{tAuth('login')}</span>
-                        </Link>
-
-                        {/* Divider */}
-                        <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100 dark:border-gray-800"></div>
+                        {registerSuccess ? (
+                            /* Registration Success */
+                            <div className="text-center py-4">
+                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Mail className="w-8 h-8 text-emerald-600" />
+                                </div>
+                                <h3 className="text-lg font-black text-gray-900 mb-2">
+                                    {tAuth('registration_success_title')}
+                                </h3>
+                                <p className="text-sm text-gray-500 leading-relaxed">
+                                    {tAuth('registration_success_desc', { email })}
+                                </p>
                             </div>
-                            <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-                                <span className="px-4 bg-white dark:bg-gray-900 text-gray-400">
-                                    {tAuth('no_account')}
-                                </span>
-                            </div>
-                        </div>
+                        ) : (
+                            <>
+                                {/* Google Sign-In — fastest path */}
+                                <GoogleSignInButton
+                                    locale={locale}
+                                    redirectUrl={returnUrl}
+                                    onError={(msg) => setError(msg)}
+                                    className="w-full p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
+                                >
+                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
+                                    <span className="text-sm">{tAuth('continue_google')}</span>
+                                </GoogleSignInButton>
 
-                        {/* Sign Up Button */}
-                        <Link
-                            href={registerUrl}
-                            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:bg-white hover:border-primary/30 hover:text-primary transition-all active:scale-95 group"
-                        >
-                            <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                            <span>{tAuth('create_account')}</span>
-                        </Link>
+                                {/* Divider */}
+                                <div className="relative py-2">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-gray-100 dark:border-gray-800"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
+                                        <span className="px-4 bg-white dark:bg-gray-900 text-gray-400">
+                                            {tAuth('or_email')}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Inline Login / Register Form */}
+                                <form onSubmit={mode === 'login' ? handleInlineLogin : handleInlineRegister} className="space-y-3">
+                                    {mode === 'register' && (
+                                        <div className="relative">
+                                            <UserPlus className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={fullName}
+                                                onChange={(e) => setFullName(e.target.value)}
+                                                placeholder={tAuth('label_fullname')}
+                                                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                                                required
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder={tAuth('email')}
+                                            className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder={tAuth('password')}
+                                            className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                                            required
+                                            minLength={mode === 'register' ? 6 : undefined}
+                                        />
+                                    </div>
+
+                                    {error && (
+                                        <p className="text-xs font-bold text-rose-600 text-center px-2">{error}</p>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white font-black uppercase tracking-widest text-sm rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
+                                    >
+                                        {isLoading ? (
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        ) : (
+                                            <>
+                                                {mode === 'login' ? (
+                                                    <LogIn className="w-4 h-4" />
+                                                ) : (
+                                                    <UserPlus className="w-4 h-4" />
+                                                )}
+                                                <span>{mode === 'login' ? tAuth('login') : tAuth('create_account')}</span>
+                                                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+
+                                {/* Toggle Login / Register */}
+                                <div className="text-center pt-2">
+                                    {mode === 'login' ? (
+                                        <p className="text-sm text-gray-500">
+                                            {tAuth('no_account')}{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => switchMode('register')}
+                                                className="text-primary font-bold hover:underline"
+                                            >
+                                                {tAuth('create_account')}
+                                            </button>
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">
+                                            {tAuth('have_account')}{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => switchMode('login')}
+                                                className="text-primary font-bold hover:underline"
+                                            >
+                                                {tAuth('login')}
+                                            </button>
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
         </>
     );
 }
-

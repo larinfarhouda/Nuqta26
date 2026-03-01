@@ -46,6 +46,7 @@ export default function RegisterPage() {
     const supabase = createClient();
 
     const initialRole = searchParams.get('role') === 'vendor' ? 'vendor' : 'user';
+    const redirectUrl = searchParams.get('redirect');
     const [role, setRole] = useState<'user' | 'vendor'>(initialRole);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -93,7 +94,7 @@ export default function RegisterPage() {
                 email: data.email,
                 password: data.password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}`,
+                    emailRedirectTo: `${window.location.origin}/auth/callback?locale=${locale}&role=${role}${redirectUrl ? `&next=${encodeURIComponent(redirectUrl)}` : ''}`,
                     data: {
                         role: role,
                         full_name: fullName,
@@ -317,6 +318,7 @@ export default function RegisterPage() {
                                     <GoogleSignInButton
                                         locale={locale}
                                         role={role}
+                                        redirectUrl={redirectUrl || undefined}
                                         onError={(msg) => setError(msg)}
                                         className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                                     >

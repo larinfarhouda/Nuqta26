@@ -17,6 +17,7 @@ declare const google: {
 interface GoogleSignInButtonProps {
     locale: string;
     role?: 'user' | 'vendor';
+    redirectUrl?: string;
     className?: string;
     children: React.ReactNode;
     onError?: (error: string) => void;
@@ -25,6 +26,7 @@ interface GoogleSignInButtonProps {
 const GoogleSignInButton = memo(function GoogleSignInButton({
     locale,
     role = 'user',
+    redirectUrl,
     className,
     children,
     onError,
@@ -35,8 +37,10 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     const googleButtonRef = useRef<HTMLDivElement>(null);
     const initializedRef = useRef(false);
     const roleRef = useRef(role);
+    const redirectUrlRef = useRef(redirectUrl);
 
     useEffect(() => { roleRef.current = role; }, [role]);
+    useEffect(() => { redirectUrlRef.current = redirectUrl; }, [redirectUrl]);
 
     const handleCredentialResponse = useCallback(async (response: any) => {
         setIsLoading(true);
@@ -96,8 +100,11 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                 }
             }
 
-            // Redirect immediately — don't wait for tracking
-            if (finalRole === 'vendor') {
+            // Redirect: use redirectUrl if available, otherwise role-based
+            const currentRedirectUrl = redirectUrlRef.current;
+            if (currentRedirectUrl) {
+                window.location.href = currentRedirectUrl;
+            } else if (finalRole === 'vendor') {
                 window.location.href = `/${locale}/dashboard/vendor`;
             } else if (finalRole === 'admin') {
                 window.location.href = `/${locale}/admin`;

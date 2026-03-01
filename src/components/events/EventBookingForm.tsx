@@ -568,7 +568,12 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
             <MobileLoginDialog
                 isOpen={showLoginDialog}
                 onClose={() => setShowLoginDialog(false)}
-                returnUrl={typeof window !== 'undefined' ? window.location.pathname : undefined}
+                onAuthSuccess={() => {
+                    setShowLoginDialog(false);
+                    // Small delay to ensure auth state is available on the server
+                    setTimeout(() => handleBook(), 300);
+                }}
+                returnUrl={typeof window !== 'undefined' ? window.location.href : undefined}
             />
         </div>
     );
