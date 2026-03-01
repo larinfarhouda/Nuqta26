@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/navigation';
 import { X, ShieldCheck, LogIn, Loader2, Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import GoogleSignInButton, { GoogleIcon } from '@/components/auth/GoogleSignInButton';
 
 interface MobileLoginDialogProps {
     isOpen: boolean;
@@ -140,52 +140,52 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                 onClick={onClose}
             />
 
-            {/* Dialog */}
+            {/* Dialog — positioned as bottom sheet on mobile for better reachability */}
             <div
-                className="fixed inset-0 z-[51] flex items-center justify-center p-4 animate-in zoom-in-95 duration-200"
+                className="fixed inset-0 z-[51] flex items-end sm:items-center justify-center sm:p-4 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
                 onClick={onClose}
             >
                 <div
-                    className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[90vh] overflow-y-auto"
+                    className="relative w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-[1.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[85vh] overflow-y-auto"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Decorative Header Background */}
-                    <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
+                    <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
 
                     {/* Header */}
-                    <div className="relative pt-8 px-8 pb-4 text-center">
+                    <div className="relative pt-5 px-6 pb-2 text-center">
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 p-2 rounded-full bg-white/50 hover:bg-white transition-colors z-10"
+                            className="absolute top-3 right-3 p-1.5 rounded-full bg-white/50 hover:bg-white transition-colors z-10"
                             aria-label="Close"
                         >
-                            <X className="w-5 h-5 text-gray-500" />
+                            <X className="w-4 h-4 text-gray-500" />
                         </button>
 
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-lg shadow-primary/10 flex items-center justify-center mx-auto mb-6">
-                            <ShieldCheck className="w-8 h-8 text-primary" />
+                        <div className="w-12 h-12 bg-white rounded-xl shadow-lg shadow-primary/10 flex items-center justify-center mx-auto mb-3">
+                            <ShieldCheck className="w-6 h-6 text-primary" />
                         </div>
 
-                        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
+                        <h2 className="text-xl font-black text-gray-900 dark:text-white mb-1">
                             {t('login_to_book')}
                         </h2>
-                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
                             {t('login_prompt')}
                         </p>
                     </div>
 
                     {/* Content */}
-                    <div className="p-8 pt-2 space-y-4">
+                    <div className="px-6 pb-6 pt-1 space-y-3">
                         {registerSuccess ? (
                             /* Registration Success */
-                            <div className="text-center py-4">
-                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Mail className="w-8 h-8 text-emerald-600" />
+                            <div className="text-center py-3">
+                                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Mail className="w-6 h-6 text-emerald-600" />
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900 mb-2">
+                                <h3 className="text-base font-black text-gray-900 mb-1">
                                     {tAuth('registration_success_title')}
                                 </h3>
-                                <p className="text-sm text-gray-500 leading-relaxed">
+                                <p className="text-xs text-gray-500 leading-relaxed">
                                     {tAuth('registration_success_desc', { email })}
                                 </p>
                             </div>
@@ -198,12 +198,12 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                     onError={(msg) => setError(msg)}
                                     className="w-full p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                                 >
-                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
+                                    <GoogleIcon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                                     <span className="text-sm">{tAuth('continue_google')}</span>
                                 </GoogleSignInButton>
 
                                 {/* Divider */}
-                                <div className="relative py-2">
+                                <div className="relative py-1">
                                     <div className="absolute inset-0 flex items-center">
                                         <div className="w-full border-t border-gray-100 dark:border-gray-800"></div>
                                     </div>
@@ -215,7 +215,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                 </div>
 
                                 {/* Inline Login / Register Form */}
-                                <form onSubmit={mode === 'login' ? handleInlineLogin : handleInlineRegister} className="space-y-3">
+                                <form onSubmit={mode === 'login' ? handleInlineLogin : handleInlineRegister} className="space-y-2.5">
                                     {mode === 'register' && (
                                         <div className="relative">
                                             <UserPlus className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -260,7 +260,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                     <button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white font-black uppercase tracking-widest text-sm rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
+                                        className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
                                     >
                                         {isLoading ? (
                                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -279,7 +279,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                 </form>
 
                                 {/* Toggle Login / Register */}
-                                <div className="text-center pt-2">
+                                <div className="text-center pt-1 pb-2">
                                     {mode === 'login' ? (
                                         <p className="text-sm text-gray-500">
                                             {tAuth('no_account')}{' '}

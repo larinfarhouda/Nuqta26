@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient, createAdminClient } from '@/utils/supabase/server';
 import { ServiceFactory } from '@/services/service-factory';
 import { EventFilters } from '@/types/dto/event.dto';
 import { logger } from '@/lib/logger/logger';
@@ -237,7 +237,8 @@ export async function createBooking(
             // Get vendor email from auth.users (service role required)
             let vendorEmail = '';
             try {
-                const { data: { user: vendorUser } } = await supabase.auth.admin.getUserById(vendorId);
+                const adminClient = createAdminClient();
+                const { data: { user: vendorUser } } = await adminClient.auth.admin.getUserById(vendorId);
                 vendorEmail = vendorUser?.email || '';
             } catch {
                 vendorEmail = '';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createBooking } from '@/actions/public/events';
 import { validateDiscountCode } from '@/actions/public/discounts';
 import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock, Copy, Check, ShieldCheck, ChevronDown } from 'lucide-react';
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
 import { MobileLoginDialog } from '@/components/auth/MobileLoginDialog';
+import { Link } from '@/navigation';
 
 export default function EventBookingForm({ event, tickets }: { event: any, tickets: any[] }) {
     const t = useTranslations('Events');
@@ -28,6 +29,40 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [existingBookingId, setExistingBookingId] = useState<string | null>(null);
+
+    const [autoSubmitTrigger, setAutoSubmitTrigger] = useState(0);
+    const STORAGE_KEY = `booking_state_${event.id}`;
+
+    // Save booking state to sessionStorage (called before auth redirect)
+    const saveBookingState = () => {
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+                selectedTicket,
+                quantity,
+                discountCode,
+                appliedDiscount,
+            }));
+        } catch { /* ignore storage errors */ }
+    };
+
+    // Restore booking state from sessionStorage on mount
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem(STORAGE_KEY);
+            if (!saved) return;
+            sessionStorage.removeItem(STORAGE_KEY);
+
+            const state = JSON.parse(saved);
+            if (state.selectedTicket) setSelectedTicket(state.selectedTicket);
+            if (state.quantity) setQuantity(state.quantity);
+            if (state.discountCode) setDiscountCode(state.discountCode);
+            if (state.appliedDiscount) setAppliedDiscount(state.appliedDiscount);
+
+            // Trigger auto-submit (increment counter to ensure effect fires)
+            setAutoSubmitTrigger(1);
+        } catch { /* ignore */ }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const copyToClipboard = (text: string, field: string) => {
         if (!text) return;
@@ -106,6 +141,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
             if (res.error) {
                 // Check if the error requires authentication
                 if (res.requiresAuth) {
+                    saveBookingState();
                     setShowLoginDialog(true);
                 } else if (res.requiresManagement) {
                     // User has an existing pending booking
@@ -132,6 +168,16 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
             setLoading(false);
         }
     };
+
+    // Auto-submit booking after state restoration from sessionStorage
+    useEffect(() => {
+        if (autoSubmitTrigger > 0) {
+            // Delay to ensure auth state is available server-side
+            const timer = setTimeout(() => handleBook(), 600);
+            return () => clearTimeout(timer);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoSubmitTrigger]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length || !bookingId) return;
@@ -503,13 +549,13 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                                         {errorMsg}
                                     </p>
                                     {existingBookingId && (
-                                        <a
+                                        <Link
                                             href="/dashboard/user"
                                             className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm transition-all shadow-sm"
                                         >
                                             <span>{t('manage_booking')}</span>
                                             <ChevronRight className="w-4 h-4" />
-                                        </a>
+                                        </Link>
                                     )}
                                 </div>
                             </div>

@@ -14,7 +14,7 @@ import { Calendar, UserCircle, MapPin, Check, Globe } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { COUNTRIES } from '@/constants/locations';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import GoogleSignInButton, { GoogleIcon } from '@/components/auth/GoogleSignInButton';
 
 // Schemas
 const createUserSchema = (t: any) => z.object({
@@ -322,7 +322,7 @@ export default function RegisterPage() {
                                         onError={(msg) => setError(msg)}
                                         className="p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                                     >
-                                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5 group-hover:rotate-12 transition-transform" alt="Google" />
+                                        <GoogleIcon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                                         <span className="text-sm">{t('continue_google')}</span>
                                     </GoogleSignInButton>
                                 </div>
