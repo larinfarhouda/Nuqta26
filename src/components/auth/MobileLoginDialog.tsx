@@ -134,20 +134,19 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
 
     return (
         <>
-            {/* Backdrop */}
+            {/* Backdrop — only this should close the dialog */}
             <div
                 className="fixed inset-0 bg-black/60 z-50 transition-opacity animate-in fade-in duration-200"
                 onClick={onClose}
+                onTouchEnd={onClose}
             />
 
             {/* Dialog — positioned as bottom sheet on mobile for better reachability */}
             <div
-                className="fixed inset-0 z-[51] flex items-end sm:items-center justify-center sm:p-4 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
-                onClick={onClose}
+                className="fixed inset-0 z-[51] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
             >
                 <div
-                    className="relative w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-[1.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[85vh] overflow-y-auto"
-                    onClick={(e) => e.stopPropagation()}
+                    className="pointer-events-auto relative w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-[1.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[85vh] overflow-y-auto"
                 >
                     {/* Decorative Header Background */}
                     <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
