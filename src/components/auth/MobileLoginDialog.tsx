@@ -26,16 +26,19 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [fullName, setFullName] = useState('');
     const [registerSuccess, setRegisterSuccess] = useState(false);
-    // Prevent the touch that opened the dialog from immediately closing it
-    const [ready, setReady] = useState(false);
 
+    // 300ms guard — prevents the touch that opened the dialog from immediately closing it
+    const [ready, setReady] = useState(false);
     useEffect(() => {
         if (isOpen) {
             setReady(false);
-            const t = setTimeout(() => setReady(true), 300);
-            return () => clearTimeout(t);
+            const timer = setTimeout(() => setReady(true), 300);
+            return () => clearTimeout(timer);
         }
     }, [isOpen]);
+
+    // 1. Ref-based "did pointer start inside card" check — more reliable than stopPropagation on touch
+    const pointerStartedInsideCard = useRef(false);
 
     if (!isOpen) return null;
 
@@ -44,25 +47,16 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         if (!email || !password) return;
         setIsLoading(true);
         setError(null);
-
         try {
             const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
             if (signInError) throw signInError;
-
-            if (onAuthSuccess) {
-                onAuthSuccess();
-            } else {
-                window.location.reload();
-            }
+            if (onAuthSuccess) onAuthSuccess();
+            else window.location.reload();
         } catch (err: any) {
-            const message = err.message || '';
-            if (message.includes('Email not confirmed')) {
-                setError(tAuth('error_email_not_confirmed'));
-            } else if (message.includes('Invalid login credentials')) {
-                setError(tAuth('error_invalid_credentials'));
-            } else {
-                setError(tAuth('error_generic'));
-            }
+            const msg = err.message || '';
+            if (msg.includes('Email not confirmed')) setError(tAuth('error_email_not_confirmed'));
+            else if (msg.includes('Invalid login credentials')) setError(tAuth('error_invalid_credentials'));
+            else setError(tAuth('error_generic'));
         } finally {
             setIsLoading(false);
         }
@@ -73,7 +67,6 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         if (!email || !password || !fullName) return;
         setIsLoading(true);
         setError(null);
-
         try {
             const { error: signUpError } = await supabase.auth.signUp({
                 email,
@@ -84,7 +77,6 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                 },
             });
             if (signUpError) throw signUpError;
-
             setRegisterSuccess(true);
             fetch('/api/notify-signup', {
                 method: 'POST',
@@ -92,10 +84,8 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                 body: JSON.stringify({ userName: fullName, userEmail: email, userRole: 'user', signupMethod: 'email' }),
             }).catch(() => { });
         } catch (err: any) {
-            const message = err.message || '';
-            setError(message.includes('User already registered')
-                ? tAuth('error_user_already_registered')
-                : tAuth('error_generic'));
+            const msg = err.message || '';
+            setError(msg.includes('User already registered') ? tAuth('error_user_already_registered') : tAuth('error_generic'));
         } finally {
             setIsLoading(false);
         }
@@ -110,28 +100,45 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         setRegisterSuccess(false);
     };
 
-    // Backdrop close: only close if dialog is ready AND click is on backdrop itself (not card)
-    const handleBackdropClick = (e: React.MouseEvent) => {
-        if (ready && e.target === e.currentTarget) onClose();
+    // 4. scrollIntoView on input focus to fight the keyboard pushing content behind it
+    const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        setTimeout(() => {
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300); // wait for keyboard to finish animating
     };
 
     return (
-        // Single overlay div — acts as backdrop AND positions the sheet
-        // We detect clicks on the backdrop (not the card) via target === currentTarget
+        // 2. overscroll-behavior-contain + touch-action: none on backdrop prevents scroll bleed
         <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 animate-in fade-in duration-200"
-            onClick={handleBackdropClick}
-            onMouseDown={(e) => {
-                // Prevent backdrop mousedown from propagating to document
-                if (e.target !== e.currentTarget) e.stopPropagation();
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 animate-in fade-in duration-200 overscroll-contain"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => {
+                // 1. Track whether pointer started inside the card (checked on pointer up)
+                pointerStartedInsideCard.current = false;
+            }}
+            onPointerUp={(e) => {
+                // Only close if: ready + pointer started outside card + ended outside card
+                if (ready && !pointerStartedInsideCard.current && e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+            onClick={(e) => {
+                // Fallback for mouse clicks (desktop)
+                if (ready && e.target === e.currentTarget) onClose();
             }}
         >
             {/* Dialog card */}
             <div
                 className="relative w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-[1.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
+                // 3. iOS safe-area-inset-bottom for the home indicator
+                style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+                onPointerDown={(e) => {
+                    // 1. Mark that pointer started inside the card
+                    pointerStartedInsideCard.current = true;
+                    e.stopPropagation();
+                }}
+                onPointerUp={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchEnd={(e) => e.stopPropagation()}
             >
                 {/* Decorative bg */}
                 <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
@@ -160,7 +167,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pb-6 pt-1 space-y-3">
+                <div className="px-6 pb-4 pt-1 space-y-3">
                     {registerSuccess ? (
                         <div className="text-center py-3">
                             <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -198,7 +205,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                 </div>
                             </div>
 
-                            {/* Email/password form */}
+                            {/* Form */}
                             <form onSubmit={mode === 'login' ? handleInlineLogin : handleInlineRegister} className="space-y-2.5">
                                 {mode === 'register' && (
                                     <div className="relative">
@@ -207,6 +214,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                             type="text"
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
+                                            onFocus={handleInputFocus}
                                             placeholder={tAuth('label_fullname')}
                                             className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
                                             required
@@ -220,6 +228,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        onFocus={handleInputFocus}
                                         placeholder={tAuth('email')}
                                         className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
                                         required
@@ -233,6 +242,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
+                                        onFocus={handleInputFocus}
                                         placeholder={tAuth('password')}
                                         className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
                                         required
