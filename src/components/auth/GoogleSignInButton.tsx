@@ -26,13 +26,11 @@ function GoogleIcon({ className }: { className?: string }) {
     );
 }
 
-// Detect Safari/Firefox where GIS popups are blocked by ITP/tracking protection
-function isSafariOrFirefox(): boolean {
+// Only Chrome supports FedCM — all other browsers use the standard GIS popup
+function supportsFedCM(): boolean {
     if (typeof navigator === 'undefined') return false;
     const ua = navigator.userAgent;
-    const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS/.test(ua);
-    const isFirefox = /Firefox/.test(ua);
-    return isSafari || isFirefox;
+    return /Chrome|Chromium|CriOS/.test(ua) && !/Edg/.test(ua);
 }
 
 interface GoogleSignInButtonProps {
@@ -54,9 +52,6 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
     const supabase = createClient();
     const [isLoading, setIsLoading] = useState(false);
-    const [scriptReady, setScriptReady] = useState(false);
-    // On Safari/Firefox, GIS won't work — skip it entirely and use OAuth directly
-    const skipGsi = useRef(isSafariOrFirefox());
     const [gsiAvailable, setGsiAvailable] = useState(false);
     const googleButtonRef = useRef<HTMLDivElement>(null);
     const initializedRef = useRef(false);
@@ -80,7 +75,6 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
 
             const currentRole = roleRef.current;
 
-            // Parallel: fetch profile + conditionally check vendor existence
             const profilePromise = supabase
                 .from('profiles')
                 .select('role, created_at')
@@ -98,13 +92,11 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
 
             let finalRole = profile?.role || user.user_metadata?.role || 'user';
 
-            // Handle vendor role assignment (fire parallel mutations)
             if (currentRole === 'vendor') {
                 if (finalRole !== 'vendor') {
                     await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id);
                     finalRole = 'vendor';
                 }
-
                 if (!vendorResult?.data) {
                     await supabase.from('vendors').insert({
                         id: user.id,
@@ -115,16 +107,13 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                 }
             }
 
-            // Fire-and-forget: new user tracking (don't block redirect)
             if (profile?.created_at) {
                 const diffSeconds = (Date.now() - new Date(profile.created_at).getTime()) / 1000;
                 if (diffSeconds < 60) {
-                    // Run async without awaiting — user gets redirected immediately
                     handleNewUserTracking(supabase, user, finalRole);
                 }
             }
 
-            // Redirect: use redirectUrl if available, otherwise role-based
             const currentRedirectUrl = redirectUrlRef.current;
             if (currentRedirectUrl) {
                 window.location.href = currentRedirectUrl;
@@ -143,14 +132,15 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     }, [supabase, locale, onError]);
 
     const initializeGoogle = useCallback(() => {
-        if (initializedRef.current || !googleButtonRef.current || skipGsi.current) return;
+        if (initializedRef.current || !googleButtonRef.current) return;
         initializedRef.current = true;
 
         try {
             google.accounts.id.initialize({
                 client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
                 callback: handleCredentialResponse,
-                use_fedcm_for_prompt: true,
+                // FedCM is Chrome-only; Safari/Firefox use the standard GIS popup
+                ...(supportsFedCM() ? { use_fedcm_for_prompt: true } : {}),
             });
 
             google.accounts.id.renderButton(googleButtonRef.current, {
@@ -163,76 +153,35 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                 width: googleButtonRef.current.offsetWidth || 400,
             });
 
-            setScriptReady(true);
             setGsiAvailable(true);
         } catch (err) {
-            console.warn('Google Sign-In initialization failed, using OAuth fallback:', err);
+            console.warn('Google Sign-In initialization failed:', err);
             setGsiAvailable(false);
         }
     }, [handleCredentialResponse]);
 
-    // Fallback for Safari/Firefox where GIS doesn't work: use Supabase OAuth redirect
-    const handleOAuthFallback = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const currentRedirectUrl = redirectUrlRef.current;
-            const callbackUrl = new URL('/auth/callback', window.location.origin);
-            callbackUrl.searchParams.set('locale', locale);
-            if (roleRef.current) callbackUrl.searchParams.set('role', roleRef.current);
-            if (currentRedirectUrl) callbackUrl.searchParams.set('next', currentRedirectUrl);
-
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: callbackUrl.toString(),
-                },
-            });
-            if (error) throw error;
-        } catch (err: any) {
-            console.error('Google OAuth fallback error:', err);
-            setIsLoading(false);
-            onError?.(err.message || 'Authentication failed');
-        }
-    }, [supabase, locale, onError]);
-
-    // Check if GSI has rendered an iframe (the actual Google button)
-    // If not after a timeout, the GIS script was likely blocked (Safari ITP)
-    useEffect(() => {
-        if (!scriptReady) return;
-        const timer = setTimeout(() => {
-            const iframe = googleButtonRef.current?.querySelector('iframe');
-            if (!iframe) {
-                console.warn('Google Sign-In iframe not found — falling back to OAuth');
-                setGsiAvailable(false);
-            }
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [scriptReady]);
-
     return (
         <>
-            {/* Only load GIS script if not Safari/Firefox (where it won't work) */}
-            {!skipGsi.current && (
-                <Script
-                    src="https://accounts.google.com/gsi/client"
-                    strategy="afterInteractive"
-                    onReady={initializeGoogle}
-                    onError={() => {
-                        console.warn('Google GSI script failed to load — using OAuth fallback');
-                        setGsiAvailable(false);
-                    }}
-                />
-            )}
+            {/* Preconnect for faster loading */}
+            <link rel="preconnect" href="https://accounts.google.com" />
+            {/* GIS script — loaded on ALL browsers (works everywhere, FedCM is just a Chrome bonus) */}
+            <Script
+                src="https://accounts.google.com/gsi/client"
+                strategy="afterInteractive"
+                onReady={initializeGoogle}
+                onError={() => {
+                    console.warn('Google GSI script failed to load');
+                    setGsiAvailable(false);
+                }}
+            />
             <div
                 className={`relative overflow-hidden ${className || ''}`}
                 style={{ cursor: isLoading ? 'wait' : 'pointer' }}
-                onClick={!gsiAvailable && !isLoading ? handleOAuthFallback : undefined}
             >
                 <div className="flex items-center justify-center gap-2 pointer-events-none">
                     {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : children}
                 </div>
-                {/* Single persistent div for GIS — styles change but it never unmounts,
-                    so the Google-rendered iframe stays in the DOM */}
+                {/* Invisible Google-rendered button overlay — works on ALL browsers */}
                 <div
                     ref={googleButtonRef}
                     style={
