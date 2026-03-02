@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations, useLocale } from 'next-intl';
 import { X, ShieldCheck, LogIn, Loader2, Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
@@ -33,15 +34,23 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         if (isOpen) {
             setReady(false);
             const timer = setTimeout(() => setReady(true), 300);
-            return () => clearTimeout(timer);
+            // Lock body scroll while dialog is open
+            document.body.style.overflow = 'hidden';
+            return () => {
+                clearTimeout(timer);
+                document.body.style.overflow = '';
+            };
         }
     }, [isOpen]);
 
     // Ref-based backdrop detection: only close if pointer started AND ended on the backdrop
-    const pointerStartedInsideCard = useRef(false);
     const pointerDownOnBackdrop = useRef(false);
 
-    if (!isOpen) return null;
+    // For portal — ensure we only render on the client
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
+    if (!isOpen || !mounted) return null;
 
     const handleInlineLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -101,47 +110,37 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         setRegisterSuccess(false);
     };
 
-    // 4. scrollIntoView on input focus to fight the keyboard pushing content behind it
+    // scrollIntoView on input focus to fight the keyboard
     const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
         setTimeout(() => {
             e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300); // wait for keyboard to finish animating
+        }, 300);
     };
 
-    return (
-        // 2. overscroll-behavior-contain + touch-action: none on backdrop prevents scroll bleed
+    const dialog = (
         <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 animate-in fade-in duration-200 overscroll-contain"
-            style={{ touchAction: 'none' }}
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4 bg-black/60 animate-in fade-in duration-200"
+            style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
             onPointerDown={(e) => {
-                // Record whether the pointer started directly on the backdrop (not a child)
                 pointerDownOnBackdrop.current = e.target === e.currentTarget;
-                pointerStartedInsideCard.current = false;
             }}
             onPointerUp={(e) => {
-                // Only close if ready, pointer started on backdrop, and also ended on backdrop
                 if (ready && pointerDownOnBackdrop.current && e.target === e.currentTarget) {
                     onClose();
                 }
                 pointerDownOnBackdrop.current = false;
             }}
             onClick={(e) => {
-                // Fallback for mouse (desktop) — same guard
                 if (ready && e.target === e.currentTarget) onClose();
             }}
         >
-            {/* Dialog card */}
+            {/* Dialog card — rendered via Portal at document.body, completely outside EventBookingForm */}
             <div
                 className="relative w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-[1.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
-                // 3. iOS safe-area-inset-bottom for the home indicator
                 style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-                onPointerDown={(e) => {
-                    // 1. Mark that pointer started inside the card
-                    pointerStartedInsideCard.current = true;
-                    e.stopPropagation();
-                }}
-                onPointerUp={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
             >
                 {/* Decorative bg */}
                 <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
@@ -299,4 +298,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
             </div>
         </div>
     );
+
+    // Render via Portal directly on document.body — completely outside any parent component tree
+    return createPortal(dialog, document.body);
 }

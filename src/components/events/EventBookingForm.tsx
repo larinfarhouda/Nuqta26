@@ -170,11 +170,24 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     };
 
     // Auto-submit booking after state restoration from sessionStorage
+    // Only auto-submit if the user is already authenticated; otherwise discard saved state
     useEffect(() => {
         if (autoSubmitTrigger > 0) {
-            // Delay to ensure auth state is available server-side
-            const timer = setTimeout(() => handleBook(), 600);
-            return () => clearTimeout(timer);
+            let cancelled = false;
+            const tryAutoSubmit = async () => {
+                try {
+                    const { createClient } = await import('@/utils/supabase/client');
+                    const supabase = createClient();
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!cancelled && user) {
+                        // User is authenticated — safe to auto-submit
+                        setTimeout(() => handleBook(), 300);
+                    }
+                    // If not authenticated, just silently skip — don't show the login dialog
+                } catch { /* ignore */ }
+            };
+            tryAutoSubmit();
+            return () => { cancelled = true; };
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoSubmitTrigger]);
