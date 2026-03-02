@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { X, ShieldCheck, LogIn, Loader2, Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
@@ -26,9 +26,16 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [fullName, setFullName] = useState('');
     const [registerSuccess, setRegisterSuccess] = useState(false);
+    // Prevent the touch that opened the dialog from immediately closing it
+    const [ready, setReady] = useState(false);
 
-    // Track whether the touch started inside the dialog card
-    const touchStartedInsideRef = useRef(false);
+    useEffect(() => {
+        if (isOpen) {
+            setReady(false);
+            const t = setTimeout(() => setReady(true), 300);
+            return () => clearTimeout(t);
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -103,9 +110,9 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         setRegisterSuccess(false);
     };
 
-    // Backdrop close: only close if touch/click started and ended on the backdrop itself
+    // Backdrop close: only close if dialog is ready AND click is on backdrop itself (not card)
     const handleBackdropClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) onClose();
+        if (ready && e.target === e.currentTarget) onClose();
     };
 
     return (
@@ -123,13 +130,8 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
             <div
                 className="relative w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-[1.5rem] sm:rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-black/5 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={() => { touchStartedInsideRef.current = true; }}
-                onTouchEnd={(e) => {
-                    // Prevent any touch-end from the card from reaching the backdrop
-                    e.stopPropagation();
-                    touchStartedInsideRef.current = false;
-                }}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
             >
                 {/* Decorative bg */}
                 <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
