@@ -132,8 +132,11 @@ export async function GET(request: Request) {
 
                 const next = searchParams.get('next');
                 if (next) {
-                    // If next is already localized or starts with /, use it
-                    // Otherwise, prefix with locale
+                    // If next is already an absolute URL, redirect directly
+                    if (next.startsWith('http://') || next.startsWith('https://')) {
+                        return NextResponse.redirect(next);
+                    }
+                    // If it's a path, prefix with origin + locale if needed
                     const target = next.startsWith('/') ? next : `/${next}`;
                     const localizedTarget = next.match(/^\/(ar|en)\//) ? target : `/${locale}${target}`;
                     return NextResponse.redirect(`${origin}${localizedTarget}`);

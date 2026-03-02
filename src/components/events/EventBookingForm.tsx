@@ -575,7 +575,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     // Small delay to ensure auth state is available on the server
                     setTimeout(() => handleBook(), 300);
                 }}
-                returnUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+                returnUrl={typeof window !== 'undefined' ? window.location.pathname : undefined}
             />
         </div>
     );
