@@ -104,11 +104,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
             });
             if (signUpError) throw signUpError;
             setRegisterSuccess(true);
-            fetch('/api/notify-signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userName: fullName, userEmail: email, userRole: 'user', signupMethod: 'email' }),
-            }).catch(() => { });
+            // Admin notification is handled by the auth callback after email confirmation
         } catch (err: any) {
             const msg = err.message || '';
             setError(msg.includes('User already registered') ? tAuth('error_user_already_registered') : tAuth('error_generic'));
