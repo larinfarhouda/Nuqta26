@@ -131,6 +131,11 @@ export default async function LocaleLayout({
                 <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
+                {/* Google Sign-In: preconnect + preload for fast GIS script loading */}
+                <link rel="preconnect" href="https://accounts.google.com" />
+                <link rel="preconnect" href="https://apis.google.com" />
+                <link rel="preload" href="https://accounts.google.com/gsi/client" as="script" />
+
                 {/* PWA Manifest handled by metadata export */}
 
                 {/* iOS Meta Tags handled by metadata/viewport exports */}

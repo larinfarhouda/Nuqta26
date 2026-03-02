@@ -26,6 +26,15 @@ function GoogleIcon({ className }: { className?: string }) {
     );
 }
 
+// Detect Safari/Firefox where GIS popups are blocked by ITP/tracking protection
+function isSafariOrFirefox(): boolean {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent;
+    const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS/.test(ua);
+    const isFirefox = /Firefox/.test(ua);
+    return isSafari || isFirefox;
+}
+
 interface GoogleSignInButtonProps {
     locale: string;
     role?: 'user' | 'vendor';
@@ -46,6 +55,8 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     const supabase = createClient();
     const [isLoading, setIsLoading] = useState(false);
     const [scriptReady, setScriptReady] = useState(false);
+    // On Safari/Firefox, GIS won't work — skip it entirely and use OAuth directly
+    const skipGsi = useRef(isSafariOrFirefox());
     const [gsiAvailable, setGsiAvailable] = useState(false);
     const googleButtonRef = useRef<HTMLDivElement>(null);
     const initializedRef = useRef(false);
@@ -132,7 +143,7 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     }, [supabase, locale, onError]);
 
     const initializeGoogle = useCallback(() => {
-        if (initializedRef.current || !googleButtonRef.current) return;
+        if (initializedRef.current || !googleButtonRef.current || skipGsi.current) return;
         initializedRef.current = true;
 
         try {
@@ -194,24 +205,24 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                 console.warn('Google Sign-In iframe not found — falling back to OAuth');
                 setGsiAvailable(false);
             }
-        }, 2000);
+        }, 500);
         return () => clearTimeout(timer);
     }, [scriptReady]);
 
     return (
         <>
-            {/* Preconnect to Google domains for faster script + popup loading */}
-            <link rel="preconnect" href="https://accounts.google.com" />
-            <link rel="preconnect" href="https://apis.google.com" />
-            <Script
-                src="https://accounts.google.com/gsi/client"
-                strategy="afterInteractive"
-                onReady={initializeGoogle}
-                onError={() => {
-                    console.warn('Google GSI script failed to load — using OAuth fallback');
-                    setGsiAvailable(false);
-                }}
-            />
+            {/* Only load GIS script if not Safari/Firefox (where it won't work) */}
+            {!skipGsi.current && (
+                <Script
+                    src="https://accounts.google.com/gsi/client"
+                    strategy="afterInteractive"
+                    onReady={initializeGoogle}
+                    onError={() => {
+                        console.warn('Google GSI script failed to load — using OAuth fallback');
+                        setGsiAvailable(false);
+                    }}
+                />
+            )}
             <div
                 className={`relative overflow-hidden ${className || ''}`}
                 style={{ cursor: isLoading ? 'wait' : 'pointer' }}
@@ -220,26 +231,31 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                 <div className="flex items-center justify-center gap-2 pointer-events-none">
                     {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : children}
                 </div>
-                {/* Only show the invisible GIS overlay if GIS is actually working */}
-                {!isLoading && gsiAvailable && (
-                    <div
-                        ref={googleButtonRef}
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            opacity: 0.01,
-                            zIndex: 10,
-                            overflow: 'hidden',
-                        }}
-                    />
-                )}
-                {/* Hidden ref for GIS initialization even when not showing overlay */}
-                {!gsiAvailable && (
-                    <div ref={googleButtonRef} style={{ display: 'none' }} />
-                )}
+                {/* Single persistent div for GIS — styles change but it never unmounts,
+                    so the Google-rendered iframe stays in the DOM */}
+                <div
+                    ref={googleButtonRef}
+                    style={
+                        !isLoading && gsiAvailable
+                            ? {
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                opacity: 0.01,
+                                zIndex: 10,
+                                overflow: 'hidden',
+                            }
+                            : {
+                                position: 'absolute',
+                                width: 0,
+                                height: 0,
+                                overflow: 'hidden',
+                                pointerEvents: 'none',
+                            }
+                    }
+                />
             </div>
         </>
     );
