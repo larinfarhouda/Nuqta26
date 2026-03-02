@@ -37,8 +37,9 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         }
     }, [isOpen]);
 
-    // 1. Ref-based "did pointer start inside card" check — more reliable than stopPropagation on touch
+    // Ref-based backdrop detection: only close if pointer started AND ended on the backdrop
     const pointerStartedInsideCard = useRef(false);
+    const pointerDownOnBackdrop = useRef(false);
 
     if (!isOpen) return null;
 
@@ -113,17 +114,19 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 animate-in fade-in duration-200 overscroll-contain"
             style={{ touchAction: 'none' }}
             onPointerDown={(e) => {
-                // 1. Track whether pointer started inside the card (checked on pointer up)
+                // Record whether the pointer started directly on the backdrop (not a child)
+                pointerDownOnBackdrop.current = e.target === e.currentTarget;
                 pointerStartedInsideCard.current = false;
             }}
             onPointerUp={(e) => {
-                // Only close if: ready + pointer started outside card + ended outside card
-                if (ready && !pointerStartedInsideCard.current && e.target === e.currentTarget) {
+                // Only close if ready, pointer started on backdrop, and also ended on backdrop
+                if (ready && pointerDownOnBackdrop.current && e.target === e.currentTarget) {
                     onClose();
                 }
+                pointerDownOnBackdrop.current = false;
             }}
             onClick={(e) => {
-                // Fallback for mouse clicks (desktop)
+                // Fallback for mouse (desktop) — same guard
                 if (ready && e.target === e.currentTarget) onClose();
             }}
         >
