@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createBooking } from '@/actions/public/events';
 import { validateDiscountCode } from '@/actions/public/discounts';
 import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock, Copy, Check, ShieldCheck, ChevronDown } from 'lucide-react';
@@ -29,40 +29,6 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [existingBookingId, setExistingBookingId] = useState<string | null>(null);
-
-    const [autoSubmitTrigger, setAutoSubmitTrigger] = useState(0);
-    const STORAGE_KEY = `booking_state_${event.id}`;
-
-    // Save booking state to sessionStorage (called before auth redirect)
-    const saveBookingState = () => {
-        try {
-            sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-                selectedTicket,
-                quantity,
-                discountCode,
-                appliedDiscount,
-            }));
-        } catch { /* ignore storage errors */ }
-    };
-
-    // Restore booking state from sessionStorage on mount
-    useEffect(() => {
-        try {
-            const saved = sessionStorage.getItem(STORAGE_KEY);
-            if (!saved) return;
-            sessionStorage.removeItem(STORAGE_KEY);
-
-            const state = JSON.parse(saved);
-            if (state.selectedTicket) setSelectedTicket(state.selectedTicket);
-            if (state.quantity) setQuantity(state.quantity);
-            if (state.discountCode) setDiscountCode(state.discountCode);
-            if (state.appliedDiscount) setAppliedDiscount(state.appliedDiscount);
-
-            // Trigger auto-submit (increment counter to ensure effect fires)
-            setAutoSubmitTrigger(1);
-        } catch { /* ignore */ }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const copyToClipboard = (text: string, field: string) => {
         if (!text) return;
@@ -141,7 +107,6 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
             if (res.error) {
                 // Check if the error requires authentication
                 if (res.requiresAuth) {
-                    saveBookingState();
                     setShowLoginDialog(true);
                 } else if (res.requiresManagement) {
                     // User has an existing pending booking
@@ -169,28 +134,6 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
         }
     };
 
-    // Auto-submit booking after state restoration from sessionStorage
-    // Only auto-submit if the user is already authenticated; otherwise discard saved state
-    useEffect(() => {
-        if (autoSubmitTrigger > 0) {
-            let cancelled = false;
-            const tryAutoSubmit = async () => {
-                try {
-                    const { createClient } = await import('@/utils/supabase/client');
-                    const supabase = createClient();
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!cancelled && user) {
-                        // User is authenticated — safe to auto-submit
-                        setTimeout(() => handleBook(), 300);
-                    }
-                    // If not authenticated, just silently skip — don't show the login dialog
-                } catch { /* ignore */ }
-            };
-            tryAutoSubmit();
-            return () => { cancelled = true; };
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [autoSubmitTrigger]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length || !bookingId) return;
