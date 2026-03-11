@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,6 +34,7 @@ interface Props {
 export default function EventForm({ event, vendorData, onClose, onSuccess }: Props) {
     const t = useTranslations('Dashboard.vendor.events.form.validation');
     const [submitting, setSubmitting] = useState(false);
+    const errorBannerRef = useRef<HTMLDivElement>(null);
     const [categories, setCategories] = useState<any[]>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
     const [categoryFetchError, setCategoryFetchError] = useState<string | null>(null);
@@ -140,12 +141,19 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             country: '',
             location_lat: null as any,
             location_long: null as any,
-            capacity: 0,
+            capacity: 100,
             date: '',
             event_type: '',
             tickets: [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
         }
     });
+
+    // Auto-scroll to error banner when validation errors appear
+    useEffect(() => {
+        if (Object.keys(errors).length > 0 && errorBannerRef.current) {
+            errorBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [errors]);
 
     // Sync category dropdown value AFTER categories are loaded
     // This is needed because <select> options load async — the browser resets
@@ -298,7 +306,9 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
 
                 <form onSubmit={handleSubmit(onSubmit)} className="p-5 sm:p-6 space-y-8 pb-24 sm:pb-6">
                     {/* Error Banner */}
-                    <FormErrorBanner errors={errors} t={t} />
+                    <div ref={errorBannerRef}>
+                        <FormErrorBanner errors={errors} t={t} />
+                    </div>
 
                     {/* Image Upload Component */}
                     <ImageUploader previewUrl={previewUrl} onImageChange={handleImageChange} />

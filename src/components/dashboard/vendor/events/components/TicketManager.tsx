@@ -29,7 +29,7 @@ export default function TicketManager({ control, register, errors }: TicketManag
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
                     <label className="text-sm font-bold text-gray-700">أنواع التذاكر</label>
-                    <button type="button" onClick={() => append({ name: '', price: 0, quantity: 10 })} className="text-xs font-bold bg-black text-white px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-gray-800 transition-colors">
+                    <button type="button" onClick={() => append({ name: 'تذكرة جديدة', price: 0, quantity: 10 })} className="text-xs font-bold bg-black text-white px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-gray-800 transition-colors">
                         <Plus className="w-3 h-3" /> إضافة تذكرة
                     </button>
                 </div>
