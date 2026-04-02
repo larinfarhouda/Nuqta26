@@ -491,7 +491,7 @@ function PaymentMethodsTab({ methods, countryId, onReload }: { methods: PaymentM
                 {methods.map(m => (
                     <div key={m.id} style={{ padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '20px' }}>{iconMap[m.icon] || '💳'}</span>
+                            <span style={{ fontSize: '20px' }}>{iconMap[m.icon || 'building'] || '💳'}</span>
                             <div style={{ flex: 1 }}>
                                 <span style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{m.label_en}</span>
                                 <span style={{ color: '#94a3b8', margin: '0 8px' }}>·</span>
