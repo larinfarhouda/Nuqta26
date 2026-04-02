@@ -5,6 +5,7 @@ import { Loader2, CheckCircle, Info, ChevronRight, TrendingUp, X, Upload, Copy, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { submitPaymentProof } from '@/actions/user';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 export default function BookingPaymentDialog({ booking }: { booking: any }) {
     const t = useTranslations('Events');
@@ -106,7 +107,7 @@ export default function BookingPaymentDialog({ booking }: { booking: any }) {
                                         <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-4">
                                             <div className="flex justify-between items-center pb-3 border-b border-gray-200">
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('amount_to_transfer')}</span>
-                                                <span className="text-xl font-black text-primary">{booking.total_amount} ₺</span>
+                                                <span className="text-xl font-black text-primary">{booking.total_amount} {getCurrencySymbol(booking.event?.country)}</span>
                                             </div>
                                             <div className="space-y-3">
                                                 <div>

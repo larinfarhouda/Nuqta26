@@ -588,6 +588,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
             {/* Mobile Booking Bar - Minimal Dark Mode */}
             <MobileBookingBar
                 price={minPrice}
+                country={event.country}
                 onReserve={scrollToBooking}
             />
         </div>

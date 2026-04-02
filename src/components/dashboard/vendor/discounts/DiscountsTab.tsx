@@ -17,14 +17,17 @@ import {
 import { getVendorEvents } from '@/actions/vendor/events';
 import { DiscountCodeWithEvent, CreateDiscountCodeInput } from '@/types/dto/discount.dto';
 import { getDemoDiscounts, getDemoEvents } from '@/lib/demoData';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 interface Props {
     showAlert: (message: string, type: 'success' | 'error') => void;
     demoMode?: boolean;
+    vendorCountry?: string;
 }
 
-export default function DiscountsTab({ showAlert, demoMode = false }: Props) {
+export default function DiscountsTab({ showAlert, demoMode = false, vendorCountry }: Props) {
     const t = useTranslations('Dashboard.vendor.discounts');
+    const cs = getCurrencySymbol(vendorCountry);
 
     const [codes, setCodes] = useState<DiscountCodeWithEvent[]>([]);
     const [events, setEvents] = useState<any[]>([]); // Keep as any - event type is complex
@@ -217,7 +220,7 @@ export default function DiscountsTab({ showAlert, demoMode = false }: Props) {
                                             className="input-field pr-12"
                                         />
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">
-                                            {formData.discount_type === 'percentage' ? '%' : '₺'}
+                                            {formData.discount_type === 'percentage' ? '%' : cs}
                                         </div>
                                     </div>
                                 </div>
@@ -288,7 +291,7 @@ export default function DiscountsTab({ showAlert, demoMode = false }: Props) {
                                         {code.discount_type === 'percentage' ? t('form.percentage') : t('form.fixed')}
                                     </td>
                                     <td className="px-6 py-4 text-sm font-black text-primary text-right">
-                                        {code.discount_value} {code.discount_type === 'percentage' ? '%' : '₺'}
+                                        {code.discount_value} {code.discount_type === 'percentage' ? '%' : cs}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <span className="text-sm font-bold text-gray-900">{code.used_count || 0}</span>

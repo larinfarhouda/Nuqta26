@@ -9,14 +9,17 @@ import {
     type SubscriptionTier
 } from '@/lib/constants/subscription';
 import { Crown, Sparkles, Check, TrendingUp } from 'lucide-react';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 interface SubscriptionBadgeProps {
     vendorId: string;
     activeEventsCount?: number;
     demoMode?: boolean;
+    vendorCountry?: string;
 }
 
-export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, demoMode = false }: SubscriptionBadgeProps) {
+export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, demoMode = false, vendorCountry }: SubscriptionBadgeProps) {
+    const cs = getCurrencySymbol(vendorCountry);
     const supabase = createClient();
     const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'professional' : 'starter');
     const [isFounder, setIsFounder] = useState(false);
@@ -123,12 +126,12 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
                 {price > 0 && (
                     <div className="text-left">
                         <div className={`text-2xl font-black ${style.text}`}>
-                            {price.toLocaleString()} ₺
+                            {price.toLocaleString()} {cs}
                         </div>
                         <div className="text-xs text-gray-500 font-medium">/ شهرياً</div>
                         {isFounder && (
                             <div className="text-xs text-gray-400 font-bold line-through opacity-60">
-                                {tierConfig.regularPrice.toLocaleString()} ₺
+                                {tierConfig.regularPrice.toLocaleString()} {cs}
                             </div>
                         )}
                     </div>

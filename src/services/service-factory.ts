@@ -9,6 +9,7 @@ import { ReviewRepository } from '@/repositories/review.repository';
 import { DiscountRepository } from '@/repositories/discount.repository';
 import { AnalyticsRepository } from '@/repositories/analytics.repository';
 import { AdminRepository } from '@/repositories/admin.repository';
+import { CountryRepository } from '@/repositories/country.repository';
 import { EventService } from '@/services/event.service';
 import { BookingService } from '@/services/booking.service';
 import { UserService } from '@/services/user.service';
@@ -19,6 +20,7 @@ import { DiscountService } from '@/services/discount.service';
 import { AnalyticsService } from '@/services/analytics.service';
 import { NotificationService } from '@/services/notification.service';
 import { AdminService } from '@/services/admin.service';
+import { CountryService } from '@/services/country.service';
 
 /**
  * Service Factory
@@ -35,6 +37,7 @@ export class ServiceFactory {
     private discountRepo: DiscountRepository;
     private analyticsRepo: AnalyticsRepository;
     private adminRepo: AdminRepository;
+    private countryRepo: CountryRepository;
 
     constructor(private supabase: SupabaseClient) {
         // Initialize all repositories
@@ -48,6 +51,7 @@ export class ServiceFactory {
         this.discountRepo = new DiscountRepository(supabase);
         this.analyticsRepo = new AnalyticsRepository(supabase);
         this.adminRepo = new AdminRepository(supabase);
+        this.countryRepo = new CountryRepository(supabase);
     }
 
     /**
@@ -146,5 +150,20 @@ export class ServiceFactory {
     getEventRepository(): EventRepository {
         return this.eventRepo;
     }
+
+    /**
+     * Get CountryService
+     */
+    getCountryService(): CountryService {
+        return new CountryService(this.countryRepo);
+    }
+
+    /**
+     * Get CountryRepository
+     */
+    getCountryRepository(): CountryRepository {
+        return this.countryRepo;
+    }
 }
+
 

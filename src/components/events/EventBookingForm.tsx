@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createBooking } from '@/actions/public/events';
 import { validateDiscountCode } from '@/actions/public/discounts';
 import { Loader2, Ticket, CheckCircle, Info, ChevronRight, TrendingUp, XCircle, AlertCircle, Tag, Calendar, Clock, Copy, Check, ShieldCheck, ChevronDown } from 'lucide-react';
@@ -9,9 +9,11 @@ import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
 import { MobileLoginDialog } from '@/components/auth/MobileLoginDialog';
 import { Link } from '@/navigation';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 export default function EventBookingForm({ event, tickets }: { event: any, tickets: any[] }) {
     const t = useTranslations('Events');
+    const cs = getCurrencySymbol(event.country);
     const [selectedTicket, setSelectedTicket] = useState(tickets[0]?.id);
     const [quantity, setQuantity] = useState(1);
     const [policyOpen, setPolicyOpen] = useState(false);
@@ -187,91 +189,19 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
 
     if (status === 'BANK_INFO') {
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-[2.5rem] shadow-3xl p-8 border border-gray-100 sticky top-32"
-            >
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                        <TrendingUp className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-2xl font-black text-gray-900">{t('complete_payment')}</h3>
-                    <p className="text-sm text-gray-500 font-bold mt-2">{t('payment_instruction')}</p>
-                </div>
-
-                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-4 mb-8">
-                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('amount_to_transfer')}</span>
-                        <span className="text-xl font-black text-primary">{totalPrice} ₺</span>
-                    </div>
-                    <div className="space-y-3">
-                        <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('bank_name')}</p>
-                            <p className="font-bold text-gray-900">{event.vendor?.bank_name || 'N/A'}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('account_holder')}</p>
-                            <div className="flex justify-between items-center gap-2">
-                                <p className="font-bold text-gray-900 flex-1">{event.vendor?.bank_account_name || 'N/A'}</p>
-                                <button
-                                    onClick={() => copyToClipboard(event.vendor?.bank_account_name, 'name')}
-                                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
-                                    title="Copy Account Name"
-                                    disabled={!event.vendor?.bank_account_name}
-                                >
-                                    {copiedField === 'name' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('iban')}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                <p className="font-bold text-gray-900 break-all bg-white p-2 rounded-lg border border-gray-200 select-all font-mono flex-1">
-                                    {event.vendor?.bank_iban || 'N/A'}
-                                </p>
-                                <button
-                                    onClick={() => copyToClipboard(event.vendor?.bank_iban, 'iban')}
-                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200 shrink-0"
-                                    title="Copy IBAN"
-                                    disabled={!event.vendor?.bank_iban}
-                                >
-                                    {copiedField === 'iban' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <label className="block w-full">
-                        <span className="sr-only">Upload Receipt</span>
-                        <div className={`w-full border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all cursor-pointer ${uploading ? 'bg-gray-50 border-gray-200 opacity-50' : 'bg-primary/5 border-primary/20 hover:border-primary/40'}`}>
-                            {uploading ? (
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                            ) : (
-                                <>
-                                    <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mb-2">
-                                        <ChevronRight className="w-5 h-5 text-primary rotate-[-90deg]" />
-                                    </div>
-                                    <span className="text-xs font-black text-gray-900 uppercase tracking-widest">{t('upload_receipt')}</span>
-                                    <span className="text-[10px] text-gray-400 font-bold mt-1">{t('receipt_format')}</span>
-                                </>
-                            )}
-                            <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleFileUpload} disabled={uploading} />
-                        </div>
-                    </label>
-
-                    {errorMsg && (
-                        <p className="text-center text-xs font-bold text-rose-600">{errorMsg}</p>
-                    )}
-
-                    <div className="flex items-center justify-center gap-3 text-gray-400 pt-2">
-                        <Info className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-center">{t('payment_verification_note')}</span>
-                    </div>
-                </div>
-            </motion.div>
+            <VendorPaymentInfoStep
+                vendorId={event.vendor_id}
+                vendor={event.vendor}
+                totalPrice={totalPrice}
+                bookingId={bookingId}
+                uploading={uploading}
+                errorMsg={errorMsg}
+                copiedField={copiedField}
+                copyToClipboard={copyToClipboard}
+                handleFileUpload={handleFileUpload}
+                setStatus={setStatus}
+                t={t}
+            />
         );
     }
 
@@ -311,7 +241,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                 <div className="space-y-1">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('starting_price')}</p>
                     <p className="text-4xl font-black text-gray-900">
-                        {activeTicket?.price > 0 ? `${activeTicket.price} ₺` : t('free')}
+                        {activeTicket?.price > 0 ? `${activeTicket.price} ${cs}` : t('free')}
                         <span className="text-sm font-bold text-gray-400 ml-2 tracking-normal">{t('per_person')}</span>
                     </p>
                 </div>
@@ -355,7 +285,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                             >
                                 <div className="flex justify-between items-center mb-1 relative z-10">
                                     <span className={`font-black text-base transition-colors ${selectedTicket === ticket.id ? 'text-primary' : 'text-gray-900'}`}>{ticket.name}</span>
-                                    <span className="font-black text-gray-900">{ticket.price > 0 ? `${ticket.price} ₺` : t('free')}</span>
+                                    <span className="font-black text-gray-900">{ticket.price > 0 ? `${ticket.price} ${cs}` : t('free')}</span>
                                 </div>
                                 <p className="text-[11px] font-bold text-gray-500 line-clamp-1 group-hover:line-clamp-none transition-all relative z-10">{ticket.description}</p>
                             </button>
@@ -410,7 +340,7 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     {appliedDiscount && (
                         <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
-                            {t('discount_applied')} (-{appliedDiscount.amount} ₺)
+                            {t('discount_applied')} (-{appliedDiscount.amount} {cs})
                         </p>
                     )}
                 </div>
@@ -461,23 +391,23 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
                     <div className="space-y-2 px-2">
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">{t('base_price')}</span>
-                            <span className="text-gray-900 font-bold">{basePrice} ₺</span>
+                            <span className="text-gray-900 font-bold">{basePrice} {cs}</span>
                         </div>
                         {bulkDiscountAmount > 0 && (
                             <div className="flex justify-between items-center text-emerald-600">
                                 <span className="font-bold uppercase tracking-widest text-[10px]">{t('bulk_discount')}</span>
-                                <span className="font-bold">-{bulkDiscountAmount} ₺</span>
+                                <span className="font-bold">-{bulkDiscountAmount} {cs}</span>
                             </div>
                         )}
                         {appliedDiscount && (
                             <div className="flex justify-between items-center text-emerald-600">
                                 <span className="font-bold uppercase tracking-widest text-[10px]">{t('promo_code')}</span>
-                                <span className="font-bold">-{appliedDiscount.amount} ₺</span>
+                                <span className="font-bold">-{appliedDiscount.amount} {cs}</span>
                             </div>
                         )}
                         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                             <span className="text-gray-900 font-black uppercase tracking-widest text-xs font-bold">{t('total_to_pay')}</span>
-                            <span className="text-3xl font-black text-gray-900">{totalPrice} ₺</span>
+                            <span className="text-3xl font-black text-gray-900">{totalPrice} {cs}</span>
                         </div>
                     </div>
 
@@ -581,3 +511,224 @@ export default function EventBookingForm({ event, tickets }: { event: any, ticke
     );
 }
 
+// ─── Dynamic Payment Info Step ──────────────────────────────────────────────
+
+function VendorPaymentInfoStep({
+    vendorId, vendor, totalPrice, bookingId, uploading, errorMsg,
+    copiedField, copyToClipboard, handleFileUpload, setStatus, t,
+}: {
+    vendorId: string;
+    vendor: any;
+    totalPrice: number;
+    bookingId: string | null;
+    uploading: boolean;
+    errorMsg: string;
+    copiedField: string | null;
+    copyToClipboard: (text: string, field: string) => void;
+    handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    setStatus: (s: any) => void;
+    t: any;
+}) {
+    const [vendorMethods, setVendorMethods] = useState<any[]>([]);
+    const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+    const [loadingMethods, setLoadingMethods] = useState(true);
+
+    useEffect(() => {
+        loadMethods();
+    }, [vendorId]);
+
+    const loadMethods = async () => {
+        try {
+            const { createClient } = await import('@/utils/supabase/client');
+            const supabase = createClient();
+            const { data } = await supabase
+                .from('vendor_payment_methods')
+                .select('*, payment_methods(*)')
+                .eq('vendor_id', vendorId)
+                .eq('is_active', true);
+
+            if (data && data.length > 0) {
+                setVendorMethods(data);
+                setSelectedMethod(data[0].id);
+            }
+        } catch (e) { /* fallback to legacy */ }
+        setLoadingMethods(false);
+    };
+
+    const currentMethod = vendorMethods.find(m => m.id === selectedMethod);
+    const pm = currentMethod?.payment_methods;
+
+    // Fallback to legacy bank details if no dynamic methods configured
+    const useLegacy = !loadingMethods && vendorMethods.length === 0;
+    const currencySymbol = getCurrencySymbol(vendor?.country);
+
+    const iconMap: Record<string, string> = { bank_transfer: '🏦', mobile_wallet: '📱', payment_link: '🔗' };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[2.5rem] shadow-3xl p-8 border border-gray-100 sticky top-32"
+        >
+            <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-black text-gray-900">{t('complete_payment')}</h3>
+                <p className="text-sm text-gray-500 font-bold mt-2">{t('payment_instruction')}</p>
+            </div>
+
+            {/* Amount */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
+                <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('amount_to_transfer')}</span>
+                    <span className="text-xl font-black text-primary">{totalPrice} {currencySymbol}</span>
+                </div>
+            </div>
+
+            {loadingMethods && (
+                <div className="flex justify-center py-6">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                </div>
+            )}
+
+            {/* Dynamic Methods */}
+            {!loadingMethods && vendorMethods.length > 1 && (
+                <div className="flex gap-2 mb-6">
+                    {vendorMethods.map(vm => (
+                        <button
+                            key={vm.id}
+                            onClick={() => setSelectedMethod(vm.id)}
+                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                                selectedMethod === vm.id
+                                    ? 'bg-primary text-white shadow-lg'
+                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <span className="mr-2">{iconMap[vm.payment_methods?.method_type] || '💳'}</span>
+                            {vm.payment_methods?.label_ar || vm.payment_methods?.label_en}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* Payment Details */}
+            {currentMethod && pm && (
+                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 mb-6">
+                    <div className="flex items-center gap-2 text-primary mb-2">
+                        <span className="text-lg">{iconMap[pm.method_type] || '💳'}</span>
+                        <span className="font-bold text-sm">{pm.label_ar || pm.label_en}</span>
+                    </div>
+
+                    {Object.entries(currentMethod.details as Record<string, string>).map(([key, value]) => {
+                        if (!value) return null;
+                        const label = key === 'bank_name' ? t('bank_name')
+                            : key === 'iban' ? t('iban')
+                            : key === 'account_holder' ? t('account_holder')
+                            : key === 'phone_number' ? 'Phone'
+                            : key === 'payment_url' ? 'Payment Link'
+                            : key;
+
+                        return (
+                            <div key={key}>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    {key === 'payment_url' ? (
+                                        <a
+                                            href={value}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-bold text-primary underline break-all flex-1"
+                                        >
+                                            {value}
+                                        </a>
+                                    ) : (
+                                        <p className={`font-bold text-gray-900 flex-1 ${key === 'iban' || key === 'account_number' ? 'break-all bg-white p-2 rounded-lg border border-gray-200 font-mono' : ''}`}>
+                                            {value}
+                                        </p>
+                                    )}
+                                    <button
+                                        onClick={() => copyToClipboard(value, key)}
+                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+                                    >
+                                        {copiedField === key ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Legacy Bank Info (fallback) */}
+            {useLegacy && (
+                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 mb-6">
+                    <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('bank_name')}</p>
+                        <p className="font-bold text-gray-900">{vendor?.bank_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('account_holder')}</p>
+                        <div className="flex justify-between items-center gap-2">
+                            <p className="font-bold text-gray-900 flex-1">{vendor?.bank_account_name || 'N/A'}</p>
+                            <button onClick={() => copyToClipboard(vendor?.bank_account_name, 'name')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
+                                {copiedField === 'name' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('iban')}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <p className="font-bold text-gray-900 break-all bg-white p-2 rounded-lg border border-gray-200 select-all font-mono flex-1">{vendor?.bank_iban || 'N/A'}</p>
+                            <button onClick={() => copyToClipboard(vendor?.bank_iban, 'iban')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
+                                {copiedField === 'iban' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Link CTA */}
+            {pm?.method_type === 'payment_link' && currentMethod?.details?.payment_url && (
+                <a
+                    href={currentMethod.details.payment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full py-4 bg-primary text-white text-center font-black rounded-2xl mb-4 hover:bg-primary/90 transition-colors"
+                >
+                    Pay via {currentMethod.details?.provider_name || pm.label_en} →
+                </a>
+            )}
+
+            {/* Receipt Upload (for bank_transfer and mobile_wallet) */}
+            {(pm?.method_type !== 'payment_link' || useLegacy) && (
+                <div className="space-y-4">
+                    <label className="block w-full">
+                        <span className="sr-only">Upload Receipt</span>
+                        <div className={`w-full border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all cursor-pointer ${uploading ? 'bg-gray-50 border-gray-200 opacity-50' : 'bg-primary/5 border-primary/20 hover:border-primary/40'}`}>
+                            {uploading ? (
+                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            ) : (
+                                <>
+                                    <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mb-2">
+                                        <ChevronRight className="w-5 h-5 text-primary rotate-[-90deg]" />
+                                    </div>
+                                    <span className="text-xs font-black text-gray-900 uppercase tracking-widest">{t('upload_receipt')}</span>
+                                    <span className="text-[10px] text-gray-400 font-bold mt-1">{t('receipt_format')}</span>
+                                </>
+                            )}
+                            <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleFileUpload} disabled={uploading} />
+                        </div>
+                    </label>
+
+                    {errorMsg && <p className="text-center text-xs font-bold text-rose-600">{errorMsg}</p>}
+
+                    <div className="flex items-center justify-center gap-3 text-gray-400 pt-2">
+                        <Info className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-center">{t('payment_verification_note')}</span>
+                    </div>
+                </div>
+            )}
+        </motion.div>
+    );
+}

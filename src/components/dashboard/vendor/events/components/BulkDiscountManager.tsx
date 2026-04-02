@@ -12,9 +12,10 @@ interface BulkDiscountWithId extends BulkDiscountInput {
 interface Props {
     discounts: BulkDiscountWithId[];
     setDiscounts: (discounts: BulkDiscountWithId[]) => void;
+    currencySymbol?: string;
 }
 
-export default function BulkDiscountManager({ discounts, setDiscounts }: Props) {
+export default function BulkDiscountManager({ discounts, setDiscounts, currencySymbol = '₺' }: Props) {
     const t = useTranslations('Dashboard.vendor.bulk_discounts');
     const addDiscount = () => {
         setDiscounts([
@@ -100,7 +101,7 @@ export default function BulkDiscountManager({ discounts, setDiscounts }: Props) 
                                     className="w-full px-3 py-2 rounded-xl border border-gray-200 font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none pr-8"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">
-                                    {discount.discount_type === 'percentage' ? '%' : '₺'}
+                                    {discount.discount_type === 'percentage' ? '%' : currencySymbol}
                                 </span>
                             </div>
                             <span className="text-sm font-bold text-gray-500">{t('off')}</span>

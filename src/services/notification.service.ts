@@ -116,6 +116,7 @@ export class NotificationService {
         totalAmount: number;
         ticketCount?: number;
         locale?: 'ar' | 'en';
+        currencySymbol?: string;
     }) {
         const locale = params.locale || 'ar';
         logger.info('NotificationService: Sending new booking notification to vendor', {
@@ -137,6 +138,7 @@ export class NotificationService {
                     totalAmount: params.totalAmount,
                     bookingId: params.bookingId,
                     locale,
+                    currencySymbol: params.currencySymbol,
                 })
             });
 

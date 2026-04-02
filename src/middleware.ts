@@ -7,6 +7,13 @@ const intlMiddleware = createMiddleware(routing);
 const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 const COOKIE_NAME = '__nuqta_ref';
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
+const COUNTRY_COOKIE = '__nuqta_country';
+
+// Map of ISO country codes to our internal country IDs
+const COUNTRY_MAP: Record<string, string> = {
+    TR: 'tr',
+    EG: 'eg',
+};
 
 export default function middleware(request: NextRequest) {
     const response = intlMiddleware(request);
@@ -39,6 +46,23 @@ export default function middleware(request: NextRequest) {
                 maxAge: COOKIE_MAX_AGE,
                 sameSite: 'lax',
                 httpOnly: false, // Needs to be readable by client JS on the register page
+            });
+        }
+    }
+
+    // --- Country Detection ---
+    // Only set if not already set (visitor can override via UI later)
+    if (!request.cookies.get(COUNTRY_COOKIE)) {
+        // Vercel provides this header on deployed environments
+        const vercelCountry = request.headers.get('x-vercel-ip-country');
+        const detectedCountry = vercelCountry ? COUNTRY_MAP[vercelCountry] : undefined;
+
+        if (detectedCountry) {
+            response.cookies.set(COUNTRY_COOKIE, detectedCountry, {
+                path: '/',
+                maxAge: 365 * 24 * 60 * 60, // 1 year
+                sameSite: 'lax',
+                httpOnly: false, // Needs to be readable by client JS
             });
         }
     }

@@ -2,16 +2,19 @@
 
 import { X, Crown, TrendingUp, Check, Sparkles } from 'lucide-react';
 import { SUBSCRIPTION_TIERS, getSubscriptionPrice, type SubscriptionTier } from '@/lib/constants/subscription';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 interface UpgradeModalProps {
     isOpen: boolean;
     onClose: () => void;
     currentTier: SubscriptionTier;
     reason?: 'event_limit' | 'features' | 'analytics';
+    vendorCountry?: string;
 }
 
-export default function UpgradeModal({ isOpen, onClose, currentTier, reason = 'event_limit' }: UpgradeModalProps) {
+export default function UpgradeModal({ isOpen, onClose, currentTier, reason = 'event_limit', vendorCountry }: UpgradeModalProps) {
     if (!isOpen) return null;
+    const cs = getCurrencySymbol(vendorCountry);
 
     const currentTierConfig = SUBSCRIPTION_TIERS[currentTier];
     const suggestedTier: SubscriptionTier = currentTier === 'starter' ? 'growth' : 'professional';
@@ -75,7 +78,7 @@ export default function UpgradeModal({ isOpen, onClose, currentTier, reason = 'e
                             </div>
                             <div className="text-left">
                                 <div className="text-3xl font-black text-gray-900">
-                                    {price.toLocaleString()} ₺
+                                    {price.toLocaleString()} {cs}
                                 </div>
                                 <div className="text-xs text-gray-500 font-medium">/ شهرياً</div>
                             </div>
@@ -88,7 +91,7 @@ export default function UpgradeModal({ isOpen, onClose, currentTier, reason = 'e
                                 <div className="flex-1">
                                     <h4 className="text-sm font-black text-[#2CA58D] mb-1">🎉 عرض المؤسسين - خصم 50% مدى الحياة!</h4>
                                     <p className="text-xs text-gray-700">
-                                        سجل قبل 1 مايو 2026 واحصل على <span className="font-bold">{founderPrice.toLocaleString()} ₺/شهر</span> بدلاً من {price.toLocaleString()} ₺/شهر للأبد!
+                                        سجل قبل 1 مايو 2026 واحصل على <span className="font-bold">{founderPrice.toLocaleString()} {cs}/شهر</span> بدلاً من {price.toLocaleString()} {cs}/شهر للأبد!
                                     </p>
                                 </div>
                             </div>

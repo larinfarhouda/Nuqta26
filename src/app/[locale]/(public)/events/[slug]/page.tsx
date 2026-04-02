@@ -15,6 +15,7 @@ import {
     generateImageUrl,
     generateSpeakableSchema
 } from '@/lib/seo';
+import { getCurrencyCode, getCountryCode } from '@/utils/country-helpers';
 
 // Deduplicate getPublicEvent across generateMetadata + EventPage
 // React cache() ensures only one DB call per request
@@ -156,7 +157,7 @@ export default async function EventPage({ params }: { params: any }) {
             address: {
                 '@type': 'PostalAddress',
                 addressLocality: event.district || 'Istanbul',
-                addressCountry: 'TR'
+                addressCountry: getCountryCode(event.country)
             },
             ...(event.location_lat && event.location_long ? {
                 geo: {
@@ -174,14 +175,14 @@ export default async function EventPage({ params }: { params: any }) {
         offers: event.tickets && event.tickets.length > 0 ? event.tickets.map(ticket => ({
             '@type': 'Offer',
             price: ticket.price || 0,
-            priceCurrency: 'TRY',
+            priceCurrency: getCurrencyCode(event.country),
             name: ticket.name,
             availability: event.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
             url: generateCanonicalUrl(`events/${slug}`, locale || 'en')
         })) : {
             '@type': 'Offer',
             price: 0,
-            priceCurrency: 'TRY',
+            priceCurrency: getCurrencyCode(event.country),
             availability: event.status === 'published' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
             url: generateCanonicalUrl(`events/${slug}`, locale || 'en')
         },

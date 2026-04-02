@@ -5,6 +5,7 @@ import { Eye, Check, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { getAdminBankTransfers, confirmBankPayment, rejectBankPayment } from '@/actions/admin';
 import type { BankTransferBooking, PaginatedResult } from '@/types/admin.types';
 import { useToast } from '@/components/ui/Toast';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 export default function AdminBookingsClient({
     initialData,
@@ -135,7 +136,7 @@ export default function AdminBookingsClient({
                                     <div style={{ fontSize: '12px', color: '#94a3b8' }}>{b.contact_email || (b.profiles as any)?.email || '—'}</div>
                                 </td>
                                 <td style={{ padding: '14px 16px', fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>
-                                    ₺{(b.total_amount || 0).toLocaleString()}
+                                    {getCurrencySymbol((b.events as any)?.country)}{(b.total_amount || 0).toLocaleString()}
                                 </td>
                                 <td style={{ padding: '14px 16px' }}>
                                     <span style={{

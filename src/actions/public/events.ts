@@ -5,6 +5,7 @@ import { ServiceFactory } from '@/services/service-factory';
 import { EventFilters } from '@/types/dto/event.dto';
 import { logger } from '@/lib/logger/logger';
 import { trackActivity } from '@/lib/track-activity';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 /**
  * Get public event by ID or slug
@@ -257,6 +258,7 @@ export async function createBooking(
                     totalAmount,
                     ticketCount: quantity,
                     locale,
+                    currencySymbol: getCurrencySymbol(event.country),
                 });
             }
 

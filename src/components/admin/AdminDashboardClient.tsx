@@ -238,7 +238,7 @@ export default function AdminDashboardClient({ data }: { data: DashboardData }) 
                 <StatCard title="Vendors" value={stats.totalVendors} growth={stats.vendorGrowth} icon={Store} color="#06b6d4" />
                 <StatCard title="Bookings" value={stats.totalBookings} growth={stats.bookingGrowth} icon={ShoppingCart} color="#10b981" />
                 <StatCard title="Total Events" value={stats.totalEvents} icon={Calendar} color="#f59e0b" />
-                <StatCard title="Booking Value" value={stats.totalBookingValue} icon={CreditCard} color="#6366f1" prefix="₺" />
+                <StatCard title="Booking Value" value={stats.totalBookingValue} icon={CreditCard} color="#6366f1" />
                 <StatCard title="Pending Payments" value={stats.pendingPayments} icon={ArrowUpRight} color="#ef4444" />
             </div>
 

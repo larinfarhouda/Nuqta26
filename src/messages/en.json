@@ -725,6 +725,8 @@
                 "website": "Website URL",
                 "whatsapp": "WhatsApp Number",
                 "bank_details": "Bank Transfer Details",
+                "payment_methods_title": "Payment Methods",
+                "payment_methods_note": "Enable the payment methods you accept and fill in your details. Customers will see these when booking your events.",
                 "bank_name": "Bank Name",
                 "bank_account_name": "Account Holder Name",
                 "bank_iban": "IBAN",

@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       activity_logs: {
@@ -51,6 +76,41 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banks: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banks_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
@@ -109,6 +169,7 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string | null
+          currency: string | null
           discount_amount: number | null
           discount_code_id: string | null
           event_id: string
@@ -116,6 +177,8 @@ export type Database = {
           payment_method: string | null
           payment_note: string | null
           payment_proof_url: string | null
+          reminder_sent: boolean
+          review_request_sent: boolean
           status: string | null
           total_amount: number | null
           user_id: string | null
@@ -126,6 +189,7 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          currency?: string | null
           discount_amount?: number | null
           discount_code_id?: string | null
           event_id: string
@@ -133,6 +197,8 @@ export type Database = {
           payment_method?: string | null
           payment_note?: string | null
           payment_proof_url?: string | null
+          reminder_sent?: boolean
+          review_request_sent?: boolean
           status?: string | null
           total_amount?: number | null
           user_id?: string | null
@@ -143,6 +209,7 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          currency?: string | null
           discount_amount?: number | null
           discount_code_id?: string | null
           event_id?: string
@@ -150,6 +217,8 @@ export type Database = {
           payment_method?: string | null
           payment_note?: string | null
           payment_proof_url?: string | null
+          reminder_sent?: boolean
+          review_request_sent?: boolean
           status?: string | null
           total_amount?: number | null
           user_id?: string | null
@@ -238,6 +307,110 @@ export type Database = {
           name_ar?: string | null
           name_en?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      cities: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          id: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          sort_order?: number
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cities_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      countries: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          currency_name_ar: string
+          currency_symbol: string
+          iban_placeholder: string | null
+          iban_regex: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          phone_code: string
+          phone_placeholder: string
+          sort_order: number
+          subscription_growth_founder_price: number
+          subscription_growth_price: number
+          subscription_professional_founder_price: number
+          subscription_professional_price: number
+          timezone: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code: string
+          currency_name_ar: string
+          currency_symbol: string
+          iban_placeholder?: string | null
+          iban_regex?: string | null
+          id: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          phone_code: string
+          phone_placeholder?: string
+          sort_order?: number
+          subscription_growth_founder_price?: number
+          subscription_growth_price?: number
+          subscription_professional_founder_price?: number
+          subscription_professional_price?: number
+          timezone?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          currency_name_ar?: string
+          currency_symbol?: string
+          iban_placeholder?: string | null
+          iban_regex?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          phone_code?: string
+          phone_placeholder?: string
+          sort_order?: number
+          subscription_growth_founder_price?: number
+          subscription_growth_price?: number
+          subscription_professional_founder_price?: number
+          subscription_professional_price?: number
+          timezone?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -412,9 +585,9 @@ export type Database = {
           image_url: string | null
           is_featured: boolean | null
           is_recurring: boolean | null
+          location_details: string | null
           location_lat: number | null
           location_long: number | null
-          location_details: string | null
           location_name: string | null
           prospect_vendor_id: string | null
           recurrence_days: string[] | null
@@ -441,9 +614,9 @@ export type Database = {
           image_url?: string | null
           is_featured?: boolean | null
           is_recurring?: boolean | null
+          location_details?: string | null
           location_lat?: number | null
           location_long?: number | null
-          location_details?: string | null
           location_name?: string | null
           prospect_vendor_id?: string | null
           recurrence_days?: string[] | null
@@ -470,9 +643,9 @@ export type Database = {
           image_url?: string | null
           is_featured?: boolean | null
           is_recurring?: boolean | null
+          location_details?: string | null
           location_lat?: number | null
           location_long?: number | null
-          location_details?: string | null
           location_name?: string | null
           prospect_vendor_id?: string | null
           recurrence_days?: string[] | null
@@ -539,6 +712,59 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          description_ar: string | null
+          description_en: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          label_ar: string
+          label_en: string
+          method_type: string
+          required_fields: Json
+          sort_order: number
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label_ar: string
+          label_en: string
+          method_type: string
+          required_fields?: Json
+          sort_order?: number
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label_ar?: string
+          label_en?: string
+          method_type?: string
+          required_fields?: Json
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
@@ -741,6 +967,7 @@ export type Database = {
       tickets: {
         Row: {
           created_at: string | null
+          currency: string | null
           description: string | null
           event_id: string
           id: string
@@ -751,6 +978,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          currency?: string | null
           description?: string | null
           event_id: string
           id?: string
@@ -761,6 +989,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          currency?: string | null
           description?: string | null
           event_id?: string
           id?: string
@@ -844,6 +1073,51 @@ export type Database = {
           },
         ]
       }
+      vendor_payment_methods: {
+        Row: {
+          created_at: string | null
+          details: Json
+          id: string
+          is_active: boolean
+          payment_method_id: string
+          updated_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json
+          id?: string
+          is_active?: boolean
+          payment_method_id: string
+          updated_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json
+          id?: string
+          is_active?: boolean
+          payment_method_id?: string
+          updated_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payment_methods_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payment_methods_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           bank_account_name: string | null
@@ -853,6 +1127,7 @@ export type Database = {
           cancellation_policy: string | null
           category: string
           company_logo: string | null
+          country: string | null
           cover_image: string | null
           created_at: string | null
           description_ar: string | null
@@ -860,9 +1135,9 @@ export type Database = {
           instagram: string | null
           is_founder_pricing: boolean | null
           is_verified: boolean | null
+          location_details: string | null
           location_lat: number | null
           location_long: number | null
-          location_details: string | null
           location_name: string | null
           return_policy: string | null
           slug: string | null
@@ -883,6 +1158,7 @@ export type Database = {
           cancellation_policy?: string | null
           category: string
           company_logo?: string | null
+          country?: string | null
           cover_image?: string | null
           created_at?: string | null
           description_ar?: string | null
@@ -890,9 +1166,9 @@ export type Database = {
           instagram?: string | null
           is_founder_pricing?: boolean | null
           is_verified?: boolean | null
+          location_details?: string | null
           location_lat?: number | null
           location_long?: number | null
-          location_details?: string | null
           location_name?: string | null
           return_policy?: string | null
           slug?: string | null
@@ -913,6 +1189,7 @@ export type Database = {
           cancellation_policy?: string | null
           category?: string
           company_logo?: string | null
+          country?: string | null
           cover_image?: string | null
           created_at?: string | null
           description_ar?: string | null
@@ -920,9 +1197,9 @@ export type Database = {
           instagram?: string | null
           is_founder_pricing?: boolean | null
           is_verified?: boolean | null
+          location_details?: string | null
           location_lat?: number | null
           location_long?: number | null
-          location_details?: string | null
           location_name?: string | null
           return_policy?: string | null
           slug?: string | null
@@ -936,6 +1213,13 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vendors_country_fkey"
+            columns: ["country"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vendors_id_fkey"
             columns: ["id"]
@@ -966,48 +1250,92 @@ export type Database = {
           review_count: number
         }[]
       }
-      get_events_pro: {
-        Args: {
-          p_category?: string
-          p_date_end?: string
-          p_date_start?: string
-          p_lat?: number
-          p_limit?: number
-          p_long?: number
-          p_max_price?: number
-          p_min_price?: number
-          p_offset?: number
-          p_radius_km?: number
-          p_search?: string
-        }
-        Returns: {
-          capacity: number
-          category_icon: string
-          category_id: string
-          category_name_ar: string
-          category_name_en: string
-          category_slug: string
-          city: string
-          country: string
-          date: string
-          description: string
-          dist_km: number
-          district: string
-          event_type: string
-          id: string
-          image_url: string
-          location_lat: number
-          location_long: number
-          location_name: string
-          price: number
-          slug: string
-          status: string
-          title: string
-          vendor_id: string
-          vendor_logo: string
-          vendor_name: string
-        }[]
-      }
+      get_events_pro:
+        | {
+            Args: {
+              p_category?: string
+              p_date_end?: string
+              p_date_start?: string
+              p_lat?: number
+              p_limit?: number
+              p_long?: number
+              p_max_price?: number
+              p_min_price?: number
+              p_offset?: number
+              p_radius_km?: number
+              p_search?: string
+            }
+            Returns: {
+              capacity: number
+              category_icon: string
+              category_id: string
+              category_name_ar: string
+              category_name_en: string
+              category_slug: string
+              city: string
+              country: string
+              date: string
+              description: string
+              dist_km: number
+              district: string
+              event_type: string
+              id: string
+              image_url: string
+              location_lat: number
+              location_long: number
+              location_name: string
+              price: number
+              slug: string
+              status: string
+              title: string
+              vendor_id: string
+              vendor_logo: string
+              vendor_name: string
+            }[]
+          }
+        | {
+            Args: {
+              p_category?: string
+              p_country?: string
+              p_date_end?: string
+              p_date_start?: string
+              p_lat?: number
+              p_limit?: number
+              p_long?: number
+              p_max_price?: number
+              p_min_price?: number
+              p_offset?: number
+              p_radius_km?: number
+              p_search?: string
+            }
+            Returns: {
+              capacity: number
+              category_icon: string
+              category_id: string
+              category_name_ar: string
+              category_name_en: string
+              category_slug: string
+              city: string
+              country: string
+              date: string
+              description: string
+              dist_km: number
+              district: string
+              event_type: string
+              id: string
+              image_url: string
+              location_lat: number
+              location_long: number
+              location_name: string
+              price: number
+              slug: string
+              status: string
+              title: string
+              vendor_id: string
+              vendor_logo: string
+              vendor_name: string
+            }[]
+          }
       get_review_helpful_count: {
         Args: { p_review_id: string }
         Returns: {
@@ -1047,118 +1375,121 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

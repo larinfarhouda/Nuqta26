@@ -8,6 +8,7 @@ import { updateBookingStatus } from '@/actions/vendor/bookings';
 import { useTranslations, useLocale } from 'next-intl';
 import { getDemoBookings } from '@/lib/demoData';
 import StarRating from '@/components/reviews/StarRating';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 export default function EventDetails({ event, onBack, demoMode = false }: { event: any, onBack: () => void, demoMode?: boolean }) {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -102,7 +103,7 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('revenue')}</div>
                     <div className="text-2xl font-black text-emerald-600 flex items-center gap-2">
                         <TrendingUp className="w-5 h-5" />
-                        {revenue} ₺
+                        {revenue} {getCurrencySymbol(event.country)}
                     </div>
                 </div>
 
@@ -193,7 +194,7 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
                                             {booking.booking_items_count || 0}
                                         </td>
                                         <td className="px-6 py-4 font-black text-gray-900">
-                                            {booking.total_amount} ₺
+                                            {booking.total_amount} {getCurrencySymbol(event.country)}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest ${booking.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :

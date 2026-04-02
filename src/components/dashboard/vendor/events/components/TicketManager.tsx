@@ -5,9 +5,10 @@ interface TicketManagerProps {
     control: Control<any>;
     register: UseFormRegister<any>;
     errors: FieldErrors<any>;
+    currencySymbol?: string;
 }
 
-export default function TicketManager({ control, register, errors }: TicketManagerProps) {
+export default function TicketManager({ control, register, errors, currencySymbol = '₺' }: TicketManagerProps) {
     const { fields, append, remove } = useFieldArray({
         control,
         name: "tickets"
@@ -52,7 +53,7 @@ export default function TicketManager({ control, register, errors }: TicketManag
                                     <label className="text-xs font-bold text-gray-500">السعر</label>
                                     <div className="relative">
                                         <input type="number" {...register(`tickets.${index}.price` as const)} className="input-field h-10 text-sm text-gray-900 pl-8" />
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₺</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">{currencySymbol}</span>
                                     </div>
                                     {(errors.tickets as any)?.[index]?.price && <p className="text-red-500 text-xs mt-1">{(errors.tickets as any)[index]?.price?.message as string}</p>}
                                 </div>

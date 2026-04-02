@@ -70,6 +70,7 @@ export interface EventListItemDTO {
     date: string;
     city: string | null;
     district: string | null;
+    country: string | null;
     image_url: string | null;
     price: number;
     vendor_name: string;
@@ -94,6 +95,7 @@ export interface EventFilters {
     lat?: number;
     lng?: number;
     radius?: number;
+    country?: string;
 }
 
 /**

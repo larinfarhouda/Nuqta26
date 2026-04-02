@@ -12,6 +12,7 @@ import { createClient } from '@/utils/supabase/client';
 import { BulkDiscountInput } from '@/types/dto/discount.dto';
 import { useTranslations } from 'next-intl';
 import { createEventValidationSchema } from './validation';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 // Sub-components
 import ImageUploader from './components/ImageUploader';
@@ -434,10 +435,10 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                     <input type="hidden" {...register('country')} />
 
                     {/* Ticket Management Component */}
-                    <TicketManager control={control} register={register} errors={errors} />
+                    <TicketManager control={control} register={register} errors={errors} currencySymbol={getCurrencySymbol(vendorData?.country)} />
 
                     {/* Bulk Discount Management Component */}
-                    <BulkDiscountManager discounts={bulkDiscounts} setDiscounts={setBulkDiscounts} />
+                    <BulkDiscountManager discounts={bulkDiscounts} setDiscounts={setBulkDiscounts} currencySymbol={getCurrencySymbol(vendorData?.country)} />
 
                     <div className="flex gap-4 pt-4 border-t border-gray-100 sticky bottom-0 bg-white/80 backdrop-blur-lg p-4 -mx-6 -mb-6 mt-4 z-20">
                         <button type="button" onClick={onClose} className="flex-1 py-4 font-bold text-gray-600 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors">إلغاء</button>
@@ -458,6 +459,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                 onClose={() => setShowUpgradeModal(false)}
                 currentTier={upgradeTier}
                 reason="event_limit"
+                vendorCountry={vendorData?.country}
             />
             {createPortal(content, document.body)}
         </>

@@ -126,6 +126,7 @@ export class EventRepository extends BaseRepository {
             p_radius_km: filters?.radius || undefined,
             p_date_start: dateStart || undefined,
             p_date_end: dateEnd || undefined,
+            p_country: filters?.country || undefined,
             p_limit: 50,
             p_offset: 0
         });

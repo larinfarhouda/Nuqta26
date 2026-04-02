@@ -8,6 +8,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
 import { createClient } from '@/utils/supabase/client';
 import { getDemoEvents } from '@/lib/demoData';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 export default function EventsTab({ vendorData, demoMode = false }: { vendorData?: any; demoMode?: boolean }) {
     const [events, setEvents] = useState<any[]>([]);
@@ -212,7 +213,7 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                                                 </div>
                                                 <div className="flex-1 lg:flex-none lg:min-w-[70px]">
                                                     <div className="text-[10px] text-gray-400 mb-0.5">{t('revenue')}</div>
-                                                    <div className="font-bold text-gray-800 text-sm">₺{revenue.toLocaleString()}</div>
+                                                    <div className="font-bold text-gray-800 text-sm">{getCurrencySymbol(vendorData?.country)}{revenue.toLocaleString()}</div>
                                                 </div>
                                                 <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
                                                     <button

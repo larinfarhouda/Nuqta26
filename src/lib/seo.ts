@@ -5,6 +5,7 @@
 
 const BASE_URL = 'https://nuqta.ist';
 const LOCALES = ['ar', 'en'] as const;
+import { getCurrencyCode } from '@/utils/country-helpers';
 
 export type Locale = typeof LOCALES[number];
 
@@ -70,6 +71,7 @@ export function createEventDescription(event: {
     district?: string | null;
     event_date?: string | null;
     price?: number | null;
+    country?: string | null;
 }): string {
     const parts: string[] = [];
 
@@ -96,7 +98,7 @@ export function createEventDescription(event: {
     }
 
     if (event.price !== undefined && event.price !== null) {
-        parts.push(`Price: ${event.price === 0 ? 'Free' : `${event.price} TRY`}`);
+        parts.push(`Price: ${event.price === 0 ? 'Free' : `${event.price} ${getCurrencyCode(event.country)}`}`);
     }
 
     return truncateText(parts.join(' | '), 160);

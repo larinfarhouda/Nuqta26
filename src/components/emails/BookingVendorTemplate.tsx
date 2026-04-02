@@ -10,6 +10,7 @@ interface BookingVendorTemplateProps {
     totalAmount: number;
     bookingId: string;
     locale?: 'ar' | 'en';
+    currencySymbol?: string;
 }
 
 export default function BookingVendorTemplate({
@@ -20,6 +21,7 @@ export default function BookingVendorTemplate({
     totalAmount,
     bookingId,
     locale = 'ar',
+    currencySymbol = '₺',
 }: BookingVendorTemplateProps) {
     // Bilingual content - Arabic first, then English
     const content = {
@@ -88,7 +90,7 @@ export default function BookingVendorTemplate({
                         {quantity} {content.ticketsAr} | {content.ticketsEn}
                     </Text>
                     <Text className="text-base text-teal-950 m-0 font-bold">
-                        {content.totalAr} | {content.totalEn}: {totalAmount} ₺
+                        {content.totalAr} | {content.totalEn}: {totalAmount} {currencySymbol}
                     </Text>
                 </Section>
 

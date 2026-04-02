@@ -10,6 +10,7 @@ import {
     UserPlus,
     Users,
     Activity,
+    Globe,
     ChevronLeft,
     ChevronRight,
     LogOut,
@@ -30,6 +31,7 @@ const navItems = [
     { label: 'Moderation', icon: Shield, href: '/admin/moderation' },
     { label: 'Prospects', icon: UserPlus, href: '/admin/prospects' },
     { label: 'Users', icon: Users, href: '/admin/users' },
+    { label: 'Countries', icon: Globe, href: '/admin/countries' },
     { label: 'Activity', icon: Activity, href: '/admin/activity' },
 ];
 

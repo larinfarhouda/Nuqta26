@@ -5,13 +5,14 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {
     Loader2, BarChart3, Star,
-    Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles
+    Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles, Globe
 } from 'lucide-react';
 import NextImage from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { getPendingBookingsCount } from '@/actions/vendor/bookings';
 import CompactTierBadge from './vendor/CompactTierBadge';
+import { getCountryFlag } from '@/utils/country-helpers';
 
 // Dynamic imports for tab components  
 const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
@@ -120,6 +121,8 @@ export default function VendorDashboard({
     const [alertState, setAlertState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
         show: false, message: '', type: 'success'
     });
+    const [countries, setCountries] = useState<any[]>([]);
+    const [selectedCountry, setSelectedCountry] = useState('tr');
 
     const showAlert = (message: string, type: 'success' | 'error' = 'success') => {
         setAlertState({ show: true, message, type });
@@ -149,6 +152,13 @@ export default function VendorDashboard({
             checkVendorStatus();
         }
     }, [initialVendorData]);
+
+    // Load countries for onboarding
+    useEffect(() => {
+        supabase.from('countries').select('*').eq('is_active', true).order('sort_order').then(({ data }) => {
+            setCountries(data || []);
+        });
+    }, []);
 
     const checkVendorStatus = async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -183,7 +193,12 @@ export default function VendorDashboard({
             setPendingBookingsCount(pendingCount);
             setActiveEventsCount(eventsCount || 0);
 
-            setStep('DASHBOARD');
+            // If vendor has no country set, redirect to DETAILS to pick one
+            if (!vendorData.country) {
+                setStep('DETAILS');
+            } else {
+                setStep('DASHBOARD');
+            }
         } else {
             setStep('DETAILS');
         }
@@ -201,6 +216,7 @@ export default function VendorDashboard({
             business_name: formData.get('business_name') as string,
             category: formData.get('category') as string,
             description_ar: (formData.get('description_ar') as string) || null,
+            country: selectedCountry,
         };
 
         const { error } = await supabase.from('vendors').upsert(payload);
@@ -292,17 +308,32 @@ export default function VendorDashboard({
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.business_name')}</label>
-                                <input name="business_name" required className="input-field text-gray-900" placeholder={t('vendor.business_name_placeholder')} />
+                                <input name="business_name" required className="input-field text-gray-900" placeholder={t('vendor.business_name_placeholder')} defaultValue={vendorData?.business_name || ''} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.category')}</label>
-                                <select name="category" className="input-field text-gray-900">
+                                <select name="category" className="input-field text-gray-900" defaultValue={vendorData?.category || 'other'}>
                                     <option value="cultural">{t('vendor.cat_cultural')}</option>
                                     <option value="entertainment">{t('vendor.cat_entertainment')}</option>
                                     <option value="educational">{t('vendor.cat_educational')}</option>
                                     <option value="artistic">{t('vendor.cat_artistic')}</option>
                                     <option value="social">{t('vendor.cat_social')}</option>
                                     <option value="other">{t('vendor.cat_other')}</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
+                                    <Globe className="w-3.5 h-3.5" />
+                                    {t('vendor.select_country')}
+                                </label>
+                                <select
+                                    value={selectedCountry}
+                                    onChange={e => setSelectedCountry(e.target.value)}
+                                    className="input-field text-gray-900"
+                                >
+                                    {countries.map(c => (
+                                        <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -375,7 +406,7 @@ export default function VendorDashboard({
                         {activeTab === 'BOOKINGS' && <BookingsTab demoMode={demoMode} />}
                         {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}
                         {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} demoMode={demoMode} />}
-                        {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} />}
+                        {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} vendorCountry={vendorData?.country} />}
                         {activeTab === 'REVIEWS' && <ReviewsTab demoMode={demoMode} />}
                         {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} demoMode={demoMode} />}
                     </div>

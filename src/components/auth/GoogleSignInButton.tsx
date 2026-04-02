@@ -103,6 +103,7 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                         business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
                         category: 'other',
                         subscription_tier: 'starter',
+                        country: 'tr',
                     } as any);
                 }
             }

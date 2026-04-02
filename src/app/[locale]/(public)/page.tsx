@@ -12,6 +12,8 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import HomeFAQ from '@/components/home/HomeFAQ';
+import { cookies } from 'next/headers';
+import { COUNTRY_COOKIE_NAME, getCountryCode } from '@/utils/country-helpers';
 
 type Props = {
     params: Promise<{ locale: string }>;
@@ -89,6 +91,11 @@ export default async function HomePage(props: { params: Promise<{ locale: string
     const lat = typeof searchParams.lat === 'string' ? Number(searchParams.lat) : undefined;
     const lng = typeof searchParams.lng === 'string' ? Number(searchParams.lng) : undefined;
     const radius = typeof searchParams.radius === 'string' ? Number(searchParams.radius) : undefined;
+    // Read country from cookie (set by middleware)
+    const cookieStore = await cookies();
+    const country = typeof searchParams.country === 'string'
+        ? searchParams.country
+        : cookieStore.get(COUNTRY_COOKIE_NAME)?.value || undefined;
 
     // Run independent queries in parallel for faster page load
     const [allEvents, { data: districtsData }, { data: { user: authUser } }] = await Promise.all([
@@ -101,7 +108,8 @@ export default async function HomePage(props: { params: Promise<{ locale: string
             maxPrice,
             lat,
             lng,
-            radius
+            radius,
+            country
         }),
         supabase
             .from('events')
@@ -164,7 +172,7 @@ export default async function HomePage(props: { params: Promise<{ locale: string
                     "address": {
                         "@type": "PostalAddress",
                         "addressLocality": event.district || 'Istanbul',
-                        "addressCountry": "TR"
+                        "addressCountry": getCountryCode(event.country)
                     }
                 },
                 "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",

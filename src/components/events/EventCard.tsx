@@ -10,6 +10,7 @@ import { getEventStatus, EventStatus } from '@/utils/eventStatus';
 import { useTranslations } from 'next-intl';
 import TierBadge from '@/components/TierBadge';
 import type { SubscriptionTier } from '@/lib/constants/subscription';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 interface EventCardProps {
     event: any;
@@ -170,7 +171,7 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
                                         const displayPrice = (event.tickets && event.tickets.length > 0)
                                             ? Math.min(...event.tickets.map((t: any) => t.price))
                                             : event.price;
-                                        return displayPrice > 0 ? `${displayPrice} ₺` : 'Free';
+                                        return displayPrice > 0 ? `${displayPrice} ${getCurrencySymbol(event.country)}` : 'Free';
                                     })()}
                                 </span>
                             </div>

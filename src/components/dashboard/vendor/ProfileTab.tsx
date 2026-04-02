@@ -13,7 +13,7 @@ import LocationPicker from '@/components/ui/LocationPicker';
 import { useEffect } from 'react';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { COUNTRIES } from '@/constants/locations';
-import { TURKISH_BANKS } from '@/constants/banks';
+import VendorPaymentMethodsSection from '@/components/dashboard/vendor/VendorPaymentMethodsSection';
 
 const detailsSchema = (t: any) => z.object({
     business_name: z.string().min(2, t('validation.business_name_min')),
@@ -23,11 +23,6 @@ const detailsSchema = (t: any) => z.object({
     whatsapp_number: z.string().optional(),
     category: z.string().min(2),
     description_ar: z.string().optional(),
-    bank_name: z.string().min(2, t('validation.bank_name_required')),
-    bank_account_name: z.string().min(3, t('validation.bank_account_name_required')),
-    bank_iban: z.string()
-        .min(16, t('validation.bank_iban_min'))
-        .regex(/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/, t('validation.bank_iban_format')),
     cancellation_policy: z.string().optional().or(z.literal("")),
     return_policy: z.string().optional().or(z.literal("")),
     location_lat: z.number().optional().nullable(),
@@ -356,58 +351,12 @@ export default function ProfileTab({ vendorData, setVendorData, showAlert, demoM
 
                 {/* Right Column: Bank Details + Location + Verification */}
                 <div className="space-y-8">
-                    {/* Bank Transfer Details */}
-                    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-                        <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
-                            <div className="p-2 bg-amber-50 rounded-xl text-amber-600"><AlertCircle className="w-5 h-5" /></div>
-                            <h3 className="font-bold text-gray-900">{t('bank_details')}</h3>
-                        </div>
-
-                        <div className="space-y-4">
-                            <p className="text-[11px] text-gray-500 font-medium bg-gray-50 p-3 rounded-xl border border-gray-100 italic">
-                                {t('bank_note')}
-                            </p>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase">
-                                    {t('bank_name')} <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    {...register('bank_name')}
-                                    className={`input-field appearance-none cursor-pointer ${errors.bank_name ? 'border-red-500 focus:ring-red-500' : ''}`}
-                                >
-                                    <option value="">{t('bank_name_placeholder')}</option>
-                                    {TURKISH_BANKS.map((bank) => (
-                                        <option key={bank} value={bank}>
-                                            {bank}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ErrorMessage message={errors.bank_name?.message as string} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase">
-                                    {t('bank_account_name')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    {...register('bank_account_name')}
-                                    className={`input-field ${errors.bank_account_name ? 'border-red-500 focus:ring-red-500' : ''}`}
-                                    placeholder={t('bank_account_name_placeholder')}
-                                />
-                                <ErrorMessage message={errors.bank_account_name?.message as string} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase">
-                                    {t('bank_iban')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    {...register('bank_iban')}
-                                    className={`input-field font-mono uppercase ${errors.bank_iban ? 'border-red-500 focus:ring-red-500' : ''}`}
-                                    placeholder={t('bank_iban_placeholder')}
-                                />
-                                <ErrorMessage message={errors.bank_iban?.message as string} />
-                            </div>
-                        </div>
-                    </div>
+                    {/* Payment Methods (Dynamic by Country) */}
+                    <VendorPaymentMethodsSection
+                        vendorId={vendorData.id}
+                        vendorCountry={vendorData.country || 'tr'}
+                        showAlert={showAlert}
+                    />
 
                     {/* Location */}
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">

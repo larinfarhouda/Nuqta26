@@ -13,8 +13,9 @@ import { Link } from '@/navigation';
 import { Calendar, UserCircle, MapPin, Check, Globe } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import PhoneInput from '@/components/ui/PhoneInput';
-import { COUNTRIES } from '@/constants/locations';
+import { createClient as createSupabaseClient } from '@/utils/supabase/client';
 import GoogleSignInButton, { GoogleIcon } from '@/components/auth/GoogleSignInButton';
+import { getCountryFlag } from '@/utils/country-helpers';
 
 // Schemas
 const createUserSchema = (t: any) => z.object({
@@ -33,6 +34,7 @@ const createVendorSchema = (t: any) => z.object({
     businessName: z.string().min(2, t('validation_business_name_required')),
     email: z.string().email(t('validation_email_invalid')),
     password: z.string().min(6, t('validation_password_min')),
+    country: z.string().min(2, 'Please select a country'),
 });
 
 type UserFormData = z.infer<ReturnType<typeof createUserSchema>>;
@@ -53,6 +55,25 @@ export default function RegisterPage() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [submittedEmail, setSubmittedEmail] = useState('');
     const [referralSource, setReferralSource] = useState<Record<string, string> | null>(null);
+    const [countries, setCountries] = useState<any[]>([]);
+    const [cities, setCities] = useState<any[]>([]);
+    const [selectedCountry, setSelectedCountry] = useState('tr');
+
+    // Load countries + cities from DB
+    useEffect(() => {
+        const supabaseLocal = createSupabaseClient();
+        supabaseLocal.from('countries').select('*').eq('is_active', true).order('sort_order').then(({ data }) => {
+            setCountries(data || []);
+        });
+    }, []);
+
+    // Load cities when country changes
+    useEffect(() => {
+        const supabaseLocal = createSupabaseClient();
+        supabaseLocal.from('cities').select('*').eq('country_id', selectedCountry).eq('is_active', true).order('sort_order').then(({ data }) => {
+            setCities(data || []);
+        });
+    }, [selectedCountry]);
 
     // Read referral cookie on mount
     useEffect(() => {
@@ -98,10 +119,10 @@ export default function RegisterPage() {
                     data: {
                         role: role,
                         full_name: fullName,
+                        country: data.country || selectedCountry,
                         ...(role === 'user' && {
                             age: data.age ? parseInt(data.age) : null,
                             gender: data.gender,
-                            country: data.country,
                             city: data.city,
                             phone: data.phone,
                         }),
@@ -362,6 +383,29 @@ export default function RegisterPage() {
                                                 )}
                                             </div>
 
+                                            {/* Country Selector (for both roles) */}
+                                            {role === 'vendor' && (
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                        <Globe className="w-3.5 h-3.5" />
+                                                        {t('country') || 'Country'}
+                                                    </label>
+                                                    <select
+                                                        {...register('country')}
+                                                        value={selectedCountry}
+                                                        onChange={e => {
+                                                            setSelectedCountry(e.target.value);
+                                                            setValue('country', e.target.value);
+                                                        }}
+                                                        className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
+                                                    >
+                                                        {countries.map(c => (
+                                                            <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+
                                             {role === 'user' && (
                                                 <>
                                                     <div className="grid grid-cols-2 gap-4">
@@ -410,6 +454,27 @@ export default function RegisterPage() {
 
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
+                                                            <Globe className="w-3.5 h-3.5" />
+                                                            {t('country') || 'Country'}
+                                                        </label>
+                                                        <select
+                                                            {...register('country')}
+                                                            value={selectedCountry}
+                                                            onChange={e => {
+                                                                setSelectedCountry(e.target.value);
+                                                                setValue('country', e.target.value);
+                                                                setValue('city', '');
+                                                            }}
+                                                            className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
+                                                        >
+                                                            {countries.map(c => (
+                                                                <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2 ml-1">
                                                             <MapPin className="w-3.5 h-3.5" />
                                                             {t('city')}
                                                         </label>
@@ -418,14 +483,13 @@ export default function RegisterPage() {
                                                             className="w-full p-4 bg-white/50 border border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl outline-none transition-all font-medium text-gray-900 focus:bg-white appearance-none"
                                                         >
                                                             <option value="">{t('select_placeholder')}</option>
-                                                            {COUNTRIES[0]?.cities?.map(city => (
+                                                            {cities.map(city => (
                                                                 <option key={city.id} value={city.id}>
                                                                     {locale === 'ar' ? city.name_ar : city.name_en}
                                                                 </option>
                                                             ))}
                                                         </select>
                                                     </div>
-                                                    <input type="hidden" {...register('country')} value="tr" />
                                                 </>
                                             )}
 

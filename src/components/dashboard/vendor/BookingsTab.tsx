@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getDemoBookings } from '@/lib/demoData';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 export default function BookingsTab({ demoMode = false }: { demoMode?: boolean } = {}) {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -136,11 +137,11 @@ export default function BookingsTab({ demoMode = false }: { demoMode?: boolean }
                                                 <User className="w-3 h-3" /> {booking.profiles?.full_name}
                                             </span>
                                             <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium font-mono">
-                                                <CreditCard className="w-3 h-3" /> {booking.total_amount} ₺
+                                                <CreditCard className="w-3 h-3" /> {booking.total_amount} {getCurrencySymbol(booking.events?.country)}
                                             </span>
                                             {booking.discount_amount > 0 && (
                                                 <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
-                                                    <Tag className="w-3 h-3" /> -{booking.discount_amount} ₺
+                                                    <Tag className="w-3 h-3" /> -{booking.discount_amount} {getCurrencySymbol(booking.events?.country)}
                                                 </span>
                                             )}
                                         </div>
