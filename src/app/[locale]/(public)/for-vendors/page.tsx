@@ -4,15 +4,31 @@ import dynamic from 'next/dynamic';
 import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
 
 const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'), {
-    loading: () => <div className="h-screen w-full animate-pulse bg-gray-50" />
+    loading: () => <div className="h-[70vh] w-full animate-pulse bg-[#264653]" />
+});
+
+const VendorLogoStrip = dynamic(() => import('@/components/vendor-landing/VendorLogoStrip'), {
+    loading: () => <div className="h-24 w-full animate-pulse bg-[#fffcf9]" />
+});
+
+const VendorPainPoints = dynamic(() => import('@/components/vendor-landing/VendorPainPoints'), {
+    loading: () => <div className="h-[500px] w-full animate-pulse bg-[#fffcf9]" />
+});
+
+const VendorHowItWorks = dynamic(() => import('@/components/vendor-landing/VendorHowItWorks'), {
+    loading: () => <div className="h-[400px] w-full animate-pulse bg-white" />
 });
 
 const VendorBenefits = dynamic(() => import('@/components/vendor-landing/VendorBenefits'), {
+    loading: () => <div className="h-[500px] w-full animate-pulse bg-white" />
+});
+
+const VendorSmartShare = dynamic(() => import('@/components/vendor-landing/VendorSmartShare'), {
     loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
 });
 
 const VendorTestimonials = dynamic(() => import('@/components/vendor-landing/VendorTestimonials'), {
-    loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
+    loading: () => <div className="h-[600px] w-full animate-pulse bg-[#fffcf9]" />
 });
 
 const VendorFAQ = dynamic(() => import('@/components/vendor-landing/VendorFAQ'), {
@@ -20,7 +36,11 @@ const VendorFAQ = dynamic(() => import('@/components/vendor-landing/VendorFAQ'),
 });
 
 const VendorPricing = dynamic(() => import('@/components/vendor-landing/VendorPricing'), {
-    loading: () => <div className="h-[800px] w-full animate-pulse bg-gray-50" />
+    loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
+});
+
+const VendorFinalCTA = dynamic(() => import('@/components/vendor-landing/VendorFinalCTA'), {
+    loading: () => <div className="h-[300px] w-full animate-pulse bg-[#264653]" />
 });
 
 type Props = {
@@ -115,7 +135,7 @@ export default async function VendorLandingPage({ params }: Props) {
                                 description: 'Unlimited events for large organizations'
                             }
                         ],
-                        description: 'Professional event management platform for Arab organizers in Turkey. Automated bilingual bookings, verified reviews, and comprehensive event tools.',
+                        description: 'Professional event management platform for organizers. Automated bilingual bookings, verified reviews, and comprehensive event tools.',
                         featureList: [
                             'Automated bilingual email notifications (Arabic/English)',
                             'Advanced dashboard for performance and sales analytics',
@@ -124,6 +144,7 @@ export default async function VendorLandingPage({ params }: Props) {
                             'Multiple ticket types',
                             'Unlimited photo gallery',
                             'Custom public page',
+                            'One-tap social media sharing with branded event cards',
                             'Priority technical support'
                         ],
                         inLanguage: ['en', 'ar'],
@@ -142,7 +163,7 @@ export default async function VendorLandingPage({ params }: Props) {
                         name: 'Nuqta',
                         url: 'https://nuqta.ist',
                         logo: 'https://nuqta.ist/icon0.svg',
-                        description: 'Turkey\'s first event management platform dedicated to the Arab community',
+                        description: 'Event management platform for organizers',
                         address: {
                             '@type': 'PostalAddress',
                             addressCountry: 'TR',
@@ -256,10 +277,15 @@ export default async function VendorLandingPage({ params }: Props) {
 
             <main className="min-h-screen bg-white">
                 <VendorHero />
+                <VendorLogoStrip />
+                <VendorPainPoints />
+                <VendorHowItWorks />
                 <VendorBenefits />
+                <VendorSmartShare />
                 <VendorTestimonials />
                 <VendorFAQ />
                 <VendorPricing />
+                <VendorFinalCTA />
             </main>
         </>
     );

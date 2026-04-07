@@ -1,152 +1,180 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { Link } from '@/navigation';
-import { motion } from 'framer-motion';
+import { Sparkles, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useCountryName } from '@/hooks/useCountry';
+import { useEffect, useState } from 'react';
+
+const FLOATING_EMOJIS = ['🎨', '🎵', '🛍️', '🎪', '✨', '📸', '🎭', '🍽️'];
 
 export default function Hero() {
     const t = useTranslations('Index');
+    const countryName = useCountryName();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => setMounted(true), []);
 
     return (
-        <section className="relative w-[calc(100%-1rem)] md:w-full h-auto min-h-[35vh] md:min-h-0 md:h-[650px] py-8 md:py-0 m-2 md:m-0 rounded-[2rem] md:rounded-b-[2.5rem] md:rounded-t-none overflow-hidden bg-white border border-secondary/20 md:border-b md:border-secondary/20 md:border-x-0 md:border-t-0 mx-auto shadow-sm md:shadow-none">
-            {/* 1. Enhanced Gradients (More Visible) */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[30%] -right-[10%] w-[800px] h-[800px] bg-gradient-to-br from-primary/10 to-primary/5 rounded-full blur-[80px]" />
-                <div className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] bg-gradient-to-tr from-secondary to-secondary/50 rounded-full blur-[80px]" />
-                <div className="absolute bottom-[-20%] right-[20%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[60px]" />
-            </div>
+        <section className="relative w-full min-h-[55vh] md:min-h-[70vh] flex flex-col items-center justify-center overflow-hidden pt-24 md:pt-32">
+            {/* Warm gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-secondary via-white to-white" />
 
-            {/* 2. Logo-Inspired Pattern: Animated Dashed Paths */}
-            <div className="absolute inset-0 pointer-events-none opacity-60">
-                <svg className="w-full h-full" viewBox="0 0 1440 800" fill="none" preserveAspectRatio="xMidYMid slice">
-                    {/* Path 1: Curving from left */}
-                    <motion.path
-                        d="M-100,600 C200,600 400,200 800,400"
-                        stroke="url(#gradient-line)"
-                        strokeWidth="5"
-                        strokeDasharray="15 15"
-                        strokeLinecap="round"
-                        style={{ pathLength: 1, opacity: 1 }}
-                        animate={{ strokeDashoffset: [0, -1000] }}
-                        transition={{
-                            strokeDashoffset: { duration: 20, repeat: Infinity, ease: "linear" }
-                        }}
+            {/* Teal glow accents */}
+            <div className="absolute top-0 right-[-10%] w-[60%] h-[60%] bg-gradient-to-bl from-primary/15 via-primary/5 to-transparent rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-gradient-to-tr from-primary/10 to-transparent rounded-full blur-[80px] pointer-events-none" />
+
+            {/* Floating emojis — desktop & larger mobile only */}
+            {mounted && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {FLOATING_EMOJIS.map((emoji, i) => (
+                        <FloatingEmoji key={i} emoji={emoji} index={i} />
+                    ))}
+                </div>
+            )}
+
+            {/* Dashed path decoration (like the logo) */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.12]" viewBox="0 0 1440 800" fill="none" preserveAspectRatio="xMidYMid slice">
+                <motion.path
+                    d="M-100,500 C200,300 600,600 900,200 S1200,400 1540,300"
+                    stroke="var(--color-primary)"
+                    strokeWidth="3"
+                    strokeDasharray="12 12"
+                    strokeLinecap="round"
+                    animate={{ strokeDashoffset: [0, -200] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.path
+                    d="M-50,700 C300,500 500,800 800,500 S1100,600 1500,400"
+                    stroke="var(--color-primary)"
+                    strokeWidth="2"
+                    strokeDasharray="8 16"
+                    strokeLinecap="round"
+                    animate={{ strokeDashoffset: [0, 200] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                />
+                {/* Small "nuqta" dots along the paths */}
+                {[
+                    { cx: 200, cy: 400 },
+                    { cx: 600, cy: 500 },
+                    { cx: 1000, cy: 300 },
+                    { cx: 1300, cy: 350 },
+                ].map((dot, i) => (
+                    <motion.circle
+                        key={i}
+                        cx={dot.cx}
+                        cy={dot.cy}
+                        r="5"
+                        fill="var(--color-primary)"
+                        animate={{ opacity: [0.2, 0.6, 0.2], scale: [1, 1.3, 1] }}
+                        transition={{ duration: 3, repeat: Infinity, delay: i * 0.8 }}
                     />
-                    {/* Path 2: Curving from bottom right */}
-                    <motion.path
-                        d="M1540,700 C1200,700 1000,100 600,200"
-                        stroke="url(#gradient-line-2)"
-                        strokeWidth="5"
-                        strokeDasharray="15 15"
-                        strokeLinecap="round"
-                        style={{ pathLength: 1, opacity: 1 }}
-                        animate={{ strokeDashoffset: [0, 1000] }}
-                        transition={{
-                            strokeDashoffset: { duration: 25, repeat: Infinity, ease: "linear" }
-                        }}
-                    />
-                    <defs>
-                        <linearGradient id="gradient-line" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.1" />
-                            <stop offset="50%" stopColor="var(--color-primary)" stopOpacity="0.3" />
-                            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
-                        </linearGradient>
-                        <linearGradient id="gradient-line-2" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0" />
-                            <stop offset="50%" stopColor="var(--color-primary)" stopOpacity="0.3" />
-                            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.1" />
-                        </linearGradient>
-                    </defs>
-                </svg>
-            </div>
+                ))}
+            </svg>
 
-            {/* 3. Floating "Nodes" (Circles from logo) */}
-            <div className="absolute inset-0 pointer-events-none">
-                <FloatingNode className="top-[15%] left-[10%]" size={20} delay={0} />
-                <FloatingNode className="top-[45%] right-[15%]" size={30} delay={1.5} />
-                <FloatingNode className="bottom-[20%] left-[20%]" size={15} delay={3} />
-            </div>
-
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4 md:px-6 max-w-5xl mx-auto">
-                {/* Brand Badge - Visible on all screens again to fill space */}
+            {/* Content */}
+            <div className="relative z-10 text-center px-6 md:px-8 max-w-3xl mx-auto flex flex-col items-center gap-4 md:gap-6">
+                {/* Badge */}
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white border border-secondary/20 text-accent mb-2 md:mb-8 shadow-md shadow-accent/5 backdrop-blur-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-primary/15 shadow-sm"
                 >
-                    <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
-                    <span className="text-xs md:text-sm font-semibold tracking-wide uppercase">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-bold text-accent tracking-wide uppercase">
                         {t('hero.connected_community')}
                     </span>
                 </motion.div>
 
-                {/* Main Headline */}
+                {/* Headline */}
                 <motion.h1
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-2xl md:text-5xl lg:text-6xl font-black tracking-normal md:tracking-tight text-accent mb-4 md:mb-6 leading-normal md:leading-[1.1]"
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-accent leading-snug md:leading-[1.12]"
                 >
                     {t.rich('title', {
+                        country: countryName,
                         br: () => <br className="hidden md:block" />,
                         highlight: (chunks) => (
-                            <span className="text-primary relative inline-block">
+                            <span className="relative inline-block text-primary">
                                 {chunks}
+                                <motion.span
+                                    className="absolute -bottom-1 left-0 w-full h-2 bg-secondary rounded-full -z-10"
+                                    initial={{ scaleX: 0 }}
+                                    animate={{ scaleX: 1 }}
+                                    transition={{ duration: 0.6, delay: 0.5 }}
+                                    style={{ originX: 0 }}
+                                />
                             </span>
                         )
                     })}
                 </motion.h1>
 
-                {/* Description - Visible again on mobile, but smaller */}
+                {/* Description */}
                 <motion.p
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-sm md:text-xl text-accent/70 max-w-2xl mx-auto leading-relaxed mb-0 md:mb-10 font-medium px-4 md:px-0"
+                    className="text-sm md:text-lg text-accent/60 max-w-xl mx-auto leading-relaxed font-medium"
                 >
                     {t('description')}
                 </motion.p>
 
-                {/* Actions - Hidden on mobile */}
+                {/* Scroll indicator on mobile */}
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="hidden md:flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="mt-2 md:mt-4"
                 >
-                    <Link
-                        href="/register"
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-white text-sm md:text-base font-bold rounded-full hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 ring-4 ring-primary/5"
+                    <motion.div
+                        animate={{ y: [0, 6, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                        className="flex flex-col items-center gap-1 text-primary/40"
                     >
-                        <span>{t('hero.discover_more')}</span>
-                        <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-                    </Link>
+                        <ChevronDown className="w-5 h-5" />
+                    </motion.div>
                 </motion.div>
             </div>
         </section>
     );
 }
 
-function FloatingNode({ className, size, delay }: { className: string, size: number, delay: number }) {
+function FloatingEmoji({ emoji, index }: { emoji: string; index: number }) {
+    // Deterministic positions based on index for SSR consistency
+    const positions = [
+        { top: '12%', left: '8%' },
+        { top: '20%', right: '12%' },
+        { top: '55%', left: '6%' },
+        { top: '60%', right: '8%' },
+        { top: '35%', left: '15%' },
+        { top: '75%', right: '15%' },
+        { top: '45%', right: '20%' },
+        { top: '80%', left: '18%' },
+    ];
+
+    const pos = positions[index % positions.length];
+
     return (
-        <motion.div
-            className={`absolute rounded-full border-[3px] border-primary/20 ${className}`}
-            style={{ width: size, height: size }}
+        <motion.span
+            className="absolute text-xl md:text-2xl select-none hidden sm:block"
+            style={pos}
+            initial={{ opacity: 0, scale: 0.5 }}
             animate={{
-                y: [0, -20, 0],
-                rotate: [0, 90, 0],
-                scale: [1, 1.1, 1]
+                opacity: [0, 0.6, 0.3, 0.6, 0],
+                y: [0, -15, 5, -10, 0],
+                rotate: [0, 8, -5, 3, 0],
             }}
             transition={{
-                duration: 6,
+                duration: 8 + index * 1.5,
                 repeat: Infinity,
-                delay: delay,
+                delay: index * 0.6,
                 ease: "easeInOut"
             }}
         >
-            <div className="w-full h-full rounded-full bg-primary/5" />
-        </motion.div>
+            {emoji}
+        </motion.span>
     );
 }

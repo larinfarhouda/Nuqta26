@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = locale === 'ar' ? 'من نحن' : 'About Us';
     const description = locale === 'ar'
-        ? 'تعرف على نقطة - المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
-        : 'Learn about Nuqta - the digital marketplace for events and ticketing in Istanbul\'s Arabic-speaking community.';
+        ? 'تعرف على نقطة - المنصة الرقمية للفعاليات والتذاكر.'
+        : 'Learn about Nuqta - the digital marketplace for events and ticketing.';
 
     return {
         title,
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             url: `https://nuqta.ist/${locale}/about`,
             siteName: 'Nuqta',
             type: 'website',
-            locale: locale === 'ar' ? 'ar_TR' : 'en_US',
+            locale: locale === 'ar' ? 'ar' : 'en_US',
         },
         twitter: {
             card: 'summary',
@@ -53,8 +53,8 @@ export default async function AboutPage({ params }: Props) {
         ...generateWebPageSchema({
             name: locale === 'ar' ? 'من نحن | نقطة' : 'About Us | Nuqta',
             description: locale === 'ar'
-                ? 'تعرف على نقطة - المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
-                : 'Learn about Nuqta - the digital marketplace for events and ticketing in Istanbul\'s Arabic-speaking community.',
+                ? 'تعرف على نقطة - المنصة الرقمية للفعاليات والتذاكر.'
+                : 'Learn about Nuqta - the digital marketplace for events and ticketing.',
             url: `https://nuqta.ist/${locale}/about`,
             locale,
             type: 'AboutPage',

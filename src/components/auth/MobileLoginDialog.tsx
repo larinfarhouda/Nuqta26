@@ -3,11 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations, useLocale } from 'next-intl';
-import { X, ShieldCheck, LogIn, Loader2, Mail, Lock, ArrowRight, UserPlus, Calendar, Phone, MapPin } from 'lucide-react';
+import { X, ShieldCheck, LogIn, Loader2, Mail, Lock, ArrowRight, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import GoogleSignInButton, { GoogleIcon } from '@/components/auth/GoogleSignInButton';
-import { COUNTRY_CODES } from '@/components/ui/PhoneInput';
-import { COUNTRIES } from '@/constants/locations';
 
 interface MobileLoginDialogProps {
     isOpen: boolean;
@@ -29,13 +27,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [fullName, setFullName] = useState('');
     const [registerSuccess, setRegisterSuccess] = useState(false);
-
-    // Extra user registration fields
-    const [age, setAge] = useState('');
-    const [gender, setGender] = useState('');
-    const [countryCode, setCountryCode] = useState('+90');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [city, setCity] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // 300ms guard
     const [ready, setReady] = useState(false);
@@ -84,8 +76,6 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         setIsLoading(true);
         setError(null);
         try {
-            const phone = phoneNumber.trim() ? `${countryCode}${phoneNumber.trim()}` : undefined;
-
             const { error: signUpError } = await supabase.auth.signUp({
                 email,
                 password,
@@ -94,17 +84,11 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                     data: {
                         role: 'user',
                         full_name: fullName,
-                        age: age ? parseInt(age) : null,
-                        gender: gender || null,
-                        country: 'tr',
-                        city: city || null,
-                        phone: phone || null,
                     },
                 },
             });
             if (signUpError) throw signUpError;
             setRegisterSuccess(true);
-            // Admin notification is handled by the auth callback after email confirmation
         } catch (err: any) {
             const msg = err.message || '';
             setError(msg.includes('User already registered') ? tAuth('error_user_already_registered') : tAuth('error_generic'));
@@ -119,12 +103,8 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
         setEmail('');
         setPassword('');
         setFullName('');
-        setAge('');
-        setGender('');
-        setCountryCode('+90');
-        setPhoneNumber('');
-        setCity('');
         setRegisterSuccess(false);
+        setShowPassword(false);
     };
 
     const handleInputFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -157,6 +137,9 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                 onPointerDown={(e) => e.stopPropagation()}
                 onPointerUp={(e) => e.stopPropagation()}
             >
+                {/* Top accent gradient */}
+                <div className="h-1 bg-gradient-to-r from-primary via-[#2CA58D] to-teal-400" />
+
                 {/* Decorative bg */}
                 <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-br from-primary/10 via-secondary/20 to-transparent" />
 
@@ -224,7 +207,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
 
                             {/* Form */}
                             <form onSubmit={mode === 'login' ? handleInlineLogin : handleInlineRegister} className="space-y-2.5">
-                                {/* Full Name — always shown for register */}
+                                {/* Full Name — register only */}
                                 {mode === 'register' && (
                                     <div className="relative">
                                         <UserPlus className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -238,85 +221,6 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                             required
                                             autoComplete="name"
                                         />
-                                    </div>
-                                )}
-
-                                {/* Age + Gender row — register only */}
-                                {mode === 'register' && (
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="relative">
-                                            <Calendar className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                            <input
-                                                type="number"
-                                                value={age}
-                                                onChange={(e) => setAge(e.target.value)}
-                                                onFocus={handleInputFocus}
-                                                placeholder={tAuth('age_label')}
-                                                min="13"
-                                                max="100"
-                                                className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                                                inputMode="numeric"
-                                            />
-                                        </div>
-                                        <select
-                                            value={gender}
-                                            onChange={(e) => setGender(e.target.value)}
-                                            onFocus={handleInputFocus}
-                                            className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">{tAuth('gender_label')}</option>
-                                            <option value="Male">{tAuth('gender_male')}</option>
-                                            <option value="Female">{tAuth('gender_female')}</option>
-                                        </select>
-                                    </div>
-                                )}
-
-                                {/* Phone — register only */}
-                                {mode === 'register' && (
-                                    <div className="flex gap-2" dir="ltr">
-                                        <select
-                                            value={countryCode}
-                                            onChange={(e) => setCountryCode(e.target.value)}
-                                            className="px-2 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all font-medium text-gray-900 w-24 text-xs"
-                                        >
-                                            {COUNTRY_CODES.map((c) => (
-                                                <option key={c.code} value={c.code}>
-                                                    {c.country} ({c.code})
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="relative flex-1">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                            <input
-                                                type="tel"
-                                                value={phoneNumber}
-                                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                                onFocus={handleInputFocus}
-                                                placeholder="555 123 45 67"
-                                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                                                inputMode="tel"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* City — register only */}
-                                {mode === 'register' && (
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                        <select
-                                            value={city}
-                                            onChange={(e) => setCity(e.target.value)}
-                                            onFocus={handleInputFocus}
-                                            className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">{tAuth('city')}</option>
-                                            {COUNTRIES[0]?.cities?.map(c => (
-                                                <option key={c.id} value={c.id}>
-                                                    {locale === 'ar' ? c.name_ar : c.name_en}
-                                                </option>
-                                            ))}
-                                        </select>
                                     </div>
                                 )}
 
@@ -340,16 +244,24 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                 <div className="relative">
                                     <Lock className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                     <input
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         onFocus={handleInputFocus}
                                         placeholder={tAuth('password')}
-                                        className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                                        className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-10 rtl:pr-4 rtl:pl-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
                                         required
                                         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                                         minLength={mode === 'register' ? 6 : undefined}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
                                 </div>
 
                                 {error && (
@@ -359,7 +271,7 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
+                                    className="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:shadow-lg transition-all active:scale-95 disabled:opacity-50"
                                 >
                                     {isLoading ? (
                                         <Loader2 className="w-5 h-5 animate-spin" />

@@ -122,7 +122,7 @@ export function createVendorDescription(vendor: {
     }
 
     if (vendor.district) {
-        parts.push(`Based in ${vendor.district}, Istanbul`);
+        parts.push(`Based in ${vendor.district}`);
     }
 
     if (vendor.categories && vendor.categories.length > 0) {
@@ -259,8 +259,8 @@ export function generateOrganizationSchema(locale: string) {
         },
         image: `${BASE_URL}/images/og-image.png`,
         description: locale === 'ar'
-            ? 'المنصة الرقمية للفعاليات والتذاكر في مجتمع اسطنبول العربي.'
-            : "The digital marketplace for events and ticketing in Istanbul's Arabic-speaking community.",
+            ? 'المنصة الرقمية للفعاليات والتذاكر.'
+            : 'The digital marketplace for events and ticketing.',
         foundingDate: '2024',
         inLanguage: ['ar', 'en'],
         sameAs: [
@@ -268,22 +268,23 @@ export function generateOrganizationSchema(locale: string) {
             'https://twitter.com/nuqta_ist',
         ],
         knowsAbout: [
-            'Arabic community events in Istanbul',
-            'Event management for Arabic-speaking organizers',
+            'Community events',
+            'Event management for organizers',
             'Bilingual event ticketing platform',
-            'Cultural events in Turkey',
+            'Cultural events',
             'Workshop and bazaar organization',
-            'فعاليات المجتمع العربي في إسطنبول',
             'إدارة الفعاليات',
         ],
-        areaServed: {
-            '@type': 'City',
-            name: 'Istanbul',
-            containedInPlace: {
+        areaServed: [
+            {
                 '@type': 'Country',
                 name: 'Turkey',
             },
-        },
+            {
+                '@type': 'Country',
+                name: 'Egypt',
+            },
+        ],
         address: {
             '@type': 'PostalAddress',
             addressLocality: 'Istanbul',
@@ -308,8 +309,8 @@ export function generateWebSiteSchema(locale: string) {
         name: 'Nuqta',
         url: BASE_URL,
         description: locale === 'ar'
-            ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول'
-            : 'Discover the best Arabic events and activities in Istanbul',
+            ? 'اكتشف أفضل الفعاليات والأنشطة'
+            : 'Discover the best events and experiences',
         inLanguage: ['ar', 'en'],
         publisher: { '@id': `${BASE_URL}/#organization` },
         potentialAction: {

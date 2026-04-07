@@ -4,9 +4,11 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, MessageSquare, Sparkles, Globe } from 'lucide-react';
 import { useState } from 'react';
+import { useCountryName } from '@/hooks/useCountry';
 
 export default function ContactPage() {
     const t = useTranslations('StaticPages.Contact');
+    const countryName = useCountryName();
     const [status, setStatus] = useState<'idle' | 'success'>('idle');
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -44,7 +46,7 @@ export default function ContactPage() {
         {
             icon: <MapPin className="w-8 h-8" />,
             label: t('cards.location'),
-            value: t('cards.location_val'),
+            value: t('cards.location_val', { country: countryName }),
             color: "from-amber-500/10 to-amber-600/5 text-amber-700 border-amber-200/50"
         }
     ];

@@ -187,7 +187,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                             >
                                 <div className="flex items-center gap-1.5">
                                     <MapPin className="w-4 h-4 text-gray-400" />
-                                    <span>Istanbul, Turkey</span>
+                                    <span>{vendor.city || vendor.district || ''}</span>
                                 </div>
                                 <div className="w-1 h-1 rounded-full bg-gray-600 hidden md:block" />
                                 {vendor.rating && vendor.rating.count > 0 && (
@@ -532,7 +532,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                             <div className="flex items-start gap-2 text-gray-600 text-sm">
                                                 <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
                                                 <div className="flex flex-col">
-                                                    <span>{vendor.location_name || 'Istanbul, Turkey'}</span>
+                                                    <span>{vendor.location_name || ''}</span>
                                                     {vendor.location_details && (
                                                         <span className="text-xs text-gray-500 italic mt-0.5">{vendor.location_details}</span>
                                                     )}
@@ -551,7 +551,7 @@ export default function VendorProfileClient({ vendor }: { vendor: any }) {
                                     ) : (
                                         <div className="flex items-start gap-2 text-gray-600 text-sm">
                                             <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                                            <span>{vendor.location_name || 'Istanbul, Turkey'}</span>
+                                            <span>{vendor.location_name || ''}</span>
                                         </div>
                                     )}
                                 </div>

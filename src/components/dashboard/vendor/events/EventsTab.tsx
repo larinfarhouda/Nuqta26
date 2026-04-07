@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Calendar, MapPin, Users, Activity, Trash2, Edit3, XCircle, AlertCircle } from 'lucide-react';
+import { Plus, Calendar, MapPin, Users, Activity, Trash2, Edit3, XCircle, AlertCircle, Share2 } from 'lucide-react';
+import ShareEventModal from './ShareEventModal';
 import NextImage from 'next/image';
 import { getVendorEvents, deleteEvent } from '@/actions/vendor/events';
 import EventDetails from './EventDetails';
@@ -17,6 +18,9 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<any>(null);
     const [viewEvent, setViewEvent] = useState<any>(null);
+    const [shareEvent, setShareEvent] = useState<any>(null);
+    const [isPostPublish, setIsPostPublish] = useState(false);
+    const tShare = useTranslations('Dashboard.vendor.share');
     const t = useTranslations('Dashboard.vendor.events');
     const locale = useLocale();
 
@@ -228,6 +232,15 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                                                     <button onClick={() => { setEditingEvent(event); setIsFormOpen(true); }} className="p-2 text-primary hover:bg-primary/10 transition-colors bg-gray-50 rounded-lg">
                                                         <Edit3 className="w-4 h-4" />
                                                     </button>
+                                                    {event.status === 'published' && (
+                                                        <button
+                                                            onClick={() => { setShareEvent(event); setIsPostPublish(false); }}
+                                                            className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors bg-gray-50 rounded-lg"
+                                                            title={tShare('share_button')}
+                                                        >
+                                                            <Share2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -251,9 +264,23 @@ export default function EventsTab({ vendorData, demoMode = false }: { vendorData
                     event={editingEvent}
                     vendorData={vendorData}
                     onClose={() => setIsFormOpen(false)}
-                    onSuccess={() => { setIsFormOpen(false); loadEvents(); }}
+                    onSuccess={(createdEvent?: any) => {
+                        setIsFormOpen(false);
+                        loadEvents();
+                        if (createdEvent && !editingEvent) {
+                            setShareEvent(createdEvent);
+                            setIsPostPublish(true);
+                        }
+                    }}
                 />
             )}
+
+            <ShareEventModal
+                event={shareEvent}
+                isOpen={!!shareEvent}
+                onClose={() => { setShareEvent(null); setIsPostPublish(false); }}
+                isPostPublish={isPostPublish}
+            />
         </div>
     );
 }

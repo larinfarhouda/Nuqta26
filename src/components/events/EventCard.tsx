@@ -2,28 +2,32 @@
 
 import { Heart, Star, AlertCircle, XCircle } from 'lucide-react';
 import Image from 'next/image';
-import { Link } from '@/navigation';
+import { Link, useRouter } from '@/navigation';
 import { useState } from 'react';
 import { toggleFavoriteEvent } from '@/actions/user';
-import { useRouter } from 'next/navigation';
-import { getEventStatus, EventStatus } from '@/utils/eventStatus';
-import { useTranslations } from 'next-intl';
+import { getEventStatus } from '@/utils/eventStatus';
+import { useTranslations, useLocale } from 'next-intl';
+import { useCountryName } from '@/hooks/useCountry';
 import TierBadge from '@/components/TierBadge';
 import type { SubscriptionTier } from '@/lib/constants/subscription';
 import { getCurrencySymbol } from '@/utils/country-helpers';
+import { motion } from 'framer-motion';
 
 interface EventCardProps {
     event: any;
     isFavoriteInitial: boolean;
+    index?: number;
 }
 
-export default function EventCard({ event, isFavoriteInitial }: EventCardProps) {
+export default function EventCard({ event, isFavoriteInitial, index = 0 }: EventCardProps) {
     const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const t = useTranslations('Events');
+    const locale = useLocale();
+    const countryName = useCountryName();
+    const isRTL = locale === 'ar';
 
-    // Calculate event status
     const eventStatus = getEventStatus(event);
     const isExpired = eventStatus === 'expired';
     const isSoldOut = eventStatus === 'sold_out';
@@ -53,151 +57,187 @@ export default function EventCard({ event, isFavoriteInitial }: EventCardProps) 
         }
     };
 
+    const displayPrice = (() => {
+        const price = (event.tickets && event.tickets.length > 0)
+            ? Math.min(...event.tickets.map((t: any) => t.price))
+            : event.price;
+        return price > 0 ? `${price} ${getCurrencySymbol(event.country)}` : 'Free';
+    })();
+
+    const eventDate = new Date(event.date);
+
+    const handleCardClick = () => {
+        router.push(`/events/${event.slug || event.id}` as any);
+    };
+
     return (
-        <div className={`group relative bg-white rounded-xl md:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl md:hover:-translate-y-2 transition-all duration-300 h-full ${isExpired ? 'grayscale opacity-75' : ''}`}>
-            <Link href={`/events/${event.slug || event.id}`} className="flex flex-col h-full">
-                {/* Image Container - Compact on mobile */}
-                <div className="relative w-full h-40 md:aspect-square overflow-hidden bg-gray-50 shrink-0">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
+            className={`group relative bg-white rounded-2xl md:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl md:hover:-translate-y-1 transition-all duration-300 h-full cursor-pointer ${isExpired ? 'opacity-60' : ''}`}
+            onClick={handleCardClick}
+            role="link"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
+        >
+            <div className="flex flex-col h-full">
+                {/* Image — taller on mobile for immersive feel */}
+                <div className="relative w-full aspect-[4/3] md:aspect-square overflow-hidden bg-gray-50 shrink-0">
                     {event.image_url ? (
                         <Image
                             src={event.image_url}
                             alt={event.title}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-                            className="object-cover md:transition-transform md:duration-700 md:group-hover:scale-110"
+                            className={`object-cover md:transition-transform md:duration-500 md:group-hover:scale-105 ${isExpired ? 'grayscale' : ''}`}
                             loading="lazy"
                             quality={75}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300 font-bold uppercase tracking-widest text-[10px]">
-                            No Image
+                        <div className="w-full h-full flex items-center justify-center bg-secondary/30 text-primary/30">
+                            <span className="text-4xl">📅</span>
                         </div>
                     )}
 
-                    {/* Floating Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    {/* Gradient overlay for readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
 
-                    {/* Status Badge - Expired or Sold Out */}
+                    {/* Status Badge — top left */}
                     {(isExpired || isSoldOut) && (
-                        <div className={`absolute top-2 left-2 md:top-3 md:left-3 z-10 px-2.5 py-1.5 md:px-3 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 ${isExpired
-                            ? 'bg-red-500 text-white'
-                            : 'bg-amber-500 text-white'
-                            }`}>
+                        <div className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} z-10 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1 ${
+                            isExpired ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'
+                        }`}>
                             {isExpired ? (
-                                <>
-                                    <XCircle className="w-3 h-3" />
-                                    <span>{t('status_expired')}</span>
-                                </>
+                                <><XCircle className="w-3 h-3" /><span>{t('status_expired')}</span></>
                             ) : (
-                                <>
-                                    <AlertCircle className="w-3 h-3" />
-                                    <span>{t('status_sold_out')}</span>
-                                </>
+                                <><AlertCircle className="w-3 h-3" /><span>{t('status_sold_out')}</span></>
                             )}
                         </div>
                     )}
 
-                    {/* Favorite Button */}
-                    <button
+                    {/* Category chip — top left (when no status badge) */}
+                    {!isExpired && !isSoldOut && (
+                        <div className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} z-10`}>
+                            <div className="px-2.5 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg text-[10px] font-bold uppercase tracking-wider text-accent shadow-sm flex items-center gap-1">
+                                <span className="text-sm">{event.category_icon || event.category?.icon || '✨'}</span>
+                                <span>{event.category_name_en || event.category?.name_en || event.category?.name_ar || 'Event'}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Favorite button — top right */}
+                    <motion.button
                         onClick={handleToggleFavorite}
+                        whileTap={{ scale: 0.8 }}
                         aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-                        className="absolute top-2 right-2 md:top-3 md:right-3 z-10 p-2 md:p-2.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all group/fav shadow-sm"
+                        className={`absolute top-3 ${isRTL ? 'left-3' : 'right-3'} z-10 p-2.5 rounded-full transition-all shadow-sm ${
+                            isFavorite ? 'bg-rose-500' : 'bg-white/90 backdrop-blur-sm'
+                        }`}
                     >
                         <Heart
-                            className={`w-4 h-4 md:w-5 md:h-5 transition-all ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-gray-600 group-hover/fav:text-rose-500'}`}
+                            className={`w-4 h-4 transition-all ${
+                                isFavorite ? 'fill-white text-white' : 'text-gray-600'
+                            }`}
                         />
-                    </button>
+                    </motion.button>
 
-                    {/* Type Badge - Positioned at bottom on mobile (only show if not expired/sold out) */}
-                    {!isExpired && !isSoldOut && (
-                        <div className="absolute bottom-2 left-2 md:top-3 md:left-3 md:bottom-auto flex items-center gap-2">
-                            {/* Category Badge */}
-                            <div className="px-2.5 py-1.5 md:px-3 md:py-1.5 bg-white/95 backdrop-blur-md rounded-lg md:rounded-xl text-[10px] md:text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm flex items-center gap-1 md:gap-1.5">
-                                <span className="text-sm md:text-sm">{event.category_icon || event.category?.icon || '✨'}</span>
-                                <span className="inline">{event.category_name_en || event.category?.name_en || event.category?.name_ar || 'Event'}</span>
-                            </div>
+                    {/* Price pill — bottom right of image */}
+                    <div className={`absolute bottom-3 ${isRTL ? 'left-3' : 'right-3'} z-10`}>
+                        <div className={`px-3 py-1.5 rounded-lg text-sm font-black shadow-md ${
+                            isExpired || isSoldOut
+                                ? 'bg-gray-100/90 text-gray-400'
+                                : displayPrice === 'Free'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-white/95 backdrop-blur-sm text-accent'
+                        }`}>
+                            {displayPrice}
+                        </div>
+                    </div>
 
-                            {/* Tier Badge - Growth or Professional */}
-                            {event.vendors?.subscription_tier && (
-                                <div className="hidden md:block">
-                                    <TierBadge
-                                        tier={event.vendors.subscription_tier as SubscriptionTier}
-                                        size="sm"
-                                        showLabel={true}
-                                    />
-                                </div>
-                            )}
+                    {/* Tier Badge */}
+                    {event.vendors?.subscription_tier && (
+                        <div className={`absolute bottom-3 ${isRTL ? 'right-3' : 'left-3'} z-10 hidden md:block`}>
+                            <TierBadge
+                                tier={event.vendors.subscription_tier as SubscriptionTier}
+                                size="sm"
+                                showLabel={true}
+                            />
                         </div>
                     )}
                 </div>
 
-                {/* Content - Compact padding on mobile */}
-                <div className="p-3 md:p-4 flex-1 flex flex-col" dir="rtl">
-                    <div className="mb-2 text-right">
-                        <h3 className="text-base md:text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
-                            {event.title}
-                        </h3>
-                    </div>
+                {/* Content */}
+                <div className="p-3.5 md:p-4 flex-1 flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+                    {/* Title */}
+                    <h3 className="text-base md:text-lg font-bold text-accent line-clamp-2 group-hover:text-primary transition-colors leading-snug mb-1">
+                        {event.title}
+                    </h3>
 
-                    <div className="space-y-1.5 mb-auto text-right">
-                        <p className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 flex-row-reverse justify-start">
-                            <span className="w-1.5 h-1.5 md:w-1.5 md:h-1.5 rounded-full bg-primary/60 shrink-0" />
+                    {/* Vendor name — clickable to vendor profile */}
+                    {event.vendor_name && (
+                        <p className="text-[11px] md:text-xs font-semibold text-accent/40 mb-2 truncate">
+                            {event.vendor_slug ? (
+                                <Link
+                                    href={`/v/${event.vendor_slug}`}
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                    className="hover:text-primary transition-colors"
+                                >
+                                    by {event.vendor_name}
+                                </Link>
+                            ) : (
+                                <span>by {event.vendor_name}</span>
+                            )}
+                        </p>
+                    )}
+
+                    {/* Location & Date */}
+                    <div className="space-y-1.5 mb-auto">
+                        <p className="text-xs md:text-sm font-semibold text-accent/50 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
                             <span className="truncate">
                                 {event.district && event.city
                                     ? `${event.district}, ${event.city}`
-                                    : (event.district || event.city || event.location_name || t('default_location'))}
+                                    : (event.district || event.city || event.location_name || t('default_location', { country: countryName }))}
                             </span>
                         </p>
-                        <p className={`text-xs md:text-sm font-bold ${isExpired ? 'text-red-400' : 'text-gray-400'} flex items-center gap-1.5 flex-row-reverse justify-start`}>
-                            <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}</span>
-                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                        <p className={`text-xs md:text-sm font-semibold ${isExpired ? 'text-red-400' : 'text-accent/35'} flex items-center gap-1.5`}>
+                            <span>{eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}</span>
+                            <span className="w-1 h-1 rounded-full bg-gray-200" />
                             <span dir="ltr">
-                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
+                                {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
                             </span>
                         </p>
                     </div>
 
-                    <div className="pt-3 flex items-center justify-between border-t border-gray-100 mt-4 flex-row-reverse">
-                        <div className="flex items-center gap-2">
-                            <div className={`px-3 py-2 md:px-3 md:py-2 rounded-xl md:rounded-xl border transition-all duration-300 ${isExpired || isSoldOut
-                                ? 'bg-gray-100 border-gray-200'
-                                : 'bg-primary/10 border-primary/10 group-hover:bg-primary group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20'
-                                }`}>
-                                <span className={`text-base md:text-lg font-black transition-colors ${isExpired || isSoldOut
-                                    ? 'text-gray-400'
-                                    : 'text-primary group-hover:text-white'
-                                    }`}>
-                                    {(() => {
-                                        const displayPrice = (event.tickets && event.tickets.length > 0)
-                                            ? Math.min(...event.tickets.map((t: any) => t.price))
-                                            : event.price;
-                                        return displayPrice > 0 ? `${displayPrice} ${getCurrencySymbol(event.country)}` : 'Free';
-                                    })()}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Status badge in footer - show expired/sold out or NEW */}
+                    {/* Footer status */}
+                    <div className="pt-3 mt-3 border-t border-gray-50 flex items-center justify-between">
                         {isExpired ? (
-                            <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-red-600 bg-red-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-red-100/50">
-                                <XCircle className="w-3 h-3 md:w-3 md:h-3" />
-                                <span className="inline">{t('status_expired')}</span>
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-50 px-2.5 py-1.5 rounded-lg">
+                                <XCircle className="w-3 h-3" />
+                                <span>{t('status_expired')}</span>
                             </div>
                         ) : isSoldOut ? (
-                            <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-amber-600 bg-amber-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-amber-100/50">
-                                <AlertCircle className="w-3 h-3 md:w-3 md:h-3" />
-                                <span className="inline">{t('status_sold_out')}</span>
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1.5 rounded-lg">
+                                <AlertCircle className="w-3 h-3" />
+                                <span>{t('status_sold_out')}</span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1 text-[10px] md:text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1.5 md:px-2.5 md:py-1.5 rounded-lg border border-emerald-100/50">
-                                <Star className="w-3 h-3 md:w-3 md:h-3 fill-current" />
-                                <span className="inline">NEW</span>
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1.5 rounded-lg border border-primary/10">
+                                <Star className="w-3 h-3 fill-current" />
+                                <span>NEW</span>
                             </div>
                         )}
+
+                        {/* View arrow */}
+                        <div className="w-8 h-8 rounded-full bg-gray-50 group-hover:bg-primary group-hover:shadow-md group-hover:shadow-primary/20 flex items-center justify-center transition-all duration-300">
+                            <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d={isRTL ? "M19 12H5M12 5l-7 7 7 7" : "M5 12h14M12 5l7 7-7 7"} />
+                            </svg>
+                        </div>
                     </div>
                 </div>
-            </Link>
-        </div>
+            </div>
+        </motion.div>
     );
 }
-

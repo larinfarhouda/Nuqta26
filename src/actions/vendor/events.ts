@@ -197,7 +197,7 @@ export async function createEvent(formData: FormData) {
             details: { title: formData.get('title') },
         });
 
-        return { success: true, eventId: event.id };
+        return { success: true, eventId: event.id, data: event };
     } catch (error) {
         logger.error('Failed to create event', { error });
         return { error: error instanceof Error ? error.message : 'Failed to create event' };

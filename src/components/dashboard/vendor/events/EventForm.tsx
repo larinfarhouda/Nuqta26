@@ -29,7 +29,7 @@ interface Props {
     event?: any;
     vendorData?: any;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (createdEvent?: any) => void;
 }
 
 export default function EventForm({ event, vendorData, onClose, onSuccess }: Props) {
@@ -116,7 +116,7 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
     // Destructure to exclude tickets and bulk_discounts from spread
     const { tickets: _eventTickets, bulk_discounts: _eventBulkDiscounts, bookings: _eventBookings, ...eventBaseData } = event || {} as any;
 
-    const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    const { register, control, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         defaultValues: event ? {
             ...eventBaseData,
@@ -272,7 +272,16 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             } else {
                 alert(res.error);
             }
-        } else onSuccess();
+        } else {
+            // For new events, pass the response data so the share modal can open
+            const createdEvent = (res as any)?.data || (res as any)?.event;
+            if (createdEvent) {
+                // Merge form ticket data since tickets are inserted separately
+                const formValues = getValues();
+                createdEvent.tickets = formValues.tickets;
+            }
+            onSuccess(createdEvent);
+        }
     };
 
     const DAYS = [

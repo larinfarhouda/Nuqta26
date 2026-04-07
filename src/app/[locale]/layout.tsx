@@ -48,48 +48,48 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         metadataBase: new URL('https://nuqta.ist'),
         title: {
             default: isArabic
-                ? 'نقطة | دليل الفعاليات والأنشطة العربية في إسطنبول'
-                : "Nuqta | Istanbul's Arabic Event Hub",
+                ? 'نقطة | دليل الفعاليات والأنشطة'
+                : 'Nuqta | Discover Events & Experiences',
             template: "%s | Nuqta"
         },
         description: isArabic
-            ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول. ورش عمل، معارض فنية، بازارات وأكثر - كل شيء في مكان واحد.'
-            : 'Discover and join vibrant community events in Istanbul. Workshops, bazaars, concerts, and more - all in one place.',
+            ? 'اكتشف أفضل الفعاليات والأنشطة. ورش عمل، معارض فنية، بازارات وأكثر - كل شيء في مكان واحد.'
+            : 'Discover and join vibrant community events. Workshops, bazaars, concerts, and more - all in one place.',
         keywords: isArabic
-            ? ['فعاليات إسطنبول', 'المجتمع العربي إسطنبول', 'ورش عمل إسطنبول', 'تذاكر إسطنبول', 'نقطة', 'فعاليات عربية']
-            : ['Istanbul events', 'Arabic community Istanbul', 'workshops Istanbul', 'tickets Istanbul', 'Nuqta', 'event marketplace', 'event ticketing', 'Istanbul Arabic events'],
+            ? ['فعاليات', 'ورش عمل', 'تذاكر', 'نقطة', 'فعاليات ثقافية', 'بازارات']
+            : ['events', 'community events', 'workshops', 'tickets', 'Nuqta', 'event marketplace', 'event ticketing'],
         applicationName: 'Nuqta',
         authors: [{ name: 'Nuqta' }],
         creator: 'Nuqta',
         publisher: 'Nuqta',
         openGraph: {
             type: 'website',
-            locale: isArabic ? 'ar_TR' : 'en_US',
-            alternateLocale: isArabic ? ['en_US'] : ['ar_TR'],
+            locale: isArabic ? 'ar' : 'en_US',
+            alternateLocale: isArabic ? ['en_US'] : ['ar'],
             url: 'https://nuqta.ist',
             siteName: 'Nuqta',
             title: isArabic
-                ? 'نقطة | دليل الفعاليات والأنشطة العربية في إسطنبول'
-                : "Nuqta | Istanbul's Arabic Event Hub",
+                ? 'نقطة | دليل الفعاليات والأنشطة'
+                : 'Nuqta | Discover Events & Experiences',
             description: isArabic
-                ? 'اكتشف أفضل الفعاليات والأنشطة العربية في إسطنبول.'
-                : 'Discover and join vibrant community events in Istanbul.',
+                ? 'اكتشف أفضل الفعاليات والأنشطة.'
+                : 'Discover and join vibrant community events.',
             images: [{
                 url: '/images/og-image.png',
                 width: 1200,
                 height: 630,
-                alt: 'Nuqta - Istanbul Event Marketplace'
+                alt: 'Nuqta - Event Marketplace'
             }],
         },
         twitter: {
             card: 'summary_large_image',
             site: '@nuqta_ist',
             title: isArabic
-                ? 'نقطة | دليل الفعاليات العربية في إسطنبول'
-                : "Nuqta | Istanbul's Arabic Event Hub",
+                ? 'نقطة | دليل الفعاليات والأنشطة'
+                : 'Nuqta | Discover Events & Experiences',
             description: isArabic
-                ? 'اكتشف أفضل الفعاليات العربية في إسطنبول.'
-                : 'Discover and join vibrant community events in Istanbul.',
+                ? 'اكتشف أفضل الفعاليات والأنشطة.'
+                : 'Discover and join vibrant community events.',
         },
         appleWebApp: {
             title: 'Nuqta',

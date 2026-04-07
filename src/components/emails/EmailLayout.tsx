@@ -77,7 +77,7 @@ export const EmailLayout = ({ children, locale = 'en', preview }: EmailLayoutPro
                                 © {new Date().getFullYear()} Nuqta. {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
                             </Text>
                             <Text className="text-gray-400 text-[12px] leading-relaxed text-center mt-2">
-                                Istanbul, Turkey
+                                Nuqta Platform
                             </Text>
                         </Section>
                     </Container>

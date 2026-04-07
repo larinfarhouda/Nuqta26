@@ -3,9 +3,11 @@
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Sparkles, Target, History, Heart, Users, MapPin } from 'lucide-react';
+import { useCountryName } from '@/hooks/useCountry';
 
 export default function AboutPage() {
     const t = useTranslations('StaticPages.About');
+    const countryName = useCountryName();
 
     return (
         <main className="min-h-screen bg-[#fffdfa]"> {/* Warmer Background */}
@@ -133,7 +135,7 @@ export default function AboutPage() {
                             <div className="flex gap-4 pt-4">
                                 <div className="flex items-center gap-2 text-sm font-bold text-primary">
                                     <MapPin className="w-4 h-4" />
-                                    <span>{t('location')}</span>
+                                    <span>{t('location', { country: countryName })}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm font-bold text-amber-600">
                                     <Users className="w-4 h-4" />

@@ -30,7 +30,7 @@ export default function Footer() {
                         </Link>
                         <div className="hidden md:block h-6 w-px bg-gray-100" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                            © {new Date().getFullYear()} Nuqta Istanbul
+                            © {new Date().getFullYear()} Nuqta
                         </span>
                     </div>
 

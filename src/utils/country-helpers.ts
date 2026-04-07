@@ -69,3 +69,34 @@ export const COUNTRY_COOKIE_NAME = '__nuqta_country';
  * Default country when none is selected
  */
 export const DEFAULT_COUNTRY = 'tr';
+
+/**
+ * Get country name in English
+ */
+const COUNTRY_NAME_EN: Record<string, string> = {
+    tr: 'Turkey',
+    eg: 'Egypt',
+};
+
+export function getCountryNameEn(countryId: string | null | undefined): string {
+    return COUNTRY_NAME_EN[countryId || 'tr'] || 'Turkey';
+}
+
+/**
+ * Get country name in Arabic
+ */
+const COUNTRY_NAME_AR: Record<string, string> = {
+    tr: 'تركيا',
+    eg: 'مصر',
+};
+
+export function getCountryNameAr(countryId: string | null | undefined): string {
+    return COUNTRY_NAME_AR[countryId || 'tr'] || 'تركيا';
+}
+
+/**
+ * Get country name based on locale
+ */
+export function getCountryName(countryId: string | null | undefined, locale: string): string {
+    return locale === 'ar' ? getCountryNameAr(countryId) : getCountryNameEn(countryId);
+}

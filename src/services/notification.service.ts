@@ -265,7 +265,7 @@ export class NotificationService {
     <!-- Footer -->
     <div style="margin-top:32px;padding-top:32px;border-top:1px solid #f3f4f6;text-align:center;">
       <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">© ${new Date().getFullYear()} Nuqta. جميع الحقوق محفوظة. | All rights reserved.</p>
-      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">Istanbul, Turkey</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">Nuqta Platform</p>
     </div>
   </div>
 </body>
@@ -465,7 +465,7 @@ export class NotificationService {
     <!-- Footer -->
     <div style="margin-top:32px;padding-top:32px;border-top:1px solid #f3f4f6;text-align:center;">
       <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:0;">© ${new Date().getFullYear()} Nuqta. جميع الحقوق محفوظة. | All rights reserved.</p>
-      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">Istanbul, Turkey</p>
+      <p style="color:#9ca3af;font-size:12px;line-height:1.6;margin:8px 0 0;">Nuqta Platform</p>
     </div>
   </div>
 </body>

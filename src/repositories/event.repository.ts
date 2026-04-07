@@ -116,7 +116,7 @@ export class EventRepository extends BaseRepository {
             }
         }
 
-        const { data, error } = await this.client.rpc('get_events_pro', {
+        const rpcParams: Record<string, any> = {
             p_search: filters?.search || undefined,
             p_category: filters?.category || undefined,
             p_min_price: filters?.minPrice || undefined,
@@ -126,10 +126,16 @@ export class EventRepository extends BaseRepository {
             p_radius_km: filters?.radius || undefined,
             p_date_start: dateStart || undefined,
             p_date_end: dateEnd || undefined,
-            p_country: filters?.country || undefined,
             p_limit: 50,
             p_offset: 0
-        });
+        };
+
+        // Only include p_country if set (avoids errors if DB migration not yet applied)
+        if (filters?.country) {
+            rpcParams.p_country = filters.country;
+        }
+
+        const { data, error } = await this.client.rpc('get_events_pro', rpcParams);
 
         if (error) {
             this.handleError(error, 'EventRepository.findPublicEvents');

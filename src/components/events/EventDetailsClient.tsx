@@ -17,6 +17,7 @@ import ReviewStats from '@/components/reviews/ReviewStats';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import ReviewList from '@/components/reviews/ReviewList';
 import { checkCanReviewEvent, getUserReviewForEvent } from '@/actions/public/reviews';
+import { useCountryName } from '@/hooks/useCountry';
 
 type EventDetailsClientProps = {
     event: any;
@@ -29,6 +30,7 @@ type EventDetailsClientProps = {
 
 export default function EventDetailsClient({ event, user, interestData }: EventDetailsClientProps) {
     const t = useTranslations('Events');
+    const countryName = useCountryName();
     const tReviews = useTranslations('Reviews');
     const locale = useLocale();
     const router = useRouter();
@@ -274,7 +276,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('where')}</span>
                                             <span className="text-sm font-black text-gray-900 underline underline-offset-4 decoration-primary/30">
-                                                {event.district && event.city ? `${event.district}, ${event.city}` : (event.location_name || t('default_location'))}
+                                                {event.district && event.city ? `${event.district}, ${event.city}` : (event.location_name || t('default_location', { country: countryName }))}
                                             </span>
                                             {event.location_details && (
                                                 <span className="text-xs text-gray-500 font-medium italic mt-1">

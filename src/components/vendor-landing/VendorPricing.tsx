@@ -73,7 +73,7 @@ export default function VendorPricing() {
 
                     {/* Founder Pricing Banner - Primary Focus */}
                     <div className="mt-6 relative">
-                        <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2CA58D]/10 via-[#2CA58D]/5 to-secondary/10 border-2 border-[#2CA58D]/40 rounded-3xl shadow-2xl shadow-[#2CA58D]/20 animate-pulse">
+                        <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2CA58D]/10 via-[#2CA58D]/5 to-secondary/10 border-2 border-[#2CA58D]/40 rounded-3xl shadow-xl shadow-[#2CA58D]/10">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="w-6 h-6 text-[#2CA58D]" />
                                 <span className="text-sm md:text-base font-black text-[#2CA58D]">{t('trial_founder_banner')}</span>
@@ -89,7 +89,7 @@ export default function VendorPricing() {
                         <div
                             key={idx}
                             className={`relative p-6 md:p-7 rounded-2xl md:rounded-3xl border-2 transition-all duration-300 ${tier.color} ${tier.highlight ? 'md:scale-105 shadow-2xl' : 'hover:shadow-lg'}`}
-                            dir="rtl"
+
                         >
                             {tier.highlight && tier.badge && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[#2CA58D] text-white rounded-full text-xs font-black uppercase tracking-wide shadow-lg">
@@ -149,11 +149,11 @@ export default function VendorPricing() {
                                 {t('all_features_included')}
                             </h3>
                             <p className="text-sm md:text-base text-gray-600">
-                                احصل على كل هذه الميزات في أي باقة تختارها
+                                {t('subtitle')}
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" dir="rtl">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             {allFeatures.map((feature: string, idx: number) => (
                                 <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
                                     <div className="w-6 h-6 rounded-full bg-[#2CA58D] flex items-center justify-center flex-shrink-0">

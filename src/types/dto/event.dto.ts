@@ -75,6 +75,7 @@ export interface EventListItemDTO {
     price: number;
     vendor_name: string;
     vendor_logo: string | null;
+    vendor_slug: string | null;
     category_name_en: string;
     category_name_ar: string | null;
     category_icon: string;
