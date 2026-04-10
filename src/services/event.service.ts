@@ -98,7 +98,7 @@ export class EventService {
      */
     async searchPublicEvents(filters?: EventFilters): Promise<EventListItemDTO[]> {
         logger.info('EventService: Searching events', { filters });
-        return await this.eventRepo.findPublicEvents(filters);
+        return await this.eventRepo.findPublicEvents(filters) as unknown as EventListItemDTO[];
     }
 
     /**
