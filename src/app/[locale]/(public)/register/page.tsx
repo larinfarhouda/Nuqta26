@@ -23,7 +23,7 @@ const createUserSchema = (t: any) => z.object({
     email: z.string().email(t('validation_email_invalid')),
     password: z.string().min(6, t('validation_password_min')),
     age: z.string().min(1, t('validation_full_name_required')),
-    gender: z.enum(['Male', 'Female'], { required_error: t('validation_full_name_required') }),
+    gender: z.enum(['Male', 'Female'], { message: t('validation_full_name_required') }),
     country: z.string().min(1, 'Required'),
     city: z.string().min(1, 'Required'),
     phone: z.string().min(1, t('validation_full_name_required')),

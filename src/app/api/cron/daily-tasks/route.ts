@@ -15,48 +15,79 @@ const BATCH_DELAY_MS = 600; // Delay between batches to respect Resend's 2 req/s
  * Secured via CRON_SECRET / Authorization header.
  */
 export async function GET(request: Request) {
-    // Verify cron secret
+    // ─── Auth: Verify CRON_SECRET ────────────────────────────────────────
+    // Vercel automatically sends Authorization: Bearer <CRON_SECRET> header
+    // when triggering cron jobs. CRON_SECRET must be set in Vercel Dashboard
+    // under Settings → Environment Variables.
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
+    if (!cronSecret) {
+        logger.error('CRON_SECRET environment variable is not set! Cron jobs will not work securely.');
+        // Still allow request to proceed for backward compatibility,
+        // but log an error so it's visible in Vercel logs
+    }
+
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+        logger.warn('Cron request rejected: invalid authorization header');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const startTime = Date.now();
-    logger.info('Daily tasks cron started');
+    logger.info('Daily tasks cron started', {
+        timestamp: new Date().toISOString(),
+        hasCronSecret: !!cronSecret,
+        hasAuthHeader: !!authHeader,
+    });
 
     const supabase = createAdminClient();
     const bookingRepo = new BookingRepository(supabase);
     const notificationService = new NotificationService();
 
-    // Calculate date ranges in Istanbul timezone
+    // ─── Calculate date ranges (UTC-based for database comparison) ────────
     const now = new Date();
-    const istanbulFormatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/Istanbul',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
+
+    // Tomorrow range (for reminders — events happening tomorrow)
+    const tomorrowDate = new Date(now);
+    tomorrowDate.setUTCDate(tomorrowDate.getUTCDate() + 1);
+    const tomorrowStart = new Date(Date.UTC(
+        tomorrowDate.getUTCFullYear(),
+        tomorrowDate.getUTCMonth(),
+        tomorrowDate.getUTCDate(),
+        0, 0, 0, 0
+    )).toISOString();
+    const tomorrowEnd = new Date(Date.UTC(
+        tomorrowDate.getUTCFullYear(),
+        tomorrowDate.getUTCMonth(),
+        tomorrowDate.getUTCDate(),
+        23, 59, 59, 999
+    )).toISOString();
+
+    // Yesterday range (for review requests — events that ended yesterday)
+    const yesterdayDate = new Date(now);
+    yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
+    const yesterdayStart = new Date(Date.UTC(
+        yesterdayDate.getUTCFullYear(),
+        yesterdayDate.getUTCMonth(),
+        yesterdayDate.getUTCDate(),
+        0, 0, 0, 0
+    )).toISOString();
+    const yesterdayEnd = new Date(Date.UTC(
+        yesterdayDate.getUTCFullYear(),
+        yesterdayDate.getUTCMonth(),
+        yesterdayDate.getUTCDate(),
+        23, 59, 59, 999
+    )).toISOString();
+
+    logger.info('Date ranges calculated', {
+        now: now.toISOString(),
+        tomorrowStart,
+        tomorrowEnd,
+        yesterdayStart,
+        yesterdayEnd,
     });
-    const todayStr = istanbulFormatter.format(now);
-    const todayDate = new Date(todayStr + 'T00:00:00+03:00');
 
-    // Tomorrow range (for reminders)
-    const tomorrowDate = new Date(todayDate);
-    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-    const tomorrowStart = tomorrowDate.toISOString();
-    const tomorrowEndDate = new Date(tomorrowDate);
-    tomorrowEndDate.setHours(23, 59, 59, 999);
-    const tomorrowEnd = tomorrowEndDate.toISOString();
-
-    // Yesterday range (for review requests)
-    const yesterdayDate = new Date(todayDate);
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterdayStart = yesterdayDate.toISOString();
-    const yesterdayEndDate = new Date(yesterdayDate);
-    yesterdayEndDate.setHours(23, 59, 59, 999);
-    const yesterdayEnd = yesterdayEndDate.toISOString();
-
+    // ─── Task 1: Event Reminders ─────────────────────────────────────────
     const reminderResult = await sendEventReminders(
         supabase, bookingRepo, notificationService, tomorrowStart, tomorrowEnd
     );

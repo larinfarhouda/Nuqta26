@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #ccc; display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 40px; }
+  
+  .slide {
+    width: 1080px;
+    height: 1350px;
+    background: #F8F6F1;
+    font-family: 'Cairo', sans-serif;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 100px;
+    overflow: hidden;
+  }
+
+  /* Teal accent line on the right */
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 80px;
+    bottom: 80px;
+    right: 0;
+    width: 5px;
+    background: #2CA58D;
+  }
+
+  /* Logo at bottom center */
+  .logo-container {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .logo-container img {
+    width: 40px;
+    height: auto;
+  }
+  .logo-text {
+    font-size: 16px;
+    color: #2CA58D;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* ===== SLIDE 1 - TITLE ===== */
+  .slide-1 .title {
+    font-size: 72px;
+    font-weight: 900;
+    color: #2D2D2D;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* ===== CONTENT SLIDES (2-6) ===== */
+  .slide-content {
+    width: 100%;
+    text-align: right;
+  }
+  .slide-number {
+    font-size: 120px;
+    font-weight: 900;
+    color: #2CA58D;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .slide-heading {
+    font-size: 56px;
+    font-weight: 800;
+    color: #2D2D2D;
+    margin-bottom: 30px;
+    line-height: 1.4;
+  }
+  .slide-body {
+    font-size: 34px;
+    font-weight: 400;
+    color: #6B6B6B;
+    line-height: 1.8;
+  }
+
+  /* ===== SLIDE 7 - CLOSING ===== */
+  .slide-7 .closing-text {
+    font-size: 56px;
+    font-weight: 800;
+    color: #2D2D2D;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .slide-7 .closing-sub {
+    font-size: 30px;
+    font-weight: 400;
+    color: #2CA58D;
+    text-align: center;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — Title -->
+<div class="slide slide-1" id="slide-1">
+  <div class="title">5 تفاصيل يلاحظها الحضور<br>قبل أي شيء آخر</div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta">
+  </div>
+</div>
+
+<!-- SLIDE 2 -->
+<div class="slide" id="slide-2">
+  <div class="slide-content">
+    <div class="slide-number">1</div>
+    <div class="slide-heading">سهولة التسجيل والحجز</div>
+    <div class="slide-body">أول تجربة للحضور تبدأ من لحظة التسجيل.<br>إذا كانت العملية معقدة، كثير منهم لن يكملوا.</div>
+  </div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta">
+  </div>
+</div>
+
+<!-- SLIDE 3 -->
+<div class="slide" id="slide-3">
+  <div class="slide-content">
+    <div class="slide-number">2</div>
+    <div class="slide-heading">وضوح التفاصيل</div>
+    <div class="slide-body">الوقت، المكان، والتوقعات.<br>الغموض يُبعد الناس حتى لو كان المحتوى مميزاً.</div>
+  </div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta">
+  </div>
+</div>
+
+<!-- SLIDE 4 -->
+<div class="slide" id="slide-4">
+  <div class="slide-content">
+    <div class="slide-number">3</div>
+    <div class="slide-heading">الهوية البصرية</div>
+    <div class="slide-body">فعالية بتصميم احترافي تعني ثقة أعلى<br>من الحضور حتى قبل أن تبدأ.</div>
+  </div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta">
+  </div>
+</div>
+
+<!-- SLIDE 5 -->
+<div class="slide" id="slide-5">
+  <div class="slide-content">
+    <div class="slide-number">4</div>
+    <div class="slide-heading">التواصل قبل الفعالية</div>
+    <div class="slide-body">رسالة تأكيد أو تذكير بسيطة<br>تصنع فرقاً كبيراً في تجربة الحضور.</div>
+  </div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta">
+  </div>
+</div>
+
+<!-- SLIDE 6 -->
+<div class="slide" id="slide-6">
+  <div class="slide-content">
+    <div class="slide-number">5</div>
+    <div class="slide-heading">تجربة الوصول</div>
+    <div class="slide-body">الاستقبال، التنظيم، والأجواء<br>أول ما يدخل الحضور تحدد انطباعهم الكامل.</div>
+  </div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta">
+  </div>
+</div>
+
+<!-- SLIDE 7 — Closing -->
+<div class="slide slide-7" id="slide-7">
+  <div class="closing-text">التفاصيل الصغيرة<br>تصنع فعاليات كبيرة</div>
+  <div class="closing-sub">nuqta.ist</div>
+  <div class="logo-container">
+    <img src="/nuqta_logo_transparent.png" alt="Nuqta" style="width: 60px;">
+  </div>
+</div>
+
+</body>
+</html>
