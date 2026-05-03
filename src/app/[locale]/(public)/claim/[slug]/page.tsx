@@ -50,12 +50,24 @@ export default async function ClaimPage({ params }: { params: any }) {
         .select('id, title, date, status')
         .eq('prospect_vendor_id', prospect.id);
 
+    // Get total interest count across all phantom events (social proof)
+    let interestCount = 0;
+    if (events && events.length > 0) {
+        const eventIds = events.map(e => e.id);
+        const { count } = await adminClient
+            .from('event_interests')
+            .select('*', { count: 'exact', head: true })
+            .in('event_id', eventIds);
+        interestCount = count || 0;
+    }
+
     return (
         <ClaimFormClient
             prospect={prospect}
             events={events || []}
             user={user}
             locale={locale}
+            interestCount={interestCount}
         />
     );
 }

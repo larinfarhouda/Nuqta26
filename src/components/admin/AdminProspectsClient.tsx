@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
+    MessageCircle, Mail,
 } from 'lucide-react';
 import {
     getAdminProspects,
@@ -31,6 +32,7 @@ export default function AdminProspectsClient({
     const [showEvent, setShowEvent] = useState<string | null>(null); // prospect ID
     const [showInterests, setShowInterests] = useState<EventInterestSummary[] | null>(null);
     const [claimUrl, setClaimUrl] = useState<string | null>(null);
+    const [contactedProspect, setContactedProspect] = useState<ProspectVendor | null>(null);
     const [loading, setLoading] = useState(false);
 
     // Form states
@@ -61,11 +63,12 @@ export default function AdminProspectsClient({
         reload();
     };
 
-    const handleContact = async (prospectId: string) => {
+    const handleContact = async (prospect: ProspectVendor) => {
         setLoading(true);
-        const result = await contactProspect(prospectId);
+        const result = await contactProspect(prospect.id);
         if (result && 'claimUrl' in result) {
             setClaimUrl(result.claimUrl || null);
+            setContactedProspect(prospect);
         }
         setLoading(false);
         reload();
@@ -131,24 +134,73 @@ export default function AdminProspectsClient({
                 <div
                     style={{
                         background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px',
-                        padding: '16px 20px', marginBottom: '20px', display: 'flex',
-                        alignItems: 'center', justifyContent: 'space-between',
+                        padding: '20px', marginBottom: '20px',
                     }}
                 >
-                    <div>
-                        <div style={{ fontWeight: 600, color: '#166534', marginBottom: '4px' }}>Claim Link Generated!</div>
-                        <div style={{ fontSize: '13px', color: '#15803d', wordBreak: 'break-all' }}>{claimUrl}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <div>
+                            <div style={{ fontWeight: 600, color: '#166534', marginBottom: '4px' }}>Claim Link Generated!</div>
+                            <div style={{ fontSize: '13px', color: '#15803d', wordBreak: 'break-all' }}>{claimUrl}</div>
+                        </div>
+                        <button
+                            onClick={() => { navigator.clipboard.writeText(claimUrl); }}
+                            style={{
+                                padding: '8px 12px', borderRadius: '8px', border: 'none',
+                                background: '#dcfce7', color: '#166534', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, fontSize: '12px',
+                            }}
+                        >
+                            <Copy size={12} /> Copy
+                        </button>
                     </div>
-                    <button
-                        onClick={() => { navigator.clipboard.writeText(claimUrl); }}
-                        style={{
-                            padding: '8px 12px', borderRadius: '8px', border: 'none',
-                            background: '#dcfce7', color: '#166534', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, fontSize: '12px',
-                        }}
-                    >
-                        <Copy size={12} /> Copy
-                    </button>
+
+                    {/* Outreach Buttons */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {contactedProspect?.contact_phone && (
+                            <a
+                                href={`https://wa.me/${contactedProspect.contact_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                    `Hi ${contactedProspect.business_name}! 👋\n\nWe listed your business on Nuqta and ${contactedProspect.totalInterests > 0 ? `${contactedProspect.totalInterests} people have already expressed interest` : 'people are already discovering your events'}!\n\nClaim your free page and start managing bookings:\n${claimUrl}\n\n— The Nuqta Team`
+                                )}`}
+                                target="_blank"
+                                style={{
+                                    padding: '8px 14px', borderRadius: '8px', border: 'none',
+                                    background: '#25D366', color: '#fff', cursor: 'pointer',
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    fontWeight: 600, fontSize: '12px', textDecoration: 'none',
+                                }}
+                            >
+                                <MessageCircle size={14} /> WhatsApp
+                            </a>
+                        )}
+                        {contactedProspect?.contact_email && (
+                            <a
+                                href={`mailto:${contactedProspect.contact_email}?subject=${encodeURIComponent(
+                                    `${contactedProspect.business_name} — Your Events Are Already on Nuqta!`
+                                )}&body=${encodeURIComponent(
+                                    `Hi ${contactedProspect.business_name},\n\nWe've created a page for you on Nuqta — the event booking platform.${contactedProspect.totalInterests > 0 ? ` ${contactedProspect.totalInterests} people have already expressed interest in your events!` : ''}\n\nClaim your free page to start managing bookings and reaching your audience:\n${claimUrl}\n\nWhat you get:\n• Full vendor profile & event management\n• Booking & payment processing\n• Real-time analytics dashboard\n• Free starter plan\n\nBest regards,\nThe Nuqta Team`
+                                )}`}
+                                style={{
+                                    padding: '8px 14px', borderRadius: '8px', border: 'none',
+                                    background: '#3b82f6', color: '#fff', cursor: 'pointer',
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    fontWeight: 600, fontSize: '12px', textDecoration: 'none',
+                                }}
+                            >
+                                <Mail size={14} /> Email
+                            </a>
+                        )}
+                        <button
+                            onClick={() => { setClaimUrl(null); setContactedProspect(null); }}
+                            style={{
+                                padding: '8px 14px', borderRadius: '8px',
+                                border: '1px solid #e2e8f0', background: '#fff',
+                                color: '#64748b', cursor: 'pointer',
+                                fontSize: '12px', fontWeight: 500,
+                            }}
+                        >
+                            Dismiss
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -371,14 +423,23 @@ export default function AdminProspectsClient({
                                         >
                                             View
                                         </button>
-                                        {p.status === 'new' && (
+                                        {p.status !== 'converted' && !p.claim_token && (
                                             <button
-                                                onClick={() => handleContact(p.id)}
+                                                onClick={() => handleContact(p)}
                                                 disabled={loading}
                                                 style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#dbeafe', color: '#1e40af', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
                                             >
                                                 Contact
                                             </button>
+                                        )}
+                                        {p.status === 'contacted' && p.contact_phone && (
+                                            <a
+                                                href={`https://wa.me/${p.contact_phone.replace(/[^0-9]/g, '')}`}
+                                                target="_blank"
+                                                style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#25D366', color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                            >
+                                                <MessageCircle size={10} /> WA
+                                            </a>
                                         )}
                                     </div>
                                 </td>
