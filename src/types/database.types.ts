@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       activity_logs: {
@@ -363,10 +338,10 @@ export type Database = {
           phone_code: string
           phone_placeholder: string
           sort_order: number
-          subscription_growth_founder_price: number
-          subscription_growth_price: number
-          subscription_professional_founder_price: number
-          subscription_professional_price: number
+          subscription_business_annual_price: number
+          subscription_business_monthly_price: number
+          subscription_pro_annual_price: number
+          subscription_pro_monthly_price: number
           timezone: string
           updated_at: string | null
         }
@@ -384,10 +359,10 @@ export type Database = {
           phone_code: string
           phone_placeholder?: string
           sort_order?: number
-          subscription_growth_founder_price?: number
-          subscription_growth_price?: number
-          subscription_professional_founder_price?: number
-          subscription_professional_price?: number
+          subscription_business_annual_price?: number
+          subscription_business_monthly_price?: number
+          subscription_pro_annual_price?: number
+          subscription_pro_monthly_price?: number
           timezone?: string
           updated_at?: string | null
         }
@@ -405,10 +380,10 @@ export type Database = {
           phone_code?: string
           phone_placeholder?: string
           sort_order?: number
-          subscription_growth_founder_price?: number
-          subscription_growth_price?: number
-          subscription_professional_founder_price?: number
-          subscription_professional_price?: number
+          subscription_business_annual_price?: number
+          subscription_business_monthly_price?: number
+          subscription_pro_annual_price?: number
+          subscription_pro_monthly_price?: number
           timezone?: string
           updated_at?: string | null
         }
@@ -1123,6 +1098,7 @@ export type Database = {
           bank_account_name: string | null
           bank_iban: string | null
           bank_name: string | null
+          billing_period: string
           business_name: string
           cancellation_policy: string | null
           category: string
@@ -1133,7 +1109,6 @@ export type Database = {
           description_ar: string | null
           id: string
           instagram: string | null
-          is_founder_pricing: boolean | null
           is_verified: boolean | null
           location_details: string | null
           location_lat: number | null
@@ -1154,6 +1129,7 @@ export type Database = {
           bank_account_name?: string | null
           bank_iban?: string | null
           bank_name?: string | null
+          billing_period?: string
           business_name: string
           cancellation_policy?: string | null
           category: string
@@ -1164,7 +1140,6 @@ export type Database = {
           description_ar?: string | null
           id: string
           instagram?: string | null
-          is_founder_pricing?: boolean | null
           is_verified?: boolean | null
           location_details?: string | null
           location_lat?: number | null
@@ -1185,6 +1160,7 @@ export type Database = {
           bank_account_name?: string | null
           bank_iban?: string | null
           bank_name?: string | null
+          billing_period?: string
           business_name?: string
           cancellation_policy?: string | null
           category?: string
@@ -1195,7 +1171,6 @@ export type Database = {
           description_ar?: string | null
           id?: string
           instagram?: string | null
-          is_founder_pricing?: boolean | null
           is_verified?: boolean | null
           location_details?: string | null
           location_lat?: number | null
@@ -1250,92 +1225,50 @@ export type Database = {
           review_count: number
         }[]
       }
-      get_events_pro:
-        | {
-            Args: {
-              p_category?: string
-              p_date_end?: string
-              p_date_start?: string
-              p_lat?: number
-              p_limit?: number
-              p_long?: number
-              p_max_price?: number
-              p_min_price?: number
-              p_offset?: number
-              p_radius_km?: number
-              p_search?: string
-            }
-            Returns: {
-              capacity: number
-              category_icon: string
-              category_id: string
-              category_name_ar: string
-              category_name_en: string
-              category_slug: string
-              city: string
-              country: string
-              date: string
-              description: string
-              dist_km: number
-              district: string
-              event_type: string
-              id: string
-              image_url: string
-              location_lat: number
-              location_long: number
-              location_name: string
-              price: number
-              slug: string
-              status: string
-              title: string
-              vendor_id: string
-              vendor_logo: string
-              vendor_name: string
-            }[]
-          }
-        | {
-            Args: {
-              p_category?: string
-              p_country?: string
-              p_date_end?: string
-              p_date_start?: string
-              p_lat?: number
-              p_limit?: number
-              p_long?: number
-              p_max_price?: number
-              p_min_price?: number
-              p_offset?: number
-              p_radius_km?: number
-              p_search?: string
-            }
-            Returns: {
-              capacity: number
-              category_icon: string
-              category_id: string
-              category_name_ar: string
-              category_name_en: string
-              category_slug: string
-              city: string
-              country: string
-              date: string
-              description: string
-              dist_km: number
-              district: string
-              event_type: string
-              id: string
-              image_url: string
-              location_lat: number
-              location_long: number
-              location_name: string
-              price: number
-              slug: string
-              status: string
-              title: string
-              vendor_id: string
-              vendor_logo: string
-              vendor_name: string
-            }[]
-          }
+      get_events_pro: {
+        Args: {
+          p_category?: string
+          p_country?: string
+          p_date_end?: string
+          p_date_start?: string
+          p_lat?: number
+          p_limit?: number
+          p_long?: number
+          p_max_price?: number
+          p_min_price?: number
+          p_offset?: number
+          p_radius_km?: number
+          p_search?: string
+        }
+        Returns: {
+          capacity: number
+          category_icon: string
+          category_id: string
+          category_name_ar: string
+          category_name_en: string
+          category_slug: string
+          city: string
+          country: string
+          date: string
+          description: string
+          dist_km: number
+          district: string
+          event_type: string
+          id: string
+          image_url: string
+          location_lat: number
+          location_long: number
+          location_name: string
+          price: number
+          slug: string
+          status: string
+          title: string
+          vendor_id: string
+          vendor_logo: string
+          vendor_name: string
+          vendor_slug: string
+        }[]
+      }
       get_review_helpful_count: {
         Args: { p_review_id: string }
         Returns: {
@@ -1487,9 +1420,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

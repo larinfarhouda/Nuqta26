@@ -48,7 +48,6 @@ export async function updateSubscriptionTier(
         name?: string;
         max_active_events?: number;
         regular_price?: number;
-        founder_price?: number;
         badge?: string | null;
         features?: string[];
     }

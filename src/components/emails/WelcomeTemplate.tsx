@@ -17,21 +17,21 @@ export const WelcomeTemplate = ({
 
     const content = {
         en: {
-            preview: 'Welcome to Nuqta!',
+            preview: 'Welcome to Nuqta — Your Events, Automated',
             heading: 'Welcome to Nuqta',
             greeting: `Hi ${name},`,
-            intro: 'Thanks for joining Nuqta! We’re thrilled to have you on board. Explore the best events and experiences near you.',
-            buttonText: 'Get Started',
-            outro: 'If you have any questions, feel free to reply to this email.',
+            intro: 'Your account is ready. Nuqta automates your event management — bookings, confirmations, reminders, and attendee tracking — so you can focus on creating unforgettable experiences.',
+            buttonText: 'Go to Dashboard',
+            outro: 'Need help getting started? Reply to this email and a real person will respond.',
             cheers: 'The Nuqta Team',
         },
         ar: {
-            preview: 'مرفباً بك في نقطة!',
+            preview: 'مرحباً بك في نقطة — فعالياتك، بأتمتة كاملة',
             heading: 'مرحباً بك في نقطة',
             greeting: `مرحباً ${name}،`,
-            intro: 'شكراً لانضمامك إلى نقطة! نحن سعداء بوجودك معنا. استكشف أفضل الفعاليات والتجارب القريبة منك.',
-            buttonText: 'ابدأ الآن',
-            outro: 'إذا كان لديك أي أسئلة، لا تتردد في الرد على هذا البريد الإلكتروني.',
+            intro: 'حسابك جاهز. نقطة تؤتمت إدارة فعالياتك — الحجوزات، التأكيدات، التذكيرات، ومتابعة الحضور — حتى تركز أنت على صناعة تجارب لا تُنسى.',
+            buttonText: 'افتح لوحة التحكم',
+            outro: 'تحتاج مساعدة؟ رد على هذا البريد وسنرد عليك شخصياً.',
             cheers: 'فريق نقطة',
         }
     };

@@ -31,11 +31,15 @@ export async function loadTiersFromDB(): Promise<Record<string, SubscriptionTier
             result[row.id] = {
                 id: row.id,
                 name: row.name,
+                nameAr: row.name_ar || row.name,
                 maxActiveEvents: row.max_active_events === -1 ? Infinity : row.max_active_events,
-                regularPrice: Number(row.regular_price),
-                founderPrice: Number(row.founder_price),
+                maxTicketTypes: row.max_ticket_types === -1 ? Infinity : (row.max_ticket_types ?? 1),
+                maxGalleryPhotos: row.max_gallery_photos === -1 ? Infinity : (row.max_gallery_photos ?? 5),
+                monthlyPrice: Number(row.monthly_price ?? row.regular_price ?? 0),
+                annualPrice: Number(row.annual_price ?? 0),
                 badge: (row.badge as BadgeType) || null,
                 features: Array.isArray(row.features) ? row.features : [],
+                featuresAr: Array.isArray(row.features_ar) ? row.features_ar : [],
             };
         }
         return result;

@@ -10,7 +10,7 @@ interface TierBadgeProps {
 }
 
 export default function TierBadge({ tier, size = 'sm', showLabel = true }: TierBadgeProps) {
-    if (!tier || tier === 'starter') return null;
+    if (!tier || tier === 'free') return null;
 
     const sizeClasses = {
         sm: 'text-[10px] px-2 py-1 gap-1',
@@ -24,7 +24,7 @@ export default function TierBadge({ tier, size = 'sm', showLabel = true }: TierB
         lg: 'w-4 h-4'
     };
 
-    if (tier === 'growth') {
+    if (tier === 'pro') {
         return (
             <div className={`inline-flex items-center ${sizeClasses[size]} bg-[#2CA58D]/10 text-[#2CA58D] rounded-lg font-black uppercase tracking-wider`}>
                 <CheckCircle2 className={`${iconSizes[size]} fill-current`} />
@@ -33,7 +33,7 @@ export default function TierBadge({ tier, size = 'sm', showLabel = true }: TierB
         );
     }
 
-    if (tier === 'professional') {
+    if (tier === 'business') {
         return (
             <div className={`inline-flex items-center ${sizeClasses[size]} bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-600 rounded-lg font-black uppercase tracking-wider border border-purple-200/50`}>
                 <Crown className={`${iconSizes[size]} fill-current`} />

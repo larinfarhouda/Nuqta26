@@ -16,7 +16,6 @@ interface TierData {
     name: string;
     max_active_events: number; // -1 = unlimited
     regular_price: number;
-    founder_price: number;
     badge: string | null;
     features: string[];
     sort_order: number;
@@ -43,17 +42,35 @@ const inputStyle = {
 };
 
 const tierColors: Record<string, { gradient: string; accent: string; text: string; bg: string }> = {
+    free: {
+        gradient: 'linear-gradient(135deg, #94a3b8, #64748b)',
+        accent: '#64748b',
+        text: '#475569',
+        bg: '#f1f5f9',
+    },
     starter: {
         gradient: 'linear-gradient(135deg, #94a3b8, #64748b)',
         accent: '#64748b',
         text: '#475569',
         bg: '#f1f5f9',
     },
+    pro: {
+        gradient: 'linear-gradient(135deg, #2CA58D, #0d9373)',
+        accent: '#2CA58D',
+        text: '#065f46',
+        bg: '#ecfdf5',
+    },
     growth: {
         gradient: 'linear-gradient(135deg, #2CA58D, #0d9373)',
         accent: '#2CA58D',
         text: '#065f46',
         bg: '#ecfdf5',
+    },
+    business: {
+        gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+        accent: '#8b5cf6',
+        text: '#5b21b6',
+        bg: '#f5f3ff',
     },
     professional: {
         gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
@@ -64,8 +81,11 @@ const tierColors: Record<string, { gradient: string; accent: string; text: strin
 };
 
 const tierIcons: Record<string, React.ElementType> = {
+    free: Star,
     starter: Star,
+    pro: TrendingUp,
     growth: TrendingUp,
+    business: Crown,
     professional: Crown,
 };
 
@@ -127,7 +147,6 @@ function TierCard({
         name: tier.name,
         max_active_events: tier.max_active_events,
         regular_price: tier.regular_price,
-        founder_price: tier.founder_price,
         badge: tier.badge || '',
         features: [...tier.features],
     });
@@ -143,7 +162,6 @@ function TierCard({
         form.name !== tier.name ||
         form.max_active_events !== tier.max_active_events ||
         form.regular_price !== tier.regular_price ||
-        form.founder_price !== tier.founder_price ||
         (form.badge || '') !== (tier.badge || '') ||
         JSON.stringify(form.features) !== JSON.stringify(tier.features);
 
@@ -153,7 +171,6 @@ function TierCard({
             name: form.name,
             max_active_events: form.max_active_events,
             regular_price: form.regular_price,
-            founder_price: form.founder_price,
             badge: form.badge || null,
             features: form.features,
         });
@@ -371,39 +388,7 @@ function TierCard({
                         </div>
                     </div>
 
-                    {/* Founder Price */}
-                    <div>
-                        <label
-                            style={{
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                color: '#64748b',
-                                marginBottom: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                            }}
-                        >
-                            <Sparkles size={12} /> Founder
-                        </label>
-                        <input
-                            style={{ ...inputStyle, fontWeight: 700, fontSize: '16px' }}
-                            type="number"
-                            min={0}
-                            value={form.founder_price}
-                            onChange={(e) =>
-                                setForm((p) => ({
-                                    ...p,
-                                    founder_price: parseFloat(e.target.value) || 0,
-                                }))
-                            }
-                        />
-                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                            SAR / month
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Badge Selector */}

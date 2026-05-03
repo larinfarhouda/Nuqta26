@@ -77,7 +77,7 @@ export const EmailLayout = ({ children, locale = 'en', preview }: EmailLayoutPro
                                 © {new Date().getFullYear()} Nuqta. {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
                             </Text>
                             <Text className="text-gray-400 text-[12px] leading-relaxed text-center mt-2">
-                                Nuqta Platform
+                                {isRtl ? 'نقطة — منصة إدارة الفعاليات' : 'Nuqta — Event Management Platform'} · nuqta.ist
                             </Text>
                         </Section>
                     </Container>

@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         title: isArabic ? 'اقترح منظم فعاليات | نقطة' : 'Suggest a Vendor | Nuqta',
         description: isArabic
             ? 'اقترح منظم فعاليات تود رؤيته على نقطة'
-            : 'Suggest an event organizer you'd like to see on Nuqta',
+            : 'Suggest an event organizer you\'d like to see on Nuqta',
     };
 }
 

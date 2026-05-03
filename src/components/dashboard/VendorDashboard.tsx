@@ -15,6 +15,8 @@ import { getPendingBookingsCount } from '@/actions/vendor/bookings';
 import CompactTierBadge from './vendor/CompactTierBadge';
 import { getCountryFlag } from '@/utils/country-helpers';
 import MoreSheet from './vendor/MoreSheet';
+import FeatureGateOverlay from './vendor/FeatureGateOverlay';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 
 // Dynamic imports for tab components  
 const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
@@ -134,6 +136,10 @@ export default function VendorDashboard({
     const [pendingBookingsCount, setPendingBookingsCount] = useState(initialPendingBookingsCount);
     const [activeEventsCount, setActiveEventsCount] = useState(initialActiveEventsCount);
     const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+
+    // Feature gating based on vendor's subscription tier
+    const vendorTier = vendorData?.subscription_tier || 'free';
+    const gate = useFeatureGate(vendorTier);
 
     // Alert State
     const [alertState, setAlertState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
@@ -566,9 +572,35 @@ export default function VendorDashboard({
                                 {activeTab === 'ANALYTICS' && <AnalyticsTab vendorId={vendorData?.id} activeEventsCount={activeEventsCount} demoMode={demoMode} />}
                                 {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} demoMode={demoMode} />}
                                 {activeTab === 'BOOKINGS' && <BookingsTab demoMode={demoMode} />}
-                                {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}
+                                {activeTab === 'CUSTOMERS' && (
+                                    gate.canUseCustomerCRM || demoMode ? (
+                                        <CustomersTab demoMode={demoMode} />
+                                    ) : (
+                                        <FeatureGateOverlay
+                                            featureName="Customer CRM"
+                                            featureNameAr="إدارة العملاء (CRM)"
+                                            requiredTier="Pro"
+                                            vendorId={vendorData?.id}
+                                        >
+                                            <CustomersTab demoMode={true} />
+                                        </FeatureGateOverlay>
+                                    )
+                                )}
                                 {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} demoMode={demoMode} />}
-                                {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} vendorCountry={vendorData?.country} />}
+                                {activeTab === 'DISCOUNTS' && (
+                                    gate.canUseDiscounts || demoMode ? (
+                                        <DiscountsTab showAlert={showAlert} demoMode={demoMode} vendorCountry={vendorData?.country} />
+                                    ) : (
+                                        <FeatureGateOverlay
+                                            featureName="Discount Codes"
+                                            featureNameAr="أكواد الخصم والكوبونات"
+                                            requiredTier="Pro"
+                                            vendorId={vendorData?.id}
+                                        >
+                                            <DiscountsTab showAlert={showAlert} demoMode={true} vendorCountry={vendorData?.country} />
+                                        </FeatureGateOverlay>
+                                    )
+                                )}
                                 {activeTab === 'REVIEWS' && <ReviewsTab demoMode={demoMode} />}
                                 {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} demoMode={demoMode} />}
                             </>

@@ -44,7 +44,7 @@ export default function EventForm({ event, vendorData, initialData, onClose, onS
 
     // Upgrade modal state
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const [upgradeTier, setUpgradeTier] = useState<SubscriptionTier>('starter');
+    const [upgradeTier, setUpgradeTier] = useState<SubscriptionTier>('free');
 
     // Memoize validation schema to prevent recreation on every render
     const schema = useMemo(() => createEventValidationSchema(t, !!event), [t, event]);
@@ -280,7 +280,7 @@ export default function EventForm({ event, vendorData, initialData, onClose, onS
         if (res.error) {
             // Check for tier limit error
             if (res.error === 'TIER_LIMIT_REACHED') {
-                setUpgradeTier((res as any).currentTier || 'starter');
+                setUpgradeTier((res as any).currentTier || 'free');
                 setShowUpgradeModal(true);
                 return;
             }

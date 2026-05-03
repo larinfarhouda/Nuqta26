@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Check, ArrowRight, Zap, Sparkles, Crown, TrendingUp } from 'lucide-react';
+import { Check, ArrowRight, Zap, Sparkles, Crown, TrendingUp, Calendar } from 'lucide-react';
 import { Link } from '@/navigation';
 
 export default function VendorPricing() {
@@ -50,7 +50,8 @@ export default function VendorPricing() {
         }
     ];
 
-    const allFeatures = t.raw('features_list');
+    const freeFeatures = t.raw('features_list');
+    const proFeatures = t.raw('pro_features_list');
 
     return (
         <section id="pricing" className="py-12 md:py-20 lg:py-24 bg-gray-50 relative overflow-hidden">
@@ -75,7 +76,7 @@ export default function VendorPricing() {
                     <div className="mt-6 relative">
                         <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2CA58D]/10 via-[#2CA58D]/5 to-secondary/10 border-2 border-[#2CA58D]/40 rounded-3xl shadow-xl shadow-[#2CA58D]/10">
                             <div className="flex items-center gap-2">
-                                <Sparkles className="w-6 h-6 text-[#2CA58D]" />
+                                <Calendar className="w-5 h-5 text-[#2CA58D]" />
                                 <span className="text-sm md:text-base font-black text-[#2CA58D]">{t('annual_savings_badge')}</span>
                             </div>
                         </div>
@@ -140,35 +141,48 @@ export default function VendorPricing() {
                     ))}
                 </div>
 
-                {/* All Features Included - Single List */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-3xl border-2 border-gray-200 p-6 md:p-10 shadow-lg">
-                        <div className="text-center mb-8">
-                            <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2">
-                                {t('all_features_included')}
-                            </h3>
-                            <p className="text-sm md:text-base text-gray-600">
-                                {t('subtitle')}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            {allFeatures.map((feature: string, idx: number) => (
-                                <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                    <div className="w-6 h-6 rounded-full bg-[#2CA58D] flex items-center justify-center flex-shrink-0">
-                                        <Check className="w-4 h-4 text-white stroke-[3]" />
+                {/* Feature Comparison — Two Columns */}
+                <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Free Features */}
+                    <div className="bg-white rounded-3xl border-2 border-gray-200 p-6 md:p-8 shadow-md">
+                        <h3 className="text-lg font-black text-gray-900 mb-5">
+                            {t('all_features_included')}
+                        </h3>
+                        <div className="space-y-3">
+                            {freeFeatures.map((feature: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                        <Check className="w-3 h-3 text-gray-600 stroke-[3]" />
                                     </div>
-                                    <span className="text-sm md:text-base text-gray-800 font-medium">{feature}</span>
+                                    <span className="text-sm text-gray-700 font-medium">{feature}</span>
                                 </div>
                             ))}
                         </div>
+                    </div>
 
-                        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-                            <p className="text-xs md:text-sm text-gray-500">
-                                💡 {t('no_credit_card')}
-                            </p>
+                    {/* Pro Features */}
+                    <div className="bg-gradient-to-br from-[#2CA58D]/5 to-[#2CA58D]/10 rounded-3xl border-2 border-[#2CA58D]/30 p-6 md:p-8 shadow-md">
+                        <h3 className="text-lg font-black text-[#2CA58D] mb-5">
+                            {t('pro_features_title')}
+                        </h3>
+                        <div className="space-y-3">
+                            {proFeatures.map((feature: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                    <div className="w-5 h-5 rounded-full bg-[#2CA58D] flex items-center justify-center flex-shrink-0">
+                                        <Check className="w-3 h-3 text-white stroke-[3]" />
+                                    </div>
+                                    <span className="text-sm text-gray-800 font-medium">{feature}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
+                </div>
+
+                {/* Bottom note */}
+                <div className="mt-8 text-center">
+                    <p className="text-xs md:text-sm text-gray-500">
+                        💡 {t('no_credit_card')}
+                    </p>
                 </div>
             </div>
         </section>
