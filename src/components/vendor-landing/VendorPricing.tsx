@@ -71,14 +71,13 @@ export default function VendorPricing() {
                         {t('subtitle')}
                     </p>
 
-                    {/* Founder Pricing Banner - Primary Focus */}
+                    {/* Annual Savings Badge */}
                     <div className="mt-6 relative">
                         <div className="inline-flex flex-col items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#2CA58D]/10 via-[#2CA58D]/5 to-secondary/10 border-2 border-[#2CA58D]/40 rounded-3xl shadow-xl shadow-[#2CA58D]/10">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="w-6 h-6 text-[#2CA58D]" />
-                                <span className="text-sm md:text-base font-black text-[#2CA58D]">{t('trial_founder_banner')}</span>
+                                <span className="text-sm md:text-base font-black text-[#2CA58D]">{t('annual_savings_badge')}</span>
                             </div>
-                            <span className="text-xs font-bold text-gray-600">{t('founder_urgency')}</span>
                         </div>
                     </div>
                 </div>

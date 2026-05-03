@@ -520,10 +520,10 @@ function PaymentMethodsTab({ methods, countryId, onReload }: { methods: PaymentM
 
 function PricingTab({ config, onSave }: { config: CountryConfig; onSave: () => void }) {
     const [form, setForm] = useState({
-        subscription_growth_price: config.subscription_growth_price,
-        subscription_professional_price: config.subscription_professional_price,
-        subscription_growth_founder_price: config.subscription_growth_founder_price,
-        subscription_professional_founder_price: config.subscription_professional_founder_price,
+        subscription_pro_monthly_price: config.subscription_pro_monthly_price,
+        subscription_business_monthly_price: config.subscription_business_monthly_price,
+        subscription_pro_annual_price: config.subscription_pro_annual_price,
+        subscription_business_annual_price: config.subscription_business_annual_price,
     });
     const [saving, setSaving] = useState(false);
     const { toast } = useToast();
@@ -542,7 +542,7 @@ function PricingTab({ config, onSave }: { config: CountryConfig; onSave: () => v
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input style={input} type="number" value={form[field]}
                     onChange={e => setForm(p => ({ ...p, [field]: Number(e.target.value) }))} />
-                <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' as const }}>{config.currency_symbol}/mo</span>
+                <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' as const }}>{config.currency_symbol}</span>
             </div>
         </div>
     );
@@ -553,14 +553,14 @@ function PricingTab({ config, onSave }: { config: CountryConfig; onSave: () => v
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                 <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#6d28d9', marginBottom: '16px' }}>Growth Tier</h4>
-                    <PriceField label="Regular Price" field="subscription_growth_price" />
-                    <PriceField label="Founder Price (50% off)" field="subscription_growth_founder_price" />
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#6d28d9', marginBottom: '16px' }}>Pro Tier</h4>
+                    <PriceField label="Monthly Price" field="subscription_pro_monthly_price" />
+                    <PriceField label="Annual Price" field="subscription_pro_annual_price" />
                 </div>
                 <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#6d28d9', marginBottom: '16px' }}>Professional Tier</h4>
-                    <PriceField label="Regular Price" field="subscription_professional_price" />
-                    <PriceField label="Founder Price (50% off)" field="subscription_professional_founder_price" />
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#6d28d9', marginBottom: '16px' }}>Business Tier</h4>
+                    <PriceField label="Monthly Price" field="subscription_business_monthly_price" />
+                    <PriceField label="Annual Price" field="subscription_business_annual_price" />
                 </div>
             </div>
 

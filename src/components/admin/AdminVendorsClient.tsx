@@ -167,9 +167,9 @@ export default function AdminVendorsClient({
                                             <div>
                                                 <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     {v.business_name}
-                                                    {v.is_founder_pricing && (
-                                                        <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: '#fef3c7', color: '#92400e', fontWeight: 700 }}>
-                                                            FOUNDER
+                                                    {v.billing_period === 'annual' && (
+                                                        <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>
+                                                            ANNUAL
                                                         </span>
                                                     )}
                                                 </div>
