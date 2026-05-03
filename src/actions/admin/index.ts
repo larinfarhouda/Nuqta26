@@ -386,7 +386,7 @@ export async function contactProspect(prospectId: string) {
         const { user } = await requireAdmin();
         const service = getAdminService();
         const claimToken = await service.contactProspect(prospectId, user.id);
-        const claimUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.events'}/claim/${claimToken}`;
+        const claimUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist'}/claim/${claimToken}`;
         return { success: true, claimUrl, claimToken };
     } catch (error) {
         logger.error('Failed to contact prospect', { error });

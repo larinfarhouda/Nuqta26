@@ -364,7 +364,7 @@ async function sendProspectFollowups(supabase: any) {
                 continue;
             }
 
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.events';
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist';
             const claimUrl = `${siteUrl}/claim/${prospect.claim_token}`;
 
             // Get interest count for this prospect
