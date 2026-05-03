@@ -1,25 +1,56 @@
 /**
  * Cache Manager
- * In-memory caching with TTL and tag-based invalidation
+ * Distributed caching with Upstash Redis, with in-memory fallback.
+ * 
+ * When UPSTASH_REDIS_REST_URL is configured, uses Redis for shared,
+ * persistent caching across all Vercel serverless instances.
+ * Falls back to in-memory Map when Redis is not available (dev mode).
  */
 
+import { Redis } from '@upstash/redis';
 import { logger } from '../logger/logger';
 
-/**
- * Cache entry structure
- */
-interface CacheEntry<T> {
-    data: T;
+// ─── Redis Client ────────────────────────────────────────────────────────────
+
+let redis: Redis | null = null;
+let redisAvailable: boolean | null = null;
+
+function getRedis(): Redis | null {
+    if (redisAvailable === false) return null;
+    if (redis) return redis;
+
+    const url = process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    if (!url || !token) {
+        redisAvailable = false;
+        logger.info('CacheManager: Using in-memory fallback (UPSTASH_REDIS not configured)');
+        return null;
+    }
+
+    redis = new Redis({ url, token });
+    redisAvailable = true;
+    return redis;
+}
+
+// ─── In-Memory Fallback ──────────────────────────────────────────────────────
+
+interface MemoryCacheEntry {
+    data: string; // JSON-serialized
     expires: number;
     tags: string[];
-    createdAt: number;
 }
+
+const memoryCache = new Map<string, MemoryCacheEntry>();
+const MAX_MEMORY_SIZE = 1000;
+
+// ─── Cache Options ───────────────────────────────────────────────────────────
 
 /**
  * Cache options
  */
 export interface CacheOptions {
-    /** Time to live in seconds (default:  300 = 5 minutes) */
+    /** Time to live in seconds (default: 300 = 5 minutes) */
     ttl?: number;
     /** Tags for cache invalidation */
     tags?: string[];
@@ -33,231 +64,244 @@ interface CacheStats {
     misses: number;
     size: number;
     hitRate: number;
+    backend: 'redis' | 'memory';
 }
 
+// ─── Cache Manager ───────────────────────────────────────────────────────────
+
 /**
- * In-Memory Cache Manager
- * Provides caching with TTL and tag-based invalidation
- * 
+ * Distributed Cache Manager
+ * Uses Upstash Redis when available, falls back to in-memory Map.
+ * The public API is identical regardless of backend.
+ *
  * @example
  * ```typescript
- * // Cache with default TTL (5 minutes)
  * const categories = await CacheManager.get(
  *   'categories:all',
- *   () => categoryRepo.findAll()
+ *   () => categoryRepo.findAll(),
+ *   { ttl: 600, tags: ['categories'] }
  * );
- * 
- * // Cache with custom TTL and tags
- * const event = await CacheManager.get(
- *   `event:${slug}`,
- *   () => eventRepo.findBySlug(slug),
- *   { ttl: 600, tags: ['events', `event:${slug}`] }
- * );
- * 
- * // Invalidate by tag
- * CacheManager.invalidate('events');
+ *
+ * CacheManager.invalidate('categories');
  * ```
  */
 export class CacheManager {
-    private static cache = new Map<string, CacheEntry<any>>();
-    private static stats = {
-        hits: 0,
-        misses: 0,
-    };
-
-    /**
-     * Default TTL in seconds
-     */
+    private static stats = { hits: 0, misses: 0 };
     private static DEFAULT_TTL = 300; // 5 minutes
-
-    /**
-     * Maximum cache size (number of entries)
-     */
-    private static MAX_SIZE = 1000;
+    private static CACHE_PREFIX = 'nuqta:cache:';
+    private static TAG_PREFIX = 'nuqta:tag:';
 
     /**
      * Get value from cache or fetch and cache it
-     * 
-     * @param key - Cache key
-     * @param fetchFn - Function to fetch data if not in cache
-     * @param options - Cache options (TTL, tags)
-     * @returns Cached or fetched data
      */
     static async get<T>(
         key: string,
         fetchFn: () => Promise<T>,
         options: CacheOptions = {}
     ): Promise<T> {
-        // Check cache
-        const cached = this.cache.get(key);
+        const r = getRedis();
+        const prefixedKey = `${this.CACHE_PREFIX}${key}`;
 
-        if (cached && cached.expires > Date.now()) {
-            this.stats.hits++;
-            logger.debug('Cache hit', {
-                key,
-                age: `${((Date.now() - cached.createdAt) / 1000).toFixed(1)}s`
-            });
-            return cached.data as T;
-        }
+        // ── Redis Path ──
+        if (r) {
+            try {
+                const cached = await r.get<string>(prefixedKey);
+                if (cached !== null) {
+                    this.stats.hits++;
+                    logger.debug('Cache hit (Redis)', { key });
+                    return JSON.parse(cached as string) as T;
+                }
+            } catch (error) {
+                logger.error('Redis get failed, fetching fresh', { key, error });
+            }
 
-        // Cache miss - fetch data
-        this.stats.misses++;
-        logger.debug('Cache miss', { key });
+            // Miss — fetch and store
+            this.stats.misses++;
+            logger.debug('Cache miss (Redis)', { key });
 
-        try {
             const data = await fetchFn();
-            this.set(key, data, options);
+            const ttl = options.ttl || this.DEFAULT_TTL;
+
+            try {
+                await r.set(prefixedKey, JSON.stringify(data), { ex: ttl });
+
+                // Store key-to-tag mappings for invalidation
+                if (options.tags && options.tags.length > 0) {
+                    const pipeline = r.pipeline();
+                    for (const tag of options.tags) {
+                        pipeline.sadd(`${this.TAG_PREFIX}${tag}`, prefixedKey);
+                    }
+                    await pipeline.exec();
+                }
+            } catch (error) {
+                logger.error('Redis set failed', { key, error });
+            }
+
             return data;
-        } catch (error) {
-            logger.error('Cache fetch failed', { key, error });
-            throw error;
-        }
-    }
-
-    /**
-     * Set a value in the cache
-     * 
-     * @param key - Cache key
-     * @param data - Data to cache
-     * @param options - Cache options
-     */
-    static set<T>(key: string, data: T, options: CacheOptions = {}) {
-        // Enforce max size
-        if (this.cache.size >= this.MAX_SIZE) {
-            this.evictOldest();
         }
 
-        const ttl = options.ttl || this.DEFAULT_TTL;
-        const entry: CacheEntry<T> = {
-            data,
-            expires: Date.now() + (ttl * 1000),
-            tags: options.tags || [],
-            createdAt: Date.now(),
-        };
-
-        this.cache.set(key, entry);
-
-        logger.debug('Cache set', {
-            key,
-            ttl: `${ttl}s`,
-            tags: entry.tags,
-        });
-    }
-
-    /**
-     * Get a value from cache if it exists and is not expired
-     * 
-     * @param key - Cache key
-     * @returns Cached value or null
-     */
-    static getCached<T>(key: string): T | null {
-        const cached = this.cache.get(key);
-
-        if (cached && cached.expires > Date.now()) {
+        // ── In-Memory Path ──
+        const memEntry = memoryCache.get(key);
+        if (memEntry && memEntry.expires > Date.now()) {
             this.stats.hits++;
-            return cached.data as T;
-        }
-
-        if (cached) {
-            // Expired - remove it
-            this.cache.delete(key);
+            logger.debug('Cache hit (memory)', { key });
+            return JSON.parse(memEntry.data) as T;
         }
 
         this.stats.misses++;
-        return null;
+        logger.debug('Cache miss (memory)', { key });
+
+        const data = await fetchFn();
+        const ttl = options.ttl || this.DEFAULT_TTL;
+
+        // Enforce max size
+        if (memoryCache.size >= MAX_MEMORY_SIZE) {
+            const oldestKey = memoryCache.keys().next().value;
+            if (oldestKey) memoryCache.delete(oldestKey);
+        }
+
+        memoryCache.set(key, {
+            data: JSON.stringify(data),
+            expires: Date.now() + ttl * 1000,
+            tags: options.tags || [],
+        });
+
+        return data;
+    }
+
+    /**
+     * Set a value in the cache directly
+     */
+    static async set<T>(key: string, data: T, options: CacheOptions = {}) {
+        const r = getRedis();
+        const ttl = options.ttl || this.DEFAULT_TTL;
+
+        if (r) {
+            const prefixedKey = `${this.CACHE_PREFIX}${key}`;
+            try {
+                await r.set(prefixedKey, JSON.stringify(data), { ex: ttl });
+                if (options.tags && options.tags.length > 0) {
+                    const pipeline = r.pipeline();
+                    for (const tag of options.tags) {
+                        pipeline.sadd(`${this.TAG_PREFIX}${tag}`, prefixedKey);
+                    }
+                    await pipeline.exec();
+                }
+            } catch (error) {
+                logger.error('Redis set failed', { key, error });
+            }
+        } else {
+            if (memoryCache.size >= MAX_MEMORY_SIZE) {
+                const oldestKey = memoryCache.keys().next().value;
+                if (oldestKey) memoryCache.delete(oldestKey);
+            }
+            memoryCache.set(key, {
+                data: JSON.stringify(data),
+                expires: Date.now() + ttl * 1000,
+                tags: options.tags || [],
+            });
+        }
     }
 
     /**
      * Invalidate cache entries by tag
-     * 
-     * @param tag - Tag to invalidate
      */
-    static invalidate(tag: string) {
-        let count = 0;
+    static async invalidate(tag: string) {
+        const r = getRedis();
 
-        for (const [key, entry] of this.cache.entries()) {
-            if (entry.tags.includes(tag)) {
-                this.cache.delete(key);
-                count++;
+        if (r) {
+            try {
+                const tagKey = `${this.TAG_PREFIX}${tag}`;
+                const keys = await r.smembers(tagKey);
+
+                if (keys.length > 0) {
+                    const pipeline = r.pipeline();
+                    for (const key of keys) {
+                        pipeline.del(key as string);
+                    }
+                    pipeline.del(tagKey);
+                    await pipeline.exec();
+                    logger.info('Cache invalidated by tag (Redis)', { tag, count: keys.length });
+                }
+            } catch (error) {
+                logger.error('Redis invalidation failed', { tag, error });
+            }
+        } else {
+            let count = 0;
+            for (const [key, entry] of memoryCache.entries()) {
+                if (entry.tags.includes(tag)) {
+                    memoryCache.delete(key);
+                    count++;
+                }
+            }
+            if (count > 0) {
+                logger.info('Cache invalidated by tag (memory)', { tag, count });
             }
         }
-
-        logger.info('Cache invalidated by tag', { tag, count });
     }
 
     /**
-     * Invalidate specific cache key
-     * 
-     * @param key - Cache key to invalidate
+     * Invalidate a specific cache key
      */
-    static invalidateKey(key: string) {
-        const deleted = this.cache.delete(key);
-        if (deleted) {
-            logger.debug('Cache key invalidated', { key });
+    static async invalidateKey(key: string) {
+        const r = getRedis();
+
+        if (r) {
+            try {
+                await r.del(`${this.CACHE_PREFIX}${key}`);
+            } catch (error) {
+                logger.error('Redis key invalidation failed', { key, error });
+            }
+        } else {
+            memoryCache.delete(key);
         }
     }
 
     /**
      * Invalidate multiple tags at once
-     * 
-     * @param tags - Array of tags to invalidate
      */
-    static invalidateTags(tags: string[]) {
-        tags.forEach(tag => this.invalidate(tag));
+    static async invalidateTags(tags: string[]) {
+        await Promise.all(tags.map(tag => this.invalidate(tag)));
     }
 
     /**
      * Clear all cache entries
      */
-    static clear() {
-        const size = this.cache.size;
-        this.cache.clear();
-        logger.info('Cache cleared', { entriesRemoved: size });
-    }
+    static async clear() {
+        const r = getRedis();
 
-    /**
-     * Remove expired entries
-     */
-    static cleanup() {
-        const now = Date.now();
-        let count = 0;
+        if (r) {
+            try {
+                // Scan and delete all nuqta:cache:* keys
+                let cursor = 0;
+                do {
+                    const [nextCursor, keys] = await r.scan(cursor, {
+                        match: `${this.CACHE_PREFIX}*`,
+                        count: 100,
+                    });
+                    cursor = Number(nextCursor);
+                    if (keys.length > 0) {
+                        const pipeline = r.pipeline();
+                        for (const key of keys) {
+                            pipeline.del(key as string);
+                        }
+                        await pipeline.exec();
+                    }
+                } while (cursor !== 0);
 
-        for (const [key, entry] of this.cache.entries()) {
-            if (entry.expires < now) {
-                this.cache.delete(key);
-                count++;
+                logger.info('Cache cleared (Redis)');
+            } catch (error) {
+                logger.error('Redis clear failed', { error });
             }
-        }
-
-        if (count > 0) {
-            logger.info('Cache cleanup completed', { entriesRemoved: count });
-        }
-    }
-
-    /**
-     * Evict oldest entry to enforce max size
-     */
-    private static evictOldest() {
-        let oldestKey: string | null = null;
-        let oldestTime = Infinity;
-
-        for (const [key, entry] of this.cache.entries()) {
-            if (entry.createdAt < oldestTime) {
-                oldestTime = entry.createdAt;
-                oldestKey = key;
-            }
-        }
-
-        if (oldestKey) {
-            this.cache.delete(oldestKey);
-            logger.debug('Cache entry evicted (max size reached)', { key: oldestKey });
+        } else {
+            const size = memoryCache.size;
+            memoryCache.clear();
+            logger.info('Cache cleared (memory)', { entriesRemoved: size });
         }
     }
 
     /**
      * Get cache statistics
-     * 
-     * @returns Cache statistics including hits, misses, and hit rate
      */
     static getStats(): CacheStats {
         const total = this.stats.hits + this.stats.misses;
@@ -266,8 +310,9 @@ export class CacheManager {
         return {
             hits: this.stats.hits,
             misses: this.stats.misses,
-            size: this.cache.size,
+            size: memoryCache.size, // memory size only (Redis size would require DBSIZE call)
             hitRate: Math.round(hitRate * 100) / 100,
+            backend: getRedis() ? 'redis' : 'memory',
         };
     }
 
@@ -276,13 +321,9 @@ export class CacheManager {
      */
     static logStats() {
         const stats = this.getStats();
-
         logger.info('Cache Statistics', {
-            hits: stats.hits,
-            misses: stats.misses,
-            hitRate: `${stats.hitRate}%`,
-            size: stats.size,
-            maxSize: this.MAX_SIZE,
+            ...stats,
+            maxSize: MAX_MEMORY_SIZE,
         });
     }
 
@@ -292,12 +333,10 @@ export class CacheManager {
     static resetStats() {
         this.stats.hits = 0;
         this.stats.misses = 0;
-        logger.info('Cache statistics reset');
     }
 
     /**
      * Warm cache with common queries
-     * Call this on application startup
      */
     static async warmup(warmupFns: Array<{ key: string; fn: () => Promise<any>; options?: CacheOptions }>) {
         logger.info('Starting cache warmup', { count: warmupFns.length });
@@ -311,9 +350,11 @@ export class CacheManager {
         });
 
         await Promise.all(promises);
-        logger.info('Cache warmup completed', { size: this.cache.size });
+        logger.info('Cache warmup completed');
     }
 }
+
+// ─── Cache Keys & Tags ───────────────────────────────────────────────────────
 
 /**
  * Common cache keys - centralized for consistency
@@ -338,6 +379,10 @@ export const CacheKeys = {
 
     // User
     USER_FAVORITES: (userId: string) => `user:${userId}:favorites`,
+
+    // Countries
+    COUNTRIES_ALL: 'countries:all',
+    SUBSCRIPTION_TIERS: 'subscription:tiers',
 } as const;
 
 /**
@@ -349,13 +394,9 @@ export const CacheTags = {
     VENDORS: 'vendors',
     REVIEWS: 'reviews',
     USERS: 'users',
+    COUNTRIES: 'countries',
 
     EVENT: (eventId: string) => `event:${eventId}`,
     VENDOR: (vendorId: string) => `vendor:${vendorId}`,
     USER: (userId: string) => `user:${userId}`,
 } as const;
-
-// Set up periodic cleanup (every 5 minutes)
-if (typeof setInterval !== 'undefined') {
-    setInterval(() => CacheManager.cleanup(), 5 * 60 * 1000);
-}

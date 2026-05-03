@@ -88,7 +88,22 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                 },
             });
             if (signUpError) throw signUpError;
-            setRegisterSuccess(true);
+
+            // In booking context: skip email verification, sign in immediately
+            if (onAuthSuccess) {
+                const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+                if (signInError) {
+                    // If email confirmation is required, show success message instead
+                    if (signInError.message?.includes('Email not confirmed')) {
+                        setRegisterSuccess(true);
+                        return;
+                    }
+                    throw signInError;
+                }
+                onAuthSuccess();
+            } else {
+                setRegisterSuccess(true);
+            }
         } catch (err: any) {
             const msg = err.message || '';
             setError(msg.includes('User already registered') ? tAuth('error_user_already_registered') : tAuth('error_generic'));
@@ -185,8 +200,9 @@ export function MobileLoginDialog({ isOpen, onClose, onAuthSuccess, returnUrl }:
                             {/* Google Sign-In */}
                             <GoogleSignInButton
                                 locale={locale}
-                                redirectUrl={returnUrl}
+                                redirectUrl={onAuthSuccess ? undefined : returnUrl}
                                 onError={(msg) => setError(msg)}
+                                onSuccess={onAuthSuccess}
                                 className="w-full p-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group hover:bg-gray-50 active:scale-[0.98]"
                             >
                                 <GoogleIcon className="w-5 h-5 group-hover:rotate-12 transition-transform" />

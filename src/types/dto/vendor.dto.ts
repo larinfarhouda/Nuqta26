@@ -13,11 +13,15 @@ export interface PublicVendorDTO {
     business_name: string;
     description_ar: string | null;
     company_logo: string | null;
+    cover_image: string | null;
     whatsapp_number: string | null;
     website: string | null;
     category: string;
     instagram: string | null;
-    banner_url: string | null;
+    status: string | null;
+    created_at: string | null;
+    city: string | null;
+    district: string | null;
     location_name: string | null;
     location_lat: number | null;
     location_long: number | null;

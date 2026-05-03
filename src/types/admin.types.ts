@@ -61,6 +61,44 @@ export interface AdminVendor {
     bookingCount: number;
 }
 
+export interface AdminVendorDetail {
+    id: string;
+    business_name: string;
+    company_logo: string | null;
+    cover_image: string | null;
+    slug: string | null;
+    category: string;
+    description_ar: string | null;
+    status: string | null;
+    is_verified: boolean | null;
+    whatsapp_number: string | null;
+    website: string | null;
+    instagram: string | null;
+    country: string | null;
+    location_name: string | null;
+    location_details: string | null;
+    location_lat: number | null;
+    location_long: number | null;
+    bank_name: string | null;
+    bank_account_name: string | null;
+    bank_iban: string | null;
+    subscription_tier: string | null;
+    subscription_status: string | null;
+    subscription_starts_at: string | null;
+    subscription_expires_at: string | null;
+    is_founder_pricing: boolean | null;
+    cancellation_policy: string | null;
+    return_policy: string | null;
+    tax_id_document: string | null;
+    created_at: string | null;
+    // Joined from profiles
+    email: string | null;
+    full_name: string | null;
+    // Counts
+    eventCount: number;
+    bookingCount: number;
+}
+
 export interface VendorDirectoryParams {
     page: number;
     pageSize: number;
@@ -186,7 +224,10 @@ export type ActivityAction =
     | 'prospect_contacted'
     | 'prospect_converted'
     | 'event_featured'
-    | 'interest_expressed';
+    | 'interest_expressed'
+    | 'subscription_changed'
+    | 'vendor_updated'
+    | 'vendor_impersonated';
 
 export interface ActivityLog {
     id: string;

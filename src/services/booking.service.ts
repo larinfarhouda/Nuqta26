@@ -228,4 +228,13 @@ export class BookingService {
 
         return success;
     }
+
+    /**
+     * Find an existing pending booking for a user + event combination
+     * Used to prevent duplicate bookings
+     */
+    async findPendingBookingByUserAndEvent(userId: string, eventId: string) {
+        logger.info('BookingService: Checking for existing pending booking', { userId, eventId });
+        return await this.bookingRepo.findPendingBookingByUserAndEvent(userId, eventId);
+    }
 }

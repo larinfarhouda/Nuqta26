@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {
     Loader2, BarChart3, Star,
-    Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles, Globe
+    Image as ImageIcon, Calendar, Users, Settings, ExternalLink, Sparkles, Globe,
+    MoreHorizontal, Tag
 } from 'lucide-react';
 import NextImage from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
@@ -13,6 +14,7 @@ import dynamic from 'next/dynamic';
 import { getPendingBookingsCount } from '@/actions/vendor/bookings';
 import CompactTierBadge from './vendor/CompactTierBadge';
 import { getCountryFlag } from '@/utils/country-helpers';
+import MoreSheet from './vendor/MoreSheet';
 
 // Dynamic imports for tab components  
 const EventsTab = dynamic(() => import('./vendor/events/EventsTab'), {
@@ -75,6 +77,22 @@ const ImageWithFallback = ({ src, alt, className, fallback }: { src?: string | n
     );
 };
 
+// All tabs config
+const ALL_TABS = [
+    { id: 'ANALYTICS', icon: BarChart3 },
+    { id: 'EVENTS', icon: Calendar },
+    { id: 'BOOKINGS', icon: Sparkles },
+    { id: 'CUSTOMERS', icon: Users },
+    { id: 'GALLERY', icon: ImageIcon },
+    { id: 'REVIEWS', icon: Star },
+    { id: 'DISCOUNTS', icon: Tag },
+    { id: 'PROFILE', icon: Settings },
+] as const;
+
+// Primary tabs for mobile bottom nav (first 4 + "more")
+const PRIMARY_TAB_IDS = ['ANALYTICS', 'EVENTS', 'BOOKINGS', 'CUSTOMERS'];
+const SECONDARY_TAB_IDS = ['GALLERY', 'REVIEWS', 'DISCOUNTS', 'PROFILE'];
+
 interface VendorDashboardProps {
     initialVendorData?: any;
     initialPendingBookingsCount?: number;
@@ -94,13 +112,12 @@ export default function VendorDashboard({
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    // Core State - Use server-provided data for instant rendering
+    // Core State
     const [step, setStep] = useState<'LOADING' | 'DETAILS' | 'VERIFICATION' | 'DASHBOARD'>(
         initialVendorData ? 'DASHBOARD' : 'LOADING'
     );
     const [vendorData, setVendorData] = useState<any>(() => {
         if (initialVendorData) {
-            // Process district inference immediately
             let inferredDistrict = null;
             if (initialVendorData.location_lat && initialVendorData.location_long) {
                 const city = CITIES['tr'].find(c =>
@@ -116,6 +133,7 @@ export default function VendorDashboard({
     const [activeTab, setActiveTab] = useState<'ANALYTICS' | 'EVENTS' | 'CUSTOMERS' | 'BOOKINGS' | 'PROFILE' | 'GALLERY' | 'DISCOUNTS' | 'REVIEWS'>('ANALYTICS');
     const [pendingBookingsCount, setPendingBookingsCount] = useState(initialPendingBookingsCount);
     const [activeEventsCount, setActiveEventsCount] = useState(initialActiveEventsCount);
+    const [moreSheetOpen, setMoreSheetOpen] = useState(false);
 
     // Alert State
     const [alertState, setAlertState] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
@@ -134,10 +152,10 @@ export default function VendorDashboard({
         setActiveTab(tabId as any);
         const url = new URL(window.location.href);
         url.searchParams.set('tab', tabId.toLowerCase());
-        router.push(url.pathname + url.search, { scroll: false });
+        window.history.replaceState(null, '', url.pathname + url.search);
     };
 
-    // Sync tab with URL parameter on mount (client-side only)
+    // Sync tab with URL parameter on mount
     useEffect(() => {
         const tab = searchParams.get('tab')?.toUpperCase();
         const validTabs = ['ANALYTICS', 'EVENTS', 'CUSTOMERS', 'BOOKINGS', 'PROFILE', 'GALLERY', 'DISCOUNTS', 'REVIEWS'];
@@ -164,7 +182,6 @@ export default function VendorDashboard({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Parallel query execution for faster loading
         const now = new Date().toISOString();
         const [
             { data: vendorData },
@@ -193,7 +210,6 @@ export default function VendorDashboard({
             setPendingBookingsCount(pendingCount);
             setActiveEventsCount(eventsCount || 0);
 
-            // If vendor has no country set, redirect to DETAILS to pick one
             if (!vendorData.country) {
                 setStep('DETAILS');
             } else {
@@ -217,6 +233,8 @@ export default function VendorDashboard({
             category: formData.get('category') as string,
             description_ar: (formData.get('description_ar') as string) || null,
             country: selectedCountry,
+            status: 'approved',
+            is_verified: true,
         };
 
         const { error } = await supabase.from('vendors').upsert(payload);
@@ -232,201 +250,436 @@ export default function VendorDashboard({
         return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
     }
 
+    const isSecondaryTab = SECONDARY_TAB_IDS.includes(activeTab);
+
+    // Tab label helper
+    const tabLabel = (id: string) => {
+        const map: Record<string, string> = {
+            ANALYTICS: t('vendor.tabs.analytics'),
+            EVENTS: t('vendor.tabs.events'),
+            BOOKINGS: t('vendor.tabs.bookings'),
+            CUSTOMERS: t('vendor.tabs.customers'),
+            GALLERY: t('vendor.tabs.gallery'),
+            REVIEWS: t('vendor.tabs.reviews'),
+            DISCOUNTS: t('vendor.tabs.discounts'),
+            PROFILE: t('vendor.tabs.settings'),
+        };
+        return map[id] || id;
+    };
+
     return (
-        <div className="relative max-w-6xl mx-auto">
-            {/* Background Blobs */}
-            <div className="fixed -top-20 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl mix-blend-multiply pointer-events-none z-0" />
-            <div className="fixed top-40 -right-20 w-96 h-96 bg-purple-50 rounded-full blur-3xl mix-blend-multiply pointer-events-none z-0" />
+        <div dir={locale === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', background: '#f8fafc' }}>
 
             {/* Demo Mode Banner */}
             {demoMode && (
-                <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-4 md:p-6 shadow-lg">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Sparkles className="w-6 h-6 text-amber-600" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-black text-gray-900">وضع التجربة - Demo Mode</h3>
-                                <p className="text-sm text-gray-600 mt-1">أنت تتصفح بيانات تجريبية. سجل الآن لإدارة فعالياتك الحقيقية!</p>
-                                <p className="text-xs text-gray-500 mt-1">You're exploring with sample data. Sign up to manage real events!</p>
-                            </div>
+                <div style={{
+                    margin: '0 16px 16px', padding: '14px 16px',
+                    background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                    border: '1.5px solid #fbbf24', borderRadius: '14px',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Sparkles size={20} color="#d97706" />
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#92400e' }}>وضع التجربة — Demo Mode</div>
+                            <div style={{ fontSize: '12px', color: '#a16207', marginTop: '2px' }}>أنت تتصفح بيانات تجريبية</div>
                         </div>
-                        <a
-                            href="/register?role=vendor"
-                            className="w-full md:w-auto px-6 py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all text-center whitespace-nowrap"
-                        >
-                            سجل الآن
-                        </a>
+                        <a href="/register?role=vendor" style={{
+                            padding: '8px 16px', background: '#2CA58D', color: '#fff',
+                            borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+                            textDecoration: 'none', whiteSpace: 'nowrap',
+                        }}>سجل الآن</a>
                     </div>
                 </div>
             )}
 
-            {/* DASHBOARD NAVIGATION */}
-            {step === 'DASHBOARD' && (
-                <div className="sticky top-20 z-30 mb-6 md:mb-8 bg-white/80 backdrop-blur-sm md:backdrop-blur-md p-2 rounded-xl md:rounded-2xl border border-white shadow-sm mx-4 lg:mx-0 overflow-x-auto scrollbar-hide">
-                    <div className="flex gap-1.5 md:gap-2 min-w-max">
-                        {[
-                            { id: 'ANALYTICS', icon: BarChart3, label: t('vendor.tabs.analytics') },
-                            { id: 'EVENTS', icon: Calendar, label: t('vendor.tabs.events') },
-                            { id: 'BOOKINGS', icon: Sparkles, label: t('vendor.tabs.bookings') },
-                            { id: 'CUSTOMERS', icon: Users, label: t('vendor.tabs.customers') },
-                            { id: 'GALLERY', icon: ImageIcon, label: t('vendor.tabs.gallery') },
-                            { id: 'REVIEWS', icon: Star, label: t('vendor.tabs.reviews') },
-                            { id: 'DISCOUNTS', icon: Settings, label: t('vendor.tabs.discounts') },
-                            { id: 'PROFILE', icon: Settings, label: t('vendor.tabs.settings') },
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabChange(tab.id)}
-                                className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === tab.id
-                                    ? 'bg-primary text-white shadow-md md:shadow-lg shadow-primary/20'
-                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                                    }`}
-                            >
-                                <tab.icon className="w-5 h-5" />
-                                {tab.label}
-                                {tab.id === 'BOOKINGS' && pendingBookingsCount > 0 && (
-                                    <span className="ml-1 px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded-full animate-bounce">
-                                        {pendingBookingsCount}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <div style={{ display: 'flex', minHeight: '100vh' }}>
 
-            {/* MAIN CONTENT AREA */}
-            <div className={`bg-white/60 backdrop-blur-md md:backdrop-blur-xl border border-white/60 shadow-lg md:shadow-xl rounded-3xl md:rounded-[2.5rem] relative z-10 overflow-hidden min-h-[600px] transition-opacity duration-700 ${step === 'DASHBOARD' ? 'p-4 md:p-6 lg:p-10' : 'p-6 md:p-8 lg:p-12 mx-4 lg:mx-0'}`}>
-                {step === 'DETAILS' && (
-                    <form onSubmit={handleInitialSubmit} className="space-y-6 max-w-lg mx-auto py-12">
-                        <div className="text-center mb-10">
-                            <h2 className="text-3xl font-black text-gray-900 mb-2">{t('vendor.welcome')}</h2>
-                            <p className="text-gray-600">{t('vendor.setup_title')}</p>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.business_name')}</label>
-                                <input name="business_name" required className="input-field text-gray-900" placeholder={t('vendor.business_name_placeholder')} defaultValue={vendorData?.business_name || ''} />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.category')}</label>
-                                <select name="category" className="input-field text-gray-900" defaultValue={vendorData?.category || 'other'}>
-                                    <option value="cultural">{t('vendor.cat_cultural')}</option>
-                                    <option value="entertainment">{t('vendor.cat_entertainment')}</option>
-                                    <option value="educational">{t('vendor.cat_educational')}</option>
-                                    <option value="artistic">{t('vendor.cat_artistic')}</option>
-                                    <option value="social">{t('vendor.cat_social')}</option>
-                                    <option value="other">{t('vendor.cat_other')}</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-                                    <Globe className="w-3.5 h-3.5" />
-                                    {t('vendor.select_country')}
-                                </label>
-                                <select
-                                    value={selectedCountry}
-                                    onChange={e => setSelectedCountry(e.target.value)}
-                                    className="input-field text-gray-900"
-                                >
-                                    {countries.map(c => (
-                                        <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">{t('vendor.description')}</label>
-                                <textarea name="description_ar" className="input-field min-h-[100px] text-gray-900" placeholder={t('vendor.description_placeholder')} />
-                            </div>
-                        </div>
-                        <button type="submit" className="btn-primary w-full py-4 text-lg">{t('vendor.start_now')}</button>
-                    </form>
-                )}
-
-                {step === 'DASHBOARD' && (
-                    <div dir="rtl">
-                        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-white shadow-lg overflow-hidden relative">
+                {/* ═══════════ DESKTOP SIDEBAR ═══════════ */}
+                <aside className="hidden md:flex" style={{
+                    position: 'sticky', top: '64px', alignSelf: 'flex-start',
+                    width: '240px', minWidth: '240px',
+                    flexDirection: 'column',
+                    height: 'calc(100vh - 64px)',
+                    borderRight: locale === 'ar' ? 'none' : '1px solid #e2e8f0',
+                    borderLeft: locale === 'ar' ? '1px solid #e2e8f0' : 'none',
+                    background: '#fff',
+                    padding: '24px 0',
+                    overflowY: 'auto',
+                }}>
+                    {/* Vendor Identity */}
+                    {step === 'DASHBOARD' && vendorData && (
+                        <div style={{ padding: '0 20px 20px', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                    width: '44px', height: '44px', borderRadius: '12px',
+                                    background: '#f1f5f9', overflow: 'hidden', flexShrink: 0,
+                                    position: 'relative',
+                                }}>
                                     <ImageWithFallback
                                         src={vendorData?.company_logo}
                                         alt="Logo"
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full"
                                         fallback={
-                                            <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold text-2xl">
+                                            <div style={{
+                                                width: '100%', height: '100%', display: 'flex',
+                                                alignItems: 'center', justifyContent: 'center',
+                                                background: '#e0f2f1', color: '#2CA58D',
+                                                fontWeight: 800, fontSize: '18px',
+                                            }}>
                                                 {vendorData?.business_name?.[0]}
                                             </div>
                                         }
                                     />
                                 </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h1 className="text-2xl font-black text-gray-900">{vendorData?.business_name}</h1>
-                                        <CompactTierBadge vendorId={vendorData?.id} demoMode={demoMode} />
+                                <div style={{ overflow: 'hidden' }}>
+                                    <div style={{
+                                        fontSize: '14px', fontWeight: 700, color: '#0f172a',
+                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                    }}>
+                                        {vendorData?.business_name}
                                     </div>
-                                    <p className="text-sm text-gray-500 font-medium">{t('vendor.title')}</p>
+                                    <CompactTierBadge vendorId={vendorData?.id} demoMode={demoMode} />
                                 </div>
                             </div>
+                        </div>
+                    )}
 
-                            <div className="flex items-center gap-3">
+                    {/* Nav Items */}
+                    {step === 'DASHBOARD' && (
+                        <nav style={{ padding: '12px 12px', flex: 1 }}>
+                            {ALL_TABS.map((tab) => {
+                                const isActive = activeTab === tab.id;
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => handleTabChange(tab.id)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                            width: '100%', padding: '10px 14px', marginBottom: '2px',
+                                            borderRadius: '10px', border: 'none', cursor: 'pointer',
+                                            fontSize: '13.5px', fontWeight: isActive ? 700 : 500,
+                                            color: isActive ? '#2CA58D' : '#475569',
+                                            background: isActive ? '#e0f7f3' : 'transparent',
+                                            transition: 'all 0.15s ease',
+                                        }}
+                                    >
+                                        <Icon size={18} />
+                                        {tabLabel(tab.id)}
+                                        {tab.id === 'BOOKINGS' && pendingBookingsCount > 0 && (
+                                            <span style={{
+                                                marginLeft: 'auto', padding: '1px 7px',
+                                                background: '#ef4444', color: '#fff',
+                                                fontSize: '11px', fontWeight: 700,
+                                                borderRadius: '10px',
+                                            }}>
+                                                {pendingBookingsCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    )}
+
+                    {/* View Profile Link */}
+                    {step === 'DASHBOARD' && vendorData?.slug && (
+                        <div style={{ padding: '12px 16px', borderTop: '1px solid #f1f5f9' }}>
+                            <a
+                                href={`/${locale}/v/${vendorData.slug}`}
+                                target="_blank"
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    fontSize: '13px', fontWeight: 600, color: '#64748b',
+                                    textDecoration: 'none', padding: '8px 8px',
+                                    borderRadius: '8px',
+                                }}
+                            >
+                                <ExternalLink size={15} />
+                                {t('vendor.profile.view_live_profile')}
+                            </a>
+                        </div>
+                    )}
+                </aside>
+
+                {/* ═══════════ MAIN CONTENT ═══════════ */}
+                <main style={{ flex: 1, minWidth: 0 }}>
+
+                    {/* Mobile Header — visible only on mobile when on dashboard */}
+                    {step === 'DASHBOARD' && vendorData && (
+                        <div className="md:hidden" style={{
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            padding: '16px 20px 12px',
+                            background: '#fff',
+                            borderBottom: '1px solid #f1f5f9',
+                            position: 'sticky', top: '0', zIndex: 30,
+                        }}>
+                            <div style={{
+                                width: '36px', height: '36px', borderRadius: '10px',
+                                background: '#f1f5f9', overflow: 'hidden', flexShrink: 0,
+                                position: 'relative',
+                            }}>
+                                <ImageWithFallback
+                                    src={vendorData?.company_logo}
+                                    alt="Logo"
+                                    className="w-full h-full"
+                                    fallback={
+                                        <div style={{
+                                            width: '100%', height: '100%', display: 'flex',
+                                            alignItems: 'center', justifyContent: 'center',
+                                            background: '#e0f2f1', color: '#2CA58D',
+                                            fontWeight: 800, fontSize: '15px',
+                                        }}>
+                                            {vendorData?.business_name?.[0]}
+                                        </div>
+                                    }
+                                />
+                            </div>
+                            <div style={{ flex: 1, overflow: 'hidden' }}>
+                                <div style={{
+                                    fontSize: '15px', fontWeight: 700, color: '#0f172a',
+                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                }}>
+                                    {vendorData?.business_name}
+                                </div>
+                            </div>
+                            <CompactTierBadge vendorId={vendorData?.id} demoMode={demoMode} />
+                        </div>
+                    )}
+
+                    {/* Desktop Header — visible only on desktop */}
+                    {step === 'DASHBOARD' && vendorData && (
+                        <div className="hidden md:flex" style={{
+                            alignItems: 'center', justifyContent: 'space-between',
+                            padding: '24px 32px 20px', gap: '16px',
+                            borderBottom: '1px solid #f1f5f9',
+                            background: '#fff',
+                        }}>
+                            <div>
+                                <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                                    {tabLabel(activeTab)}
+                                </h1>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 {vendorData?.slug ? (
                                     <a
                                         href={`/${locale || 'ar'}/v/${vendorData.slug}`}
                                         target="_blank"
-                                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 hover:-translate-y-0.5 transition-all"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                            padding: '8px 14px', borderRadius: '10px',
+                                            border: '1px solid #e2e8f0', background: '#fff',
+                                            color: '#475569', fontSize: '13px', fontWeight: 600,
+                                            textDecoration: 'none', cursor: 'pointer',
+                                        }}
                                     >
-                                        <ExternalLink className="w-4 h-4" />
-                                        <span>{t('vendor.profile.view_live_profile')}</span>
+                                        <ExternalLink size={14} />
+                                        {t('vendor.profile.view_live_profile')}
                                     </a>
                                 ) : (
                                     <button
                                         onClick={() => handleTabChange('PROFILE')}
-                                        className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-sm shadow-sm hover:bg-primary/20 hover:-translate-y-0.5 transition-all"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                            padding: '8px 14px', borderRadius: '10px',
+                                            border: '1px solid #d1fae5', background: '#ecfdf5',
+                                            color: '#059669', fontSize: '13px', fontWeight: 600,
+                                            cursor: 'pointer',
+                                        }}
                                     >
-                                        <Sparkles className="w-4 h-4" />
-                                        <span>{t('vendor.profile.create_live_profile')}</span>
+                                        <Sparkles size={14} />
+                                        {t('vendor.profile.create_live_profile')}
                                     </button>
                                 )}
-                                <button
-                                    onClick={() => handleTabChange('PROFILE')}
-                                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl font-bold text-sm shadow-lg hover:bg-gray-800 hover:-translate-y-0.5 transition-all"
-                                >
-                                    <Settings className="w-4 h-4" />
-                                    <span>{t('vendor.tabs.settings')}</span>
-                                </button>
                             </div>
                         </div>
+                    )}
 
+                    {/* Content Area */}
+                    <div style={{
+                        padding: step === 'DASHBOARD'
+                            ? '20px 16px 100px'  // mobile bottom padding for nav
+                            : '32px 16px',
+                        maxWidth: step === 'DETAILS' ? '480px' : undefined,
+                        margin: step === 'DETAILS' ? '0 auto' : undefined,
+                    }}
+                        className={step === 'DASHBOARD' ? 'md:!pb-8 md:!px-8' : ''}
+                    >
+                        {step === 'DETAILS' && (
+                            <form onSubmit={handleInitialSubmit} style={{ padding: '32px 0' }}>
+                                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                                    <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>
+                                        {t('vendor.welcome')}
+                                    </h2>
+                                    <p style={{ color: '#64748b', fontSize: '14px' }}>{t('vendor.setup_title')}</p>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                            {t('vendor.business_name')}
+                                        </label>
+                                        <input name="business_name" required className="input-field text-gray-900" placeholder={t('vendor.business_name_placeholder')} defaultValue={vendorData?.business_name || ''} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                            {t('vendor.category')}
+                                        </label>
+                                        <select name="category" className="input-field text-gray-900" defaultValue={vendorData?.category || 'other'}>
+                                            <option value="cultural">{t('vendor.cat_cultural')}</option>
+                                            <option value="entertainment">{t('vendor.cat_entertainment')}</option>
+                                            <option value="educational">{t('vendor.cat_educational')}</option>
+                                            <option value="artistic">{t('vendor.cat_artistic')}</option>
+                                            <option value="social">{t('vendor.cat_social')}</option>
+                                            <option value="other">{t('vendor.cat_other')}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'flex', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px', alignItems: 'center', gap: '6px' }}>
+                                            <Globe style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
+                                            {t('vendor.select_country')}
+                                        </label>
+                                        <select
+                                            value={selectedCountry}
+                                            onChange={e => setSelectedCountry(e.target.value)}
+                                            className="input-field text-gray-900"
+                                        >
+                                            {countries.map(c => (
+                                                <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                            {t('vendor.description')}
+                                        </label>
+                                        <textarea name="description_ar" className="input-field min-h-[100px] text-gray-900" placeholder={t('vendor.description_placeholder')} />
+                                    </div>
+                                </div>
+                                <button type="submit" className="btn-primary w-full py-4 text-lg" style={{ marginTop: '24px' }}>
+                                    {t('vendor.start_now')}
+                                </button>
+                            </form>
+                        )}
 
-
-                        {activeTab === 'ANALYTICS' && <AnalyticsTab vendorId={vendorData?.id} activeEventsCount={activeEventsCount} demoMode={demoMode} />}
-                        {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} demoMode={demoMode} />}
-                        {activeTab === 'BOOKINGS' && <BookingsTab demoMode={demoMode} />}
-                        {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}
-                        {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} demoMode={demoMode} />}
-                        {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} vendorCountry={vendorData?.country} />}
-                        {activeTab === 'REVIEWS' && <ReviewsTab demoMode={demoMode} />}
-                        {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} demoMode={demoMode} />}
+                        {step === 'DASHBOARD' && (
+                            <>
+                                {activeTab === 'ANALYTICS' && <AnalyticsTab vendorId={vendorData?.id} activeEventsCount={activeEventsCount} demoMode={demoMode} />}
+                                {activeTab === 'EVENTS' && <EventsTab vendorData={vendorData} demoMode={demoMode} />}
+                                {activeTab === 'BOOKINGS' && <BookingsTab demoMode={demoMode} />}
+                                {activeTab === 'CUSTOMERS' && <CustomersTab demoMode={demoMode} />}
+                                {activeTab === 'GALLERY' && <GalleryTab vendorId={vendorData?.id} showAlert={showAlert} demoMode={demoMode} />}
+                                {activeTab === 'DISCOUNTS' && <DiscountsTab showAlert={showAlert} demoMode={demoMode} vendorCountry={vendorData?.country} />}
+                                {activeTab === 'REVIEWS' && <ReviewsTab demoMode={demoMode} />}
+                                {activeTab === 'PROFILE' && <ProfileTab vendorData={vendorData} setVendorData={setVendorData} showAlert={showAlert} demoMode={demoMode} />}
+                            </>
+                        )}
                     </div>
-                )}
+                </main>
             </div>
 
-            {/* CUSTOM ALERT MODAL */}
-            {alertState.show && (
-                <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-start p-6 pointer-events-none">
-                    <div
-                        className={`pointer-events-auto flex items-center gap-4 px-6 py-4 rounded-2xl shadow-xl md:shadow-2xl backdrop-blur-md md:backdrop-blur-xl border border-white/20 transition-all duration-300 ${alertState.type === 'success' ? 'bg-[#2CA58D]/90 text-white' : 'bg-red-500/90 text-white'} animate-slide-up`}
-                        dir="rtl"
+            {/* ═══════════ MOBILE BOTTOM NAV BAR ═══════════ */}
+            {step === 'DASHBOARD' && (
+                <nav className="md:hidden flex" style={{
+                    position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+                    background: '#fff',
+                    borderTop: '1px solid #e2e8f0',
+                    padding: '6px 8px env(safe-area-inset-bottom, 8px)',
+                    justifyContent: 'space-around', alignItems: 'center',
+                }}>
+                    {PRIMARY_TAB_IDS.map((tabId) => {
+                        const tab = ALL_TABS.find(t => t.id === tabId)!;
+                        const isActive = activeTab === tabId;
+                        const Icon = tab.icon;
+                        return (
+                            <button
+                                key={tabId}
+                                onClick={() => handleTabChange(tabId)}
+                                style={{
+                                    display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', gap: '2px',
+                                    padding: '6px 12px', border: 'none',
+                                    background: 'none', cursor: 'pointer',
+                                    color: isActive ? '#2CA58D' : '#94a3b8',
+                                    position: 'relative',
+                                    transition: 'color 0.15s ease',
+                                }}
+                            >
+                                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
+                                <span style={{
+                                    fontSize: '10px', fontWeight: isActive ? 700 : 500,
+                                    lineHeight: 1,
+                                }}>
+                                    {tabLabel(tabId)}
+                                </span>
+                                {tabId === 'BOOKINGS' && pendingBookingsCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute', top: '2px', right: '6px',
+                                        width: '16px', height: '16px', borderRadius: '50%',
+                                        background: '#ef4444', color: '#fff',
+                                        fontSize: '9px', fontWeight: 800,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                        {pendingBookingsCount}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
+
+                    {/* More button */}
+                    <button
+                        onClick={() => setMoreSheetOpen(true)}
+                        style={{
+                            display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', gap: '2px',
+                            padding: '6px 12px', border: 'none',
+                            background: 'none', cursor: 'pointer',
+                            color: isSecondaryTab ? '#2CA58D' : '#94a3b8',
+                            transition: 'color 0.15s ease',
+                        }}
                     >
-                        <div className="font-bold">{alertState.message}</div>
+                        <MoreHorizontal size={22} strokeWidth={isSecondaryTab ? 2.5 : 1.8} />
+                        <span style={{
+                            fontSize: '10px',
+                            fontWeight: isSecondaryTab ? 700 : 500,
+                            lineHeight: 1,
+                        }}>
+                            المزيد
+                        </span>
+                    </button>
+                </nav>
+            )}
+
+            {/* More Sheet */}
+            <MoreSheet
+                open={moreSheetOpen}
+                onClose={() => setMoreSheetOpen(false)}
+                onNavigate={handleTabChange}
+                vendorSlug={vendorData?.slug}
+            />
+
+            {/* Alert Toast */}
+            {alertState.show && (
+                <div style={{
+                    position: 'fixed', bottom: '90px', left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100, pointerEvents: 'none',
+                }}>
+                    <div
+                        dir="rtl"
+                        style={{
+                            pointerEvents: 'auto',
+                            padding: '12px 24px', borderRadius: '14px',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                            background: alertState.type === 'success' ? '#2CA58D' : '#ef4444',
+                            color: '#fff', fontWeight: 700, fontSize: '14px',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {alertState.message}
                     </div>
                 </div>
             )}
-
-
-
         </div>
     );
 }

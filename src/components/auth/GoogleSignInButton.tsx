@@ -40,6 +40,7 @@ interface GoogleSignInButtonProps {
     className?: string;
     children: React.ReactNode;
     onError?: (error: string) => void;
+    onSuccess?: () => void;
 }
 
 const GoogleSignInButton = memo(function GoogleSignInButton({
@@ -49,6 +50,7 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     className,
     children,
     onError,
+    onSuccess,
 }: GoogleSignInButtonProps) {
     const supabase = createClient();
     const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +59,8 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     const initializedRef = useRef(false);
     const roleRef = useRef(role);
     const redirectUrlRef = useRef(redirectUrl);
+    const onSuccessRef = useRef(onSuccess);
+    useEffect(() => { onSuccessRef.current = onSuccess; }, [onSuccess]);
 
     useEffect(() => { roleRef.current = role; }, [role]);
     useEffect(() => { redirectUrlRef.current = redirectUrl; }, [redirectUrl]);
@@ -104,6 +108,8 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                         category: 'other',
                         subscription_tier: 'starter',
                         country: 'tr',
+                        status: 'approved',
+                        is_verified: true,
                     } as any);
                 }
             }
@@ -113,6 +119,13 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                 if (diffSeconds < 60) {
                     handleNewUserTracking(supabase, user, finalRole);
                 }
+            }
+
+            // If onSuccess callback is provided (e.g., booking flow), use it instead of redirect
+            if (onSuccessRef.current) {
+                setIsLoading(false);
+                onSuccessRef.current();
+                return;
             }
 
             const currentRedirectUrl = redirectUrlRef.current;

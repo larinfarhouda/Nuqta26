@@ -6,6 +6,8 @@ import { EventFilters } from '@/types/dto/event.dto';
 import { logger } from '@/lib/logger/logger';
 import { trackActivity } from '@/lib/track-activity';
 import { getCurrencySymbol } from '@/utils/country-helpers';
+import { checkRateLimit, RateLimiters } from '@/lib/rate-limit/rate-limiter';
+import { CreateBookingSchema, validateInput } from '@/lib/validation/action-schemas';
 
 /**
  * Get public event by ID or slug
@@ -81,15 +83,23 @@ export async function createBooking(
     quantity: number,
     discountCode?: string
 ) {
-    // This function is complex and involves transaction logic
-    // For now, keeping the original implementation
-    // Will refactor in a follow-up when BookingService.createBooking is implemented
+    // Validate input
+    const validation = validateInput(CreateBookingSchema, { eventId, ticketId, quantity, discountCode });
+    if (!validation.success) {
+        return { error: validation.error };
+    }
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
         return { error: 'error_not_authenticated', requiresAuth: true };
+    }
+
+    // Rate limit check
+    const rl = await checkRateLimit(user.id, RateLimiters.booking);
+    if (!rl.allowed) {
+        return { error: 'Too many booking attempts. Please wait a moment and try again.' };
     }
 
     try {
@@ -156,8 +166,8 @@ export async function createBooking(
         }
 
         // Check for existing pending booking
-        const bookingRepo = factory.getBookingRepository();
-        const existingBooking = await bookingRepo.findPendingBookingByUserAndEvent(user.id, eventId);
+        const bookingService = factory.getBookingService();
+        const existingBooking = await bookingService.findPendingBookingByUserAndEvent(user.id, eventId);
 
         if (existingBooking) {
             return {

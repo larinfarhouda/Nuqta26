@@ -9,6 +9,9 @@ export default function BottomNav({ isLoggedIn, role }: { isLoggedIn: boolean; r
     const t = useTranslations('Navigation');
     const pathname = usePathname();
 
+    // Hide on vendor dashboard — it has its own bottom nav
+    if (pathname.startsWith('/dashboard/vendor')) return null;
+
     const navItems = [
         {
             key: 'home',

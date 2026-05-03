@@ -1,4 +1,9 @@
-import { AdminRepository } from '@/repositories/admin.repository';
+import { AdminDashboardRepository } from '@/repositories/admin/dashboard.repository';
+import { AdminVendorRepository } from '@/repositories/admin/vendor-management.repository';
+import { AdminPaymentRepository } from '@/repositories/admin/payment.repository';
+import { AdminModerationRepository } from '@/repositories/admin/moderation.repository';
+import { AdminProspectRepository } from '@/repositories/admin/prospect.repository';
+import { AdminActivityRepository } from '@/repositories/admin/activity.repository';
 import { logger } from '@/lib/logger/logger';
 import type {
     VendorDirectoryParams,
@@ -9,9 +14,17 @@ import type {
 /**
  * Admin Service
  * Business logic orchestration for the Super Admin panel.
+ * Delegates to focused repositories for each domain area.
  */
 export class AdminService {
-    constructor(private adminRepo: AdminRepository) { }
+    constructor(
+        private dashboardRepo: AdminDashboardRepository,
+        private vendorRepo: AdminVendorRepository,
+        private paymentRepo: AdminPaymentRepository,
+        private moderationRepo: AdminModerationRepository,
+        private prospectRepo: AdminProspectRepository,
+        private activityRepo: AdminActivityRepository,
+    ) { }
 
     // ─── Dashboard ──────────────────────────────────────────────────────
 
@@ -19,11 +32,11 @@ export class AdminService {
         logger.info('AdminService: Fetching dashboard data');
 
         const [stats, subscription, trend, categories, eventStatus] = await Promise.all([
-            this.adminRepo.getPlatformStats(),
-            this.adminRepo.getSubscriptionRevenue(),
-            this.adminRepo.get30DayTrend(),
-            this.adminRepo.getTopCategories(),
-            this.adminRepo.getEventStatusCounts(),
+            this.dashboardRepo.getPlatformStats(),
+            this.dashboardRepo.getSubscriptionRevenue(),
+            this.dashboardRepo.get30DayTrend(),
+            this.dashboardRepo.getTopCategories(),
+            this.dashboardRepo.getEventStatusCounts(),
         ]);
 
         return { stats, subscription, trend, categories, eventStatus };
@@ -33,13 +46,13 @@ export class AdminService {
 
     async getVendorDirectory(params: VendorDirectoryParams) {
         logger.info('AdminService: Fetching vendor directory', { page: params.page });
-        return this.adminRepo.getVendorDirectory(params);
+        return this.vendorRepo.getVendorDirectory(params);
     }
 
     async approveVendor(vendorId: string, adminId: string) {
         logger.info('AdminService: Approving vendor', { vendorId });
-        await this.adminRepo.updateVendorStatus(vendorId, 'approved', true);
-        await this.adminRepo.logActivity({
+        await this.vendorRepo.updateVendorStatus(vendorId, 'approved', true);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'vendor_approved',
             entity_type: 'vendor',
@@ -49,8 +62,8 @@ export class AdminService {
 
     async suspendVendor(vendorId: string, adminId: string) {
         logger.info('AdminService: Suspending vendor', { vendorId });
-        await this.adminRepo.updateVendorStatus(vendorId, 'suspended', false);
-        await this.adminRepo.logActivity({
+        await this.vendorRepo.updateVendorStatus(vendorId, 'suspended', false);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'vendor_suspended',
             entity_type: 'vendor',
@@ -58,17 +71,46 @@ export class AdminService {
         });
     }
 
+    async getVendorFullDetails(vendorId: string) {
+        logger.info('AdminService: Fetching vendor full details', { vendorId });
+        return this.vendorRepo.getVendorFullDetails(vendorId);
+    }
+
+    async updateVendorSubscription(vendorId: string, tier: string, isFounder: boolean, adminId: string) {
+        logger.info('AdminService: Updating vendor subscription', { vendorId, tier, isFounder });
+        await this.vendorRepo.updateVendorSubscription(vendorId, tier, isFounder);
+        await this.activityRepo.logActivity({
+            user_id: adminId,
+            action: 'subscription_changed',
+            entity_type: 'vendor',
+            entity_id: vendorId,
+            metadata: { tier, is_founder: isFounder },
+        });
+    }
+
+    async updateVendorDetails(vendorId: string, updates: Record<string, any>, adminId: string) {
+        logger.info('AdminService: Updating vendor details', { vendorId });
+        await this.vendorRepo.updateVendorDetails(vendorId, updates);
+        await this.activityRepo.logActivity({
+            user_id: adminId,
+            action: 'vendor_updated',
+            entity_type: 'vendor',
+            entity_id: vendorId,
+            metadata: { fields: Object.keys(updates) },
+        });
+    }
+
     // ─── Booking (Bank Transfer) Management ─────────────────────────────
 
     async getBankTransferQueue(page = 1, pageSize = 20) {
         logger.info('AdminService: Fetching bank transfer queue', { page });
-        return this.adminRepo.getBankTransferQueue(page, pageSize);
+        return this.paymentRepo.getBankTransferQueue(page, pageSize);
     }
 
     async confirmPayment(bookingId: string, adminId: string) {
         logger.info('AdminService: Confirming payment', { bookingId });
-        await this.adminRepo.confirmPayment(bookingId);
-        await this.adminRepo.logActivity({
+        await this.paymentRepo.confirmPayment(bookingId);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'payment_confirmed',
             entity_type: 'booking',
@@ -78,8 +120,8 @@ export class AdminService {
 
     async rejectPayment(bookingId: string, adminId: string) {
         logger.info('AdminService: Rejecting payment', { bookingId });
-        await this.adminRepo.rejectPayment(bookingId);
-        await this.adminRepo.logActivity({
+        await this.paymentRepo.rejectPayment(bookingId);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'payment_rejected',
             entity_type: 'booking',
@@ -91,24 +133,24 @@ export class AdminService {
 
     async getFlaggedReviews(page = 1, pageSize = 20) {
         logger.info('AdminService: Fetching flagged reviews', { page });
-        return this.adminRepo.getFlaggedReviews(page, pageSize);
+        return this.moderationRepo.getFlaggedReviews(page, pageSize);
     }
 
     async unflagReview(reviewId: string) {
         logger.info('AdminService: Unflagging review', { reviewId });
-        await this.adminRepo.unflagReview(reviewId);
+        await this.moderationRepo.unflagReview(reviewId);
     }
 
     async deleteReview(reviewId: string) {
         logger.info('AdminService: Deleting review', { reviewId });
-        await this.adminRepo.deleteReview(reviewId);
+        await this.moderationRepo.deleteReview(reviewId);
     }
 
     async toggleFeatureEvent(eventId: string, featured: boolean, adminId: string) {
         logger.info('AdminService: Toggling event feature', { eventId, featured });
-        await this.adminRepo.toggleFeatureEvent(eventId, featured);
+        await this.moderationRepo.toggleFeatureEvent(eventId, featured);
         if (featured) {
-            await this.adminRepo.logActivity({
+            await this.activityRepo.logActivity({
                 user_id: adminId,
                 action: 'event_featured',
                 entity_type: 'event',
@@ -121,8 +163,8 @@ export class AdminService {
 
     async createProspectVendor(input: CreateProspectVendorInput, adminId: string) {
         logger.info('AdminService: Creating prospect vendor', { businessName: input.business_name });
-        const prospect = await this.adminRepo.createProspectVendor(input, adminId);
-        await this.adminRepo.logActivity({
+        const prospect = await this.prospectRepo.createProspectVendor(input, adminId);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'prospect_created',
             entity_type: 'prospect_vendor',
@@ -134,14 +176,14 @@ export class AdminService {
 
     async getProspects(page = 1, pageSize = 20, status?: string) {
         logger.info('AdminService: Fetching prospects', { page, status });
-        return this.adminRepo.getProspects(page, pageSize, status);
+        return this.prospectRepo.getProspects(page, pageSize, status);
     }
 
     async contactProspect(prospectId: string, adminId: string) {
         logger.info('AdminService: Marking prospect as contacted', { prospectId });
-        await this.adminRepo.updateProspectStatus(prospectId, 'contacted');
-        const token = await this.adminRepo.generateClaimToken(prospectId);
-        await this.adminRepo.logActivity({
+        await this.prospectRepo.updateProspectStatus(prospectId, 'contacted');
+        const token = await this.prospectRepo.generateClaimToken(prospectId);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'prospect_contacted',
             entity_type: 'prospect_vendor',
@@ -152,18 +194,18 @@ export class AdminService {
 
     async createProspectEvent(input: CreateProspectEventInput, systemVendorId: string) {
         logger.info('AdminService: Creating prospect event', { prospect: input.prospect_vendor_id });
-        return this.adminRepo.createProspectEvent(input, systemVendorId);
+        return this.prospectRepo.createProspectEvent(input, systemVendorId);
     }
 
     async getProspectInterests(prospectId: string) {
         logger.info('AdminService: Fetching prospect interests', { prospectId });
-        return this.adminRepo.getProspectInterests(prospectId);
+        return this.prospectRepo.getProspectInterests(prospectId);
     }
 
     async convertProspect(prospectId: string, vendorId: string, systemVendorId: string, adminId: string) {
         logger.info('AdminService: Converting prospect to vendor', { prospectId, vendorId });
-        await this.adminRepo.convertProspect(prospectId, vendorId, systemVendorId);
-        await this.adminRepo.logActivity({
+        await this.prospectRepo.convertProspect(prospectId, vendorId, systemVendorId);
+        await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'prospect_converted',
             entity_type: 'prospect_vendor',
@@ -176,10 +218,31 @@ export class AdminService {
 
     async getRecentActivity(page = 1, pageSize = 50) {
         logger.info('AdminService: Fetching recent activity', { page });
-        return this.adminRepo.getRecentActivity(page, pageSize);
+        return this.activityRepo.getRecentActivity(page, pageSize);
     }
 
-    async logActivity(input: Parameters<AdminRepository['logActivity']>[0]) {
-        return this.adminRepo.logActivity(input);
+    async logActivity(input: Parameters<AdminActivityRepository['logActivity']>[0]) {
+        return this.activityRepo.logActivity(input);
+    }
+
+    // ─── User Activity Tracking ─────────────────────────────────────────
+
+    async getUserActivityFeed(
+        page: number,
+        pageSize: number,
+        filters?: { userId?: string; action?: string; userRole?: string }
+    ) {
+        logger.info('AdminService: Fetching user activity feed', { page });
+        return this.activityRepo.getUserActivityFeed(page, pageSize, filters);
+    }
+
+    async getUserEngagementStats() {
+        logger.info('AdminService: Fetching user engagement stats');
+        return this.activityRepo.getUserEngagementStats();
+    }
+
+    async getMostActiveUsers(limit = 10) {
+        logger.info('AdminService: Fetching most active users', { limit });
+        return this.activityRepo.getMostActiveUsers(limit);
     }
 }

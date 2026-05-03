@@ -15,7 +15,7 @@ interface Category {
     icon?: string | null;
 }
 
-export default function VendorEventFilters() {
+export default function VendorEventFilters({ compact = false, vendorId }: { compact?: boolean; vendorId?: string } = {}) {
     const t = useTranslations('Index');
     const tVendor = useTranslations('VendorProfile');
     const locale = useLocale();
@@ -53,12 +53,18 @@ export default function VendorEventFilters() {
 
             if (categoriesData) setCategories(categoriesData);
 
-            // Fetch unique districts from events
-            const { data: districtsData } = await supabase
+            // Fetch unique districts from events (scoped to vendor if vendorId provided)
+            let districtQuery = supabase
                 .from('events')
                 .select('district')
                 .not('district', 'is', null)
                 .eq('status', 'published');
+
+            if (vendorId) {
+                districtQuery = districtQuery.eq('vendor_id', vendorId);
+            }
+
+            const { data: districtsData } = await districtQuery;
 
             if (districtsData) {
                 const uniqueDistricts = Array.from(
@@ -142,18 +148,18 @@ export default function VendorEventFilters() {
     const hasActiveFilters = searchQuery || selectedCategory || selectedDistrict || hasUserLocation;
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className={compact ? 'space-y-3' : 'space-y-4 md:space-y-6'}>
             {/* Search Bar */}
             <div className="relative">
-                <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                    <Search className="w-5 h-5" />
+                <div className={`absolute ${compact ? 'left-3' : 'left-4 md:left-6'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`}>
+                    <Search className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
                 </div>
                 <input
                     type="text"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
-                    placeholder={locale === 'ar' ? 'عن ماذا تبحث اليوم؟' : 'What are you looking for today?'}
-                    className="w-full pl-12 md:pl-14 pr-4 py-4 md:py-5 bg-white rounded-2xl md:rounded-3xl border-2 border-gray-100 text-sm md:text-base font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-lg shadow-gray-100"
+                    placeholder={locale === 'ar' ? 'ابحث في الفعاليات...' : 'Search events...'}
+                    className={`w-full ${compact ? 'pl-10 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-200 text-sm' : 'pl-12 md:pl-14 pr-4 py-4 md:py-5 bg-white rounded-2xl md:rounded-3xl border-2 border-gray-100 text-sm md:text-base shadow-lg shadow-gray-100'} font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all`}
                     dir={locale === 'ar' ? 'rtl' : 'ltr'}
                 />
                 {localSearch && (
@@ -171,12 +177,26 @@ export default function VendorEventFilters() {
 
             {/* Categories - Horizontal Scroll */}
             <div className="relative">
-                <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-2 no-scrollbar flex-nowrap">
+                <div className={`flex items-center ${compact ? 'gap-2' : 'gap-3 md:gap-4'} overflow-x-auto pb-2 no-scrollbar flex-nowrap`}>
                     {categories.map((cat) => {
                         const isActive = selectedCategory === cat.slug;
                         const name = locale === 'ar' && cat.name_ar ? cat.name_ar : cat.name_en;
 
-                        return (
+                        return compact ? (
+                            <button
+                                key={cat.id}
+                                onClick={() => handleCategoryClick(cat.slug)}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold transition-all shrink-0 whitespace-nowrap border",
+                                    isActive
+                                        ? "bg-primary text-white border-primary shadow-sm"
+                                        : "bg-white text-gray-600 hover:bg-gray-50 border-gray-200"
+                                )}
+                            >
+                                <span className="text-sm">{cat.icon}</span>
+                                <span>{name}</span>
+                            </button>
+                        ) : (
                             <button
                                 key={cat.id}
                                 onClick={() => handleCategoryClick(cat.slug)}
@@ -227,30 +247,34 @@ export default function VendorEventFilters() {
                     </div>
                 </div>
 
-                {/* Near Me Button */}
-                <button
-                    onClick={handleNearMe}
-                    disabled={isLocating}
-                    className={cn(
-                        "flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all border whitespace-nowrap",
-                        hasUserLocation
-                            ? "bg-primary text-white border-primary shadow-xl shadow-primary/20"
-                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-900 hover:bg-gray-50 active:scale-95"
-                    )}
-                >
-                    <Navigation2 className={cn("w-4 h-4", isLocating && "animate-spin")} />
-                    <span className="hidden md:inline">{hasUserLocation ? t('search.near_me') : t('search.search_nearby')}</span>
-                    <span className="md:hidden">📍</span>
-                </button>
+                {/* Near Me Button — hidden in compact mode */}
+                {!compact && (
+                    <button
+                        onClick={handleNearMe}
+                        disabled={isLocating}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all border whitespace-nowrap",
+                            hasUserLocation
+                                ? "bg-primary text-white border-primary shadow-xl shadow-primary/20"
+                                : "bg-white text-gray-700 border-gray-200 hover:border-gray-900 hover:bg-gray-50 active:scale-95"
+                        )}
+                    >
+                        <Navigation2 className={cn("w-4 h-4", isLocating && "animate-spin")} />
+                        <span className="hidden md:inline">{hasUserLocation ? t('search.near_me') : t('search.search_nearby')}</span>
+                        <span className="md:hidden">📍</span>
+                    </button>
+                )}
 
-                {/* Mobile Filters Toggle */}
-                <button
-                    onClick={() => setShowMobileFilters(!showMobileFilters)}
-                    className="md:hidden flex items-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm"
-                >
-                    <SlidersHorizontal className="w-4 h-4" />
-                    <span>{t('filters')}</span>
-                </button>
+                {/* Mobile Filters Toggle — hidden in compact mode */}
+                {!compact && (
+                    <button
+                        onClick={() => setShowMobileFilters(!showMobileFilters)}
+                        className="md:hidden flex items-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm"
+                    >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        <span>{t('filters')}</span>
+                    </button>
+                )}
 
                 {/* Clear Filters */}
                 {hasActiveFilters && (

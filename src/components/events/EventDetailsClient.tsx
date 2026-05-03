@@ -6,11 +6,14 @@ import Image from 'next/image';
 import { Link, useRouter } from '@/navigation';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Share2, Clock, ShieldCheck, Heart, ArrowLeft, MessageCircle, Star, Sparkles, XCircle, AlertCircle, ChevronDown } from 'lucide-react';
+import {
+    Calendar, MapPin, Share2, Clock, ShieldCheck, Heart,
+    MessageCircle, Star, Sparkles, XCircle, AlertCircle, ChevronDown,
+    ExternalLink
+} from 'lucide-react';
 import EventBookingForm from '@/components/events/EventBookingForm';
 import InterestWidget from '@/components/events/InterestWidget';
 import MobileBookingBar from '@/components/events/MobileBookingBar';
-import BackgroundShapes from '@/components/home/BackgroundShapes';
 import { Suspense } from 'react';
 import { getEventStatus } from '@/utils/eventStatus';
 import ReviewStats from '@/components/reviews/ReviewStats';
@@ -18,6 +21,7 @@ import ReviewForm from '@/components/reviews/ReviewForm';
 import ReviewList from '@/components/reviews/ReviewList';
 import { checkCanReviewEvent, getUserReviewForEvent } from '@/actions/public/reviews';
 import { useCountryName } from '@/hooks/useCountry';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 type EventDetailsClientProps = {
     event: any;
@@ -57,10 +61,13 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
     const [editingReview, setEditingReview] = useState(false);
     const [policyExpanded, setPolicyExpanded] = useState(false);
     const [shouldAutoScroll, setShouldAutoScroll] = useState(false);
+    const [liked, setLiked] = useState(false);
 
     const hasCancellationPolicy = !!event.vendor?.cancellation_policy;
     const hasReturnPolicy = !!event.vendor?.return_policy;
     const hasAnyPolicy = hasCancellationPolicy || hasReturnPolicy;
+
+    const cs = getCurrencySymbol(event.country);
 
     const handleShare = async () => {
         try {
@@ -138,262 +145,231 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
     }, [event.id, user]);
 
     return (
-        <div className="min-h-screen bg-transparent pb-32 md:pb-24 selection:bg-primary selection:text-white relative">
-            <BackgroundShapes />
+        <div className="min-h-screen bg-white pb-32 md:pb-16 selection:bg-primary selection:text-white">
 
-            {/* 1. Header Navigation - Ambient Glass - Positioned below main Navbar */}
-            <div className="sticky top-16 md:top-24 z-40 bg-white/60 backdrop-blur-2xl border-b border-white/20 px-4 md:px-6 py-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <Link href="/" className="p-2 -ml-2 hover:bg-white/50 rounded-full transition-colors flex items-center gap-2 text-sm font-black text-gray-900 group">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform rtl:rotate-180" />
-                        <span className="hidden sm:inline uppercase tracking-widest text-[10px]">{t('back_to_discovery')}</span>
-                    </Link>
-                    <div className="flex items-center gap-1 md:gap-3">
-                        <button
-                            onClick={handleShare}
-                            className="p-2.5 hover:bg-white/50 rounded-full transition-colors text-gray-900"
-                        >
-                            <Share2 className="w-5 h-5" />
-                        </button>
-                        <button
-                            className="p-2.5 hover:bg-white/50 rounded-full transition-colors text-gray-900"
-                            onClick={() => {
-                                if (!user) {
-                                    router.push('/login');
-                                } else {
-                                    alert(t('added_favorites'));
-                                }
-                            }}
-                        >
-                            <Heart className={`w-5 h-5 ${user ? 'text-primary' : ''}`} />
-                        </button>
+            {/* ─── Hero Image (Full-Width) ─────────────────────────────── */}
+            <div className="relative w-full h-[280px] md:h-[400px] bg-gray-100 overflow-hidden">
+                <Image
+                    src={event.image_url || '/images/hero_community.png'}
+                    alt={event.title}
+                    fill
+                    className="object-cover"
+                    priority
+                />
+                {/* Gradient overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
+                {/* Action Buttons (absolute top-right, below navbar) */}
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+                    <button
+                        onClick={handleShare}
+                        className="p-2.5 bg-black/30 backdrop-blur-md rounded-xl text-white hover:bg-black/50 transition-colors"
+                    >
+                        <Share2 className="w-5 h-5" />
+                    </button>
+                    <button
+                        className="p-2.5 bg-black/30 backdrop-blur-md rounded-xl text-white hover:bg-black/50 transition-colors"
+                        onClick={() => {
+                            if (!user) {
+                                router.push('/login');
+                            } else {
+                                setLiked(!liked);
+                                if (!liked) alert(t('added_favorites'));
+                            }
+                        }}
+                    >
+                        <Heart className={`w-5 h-5 transition-colors ${liked ? 'fill-red-500 text-red-500' : ''}`} />
+                    </button>
+                </div>
+
+                {/* Category + Price Badge on Image */}
+                <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between z-10">
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1.5 bg-white/90 backdrop-blur-md text-gray-900 text-xs font-bold rounded-lg">
+                            {event.category_name_en || t('default_category')}
+                        </span>
+                        {isProspectEvent ? (
+                            <span className="px-3 py-1.5 bg-amber-400/90 backdrop-blur-md text-amber-900 text-xs font-bold rounded-lg flex items-center gap-1">
+                                ⚡ Coming Soon
+                            </span>
+                        ) : (
+                            <span className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur-md text-white text-xs font-bold rounded-lg flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3" />
+                                {t('verified_community')}
+                            </span>
+                        )}
+                    </div>
+                    <div className="px-4 py-2 bg-white/95 backdrop-blur-md rounded-xl shadow-lg">
+                        <p className="text-[10px] text-gray-500 font-semibold">{t('starting_price')}</p>
+                        <p className="text-lg font-bold text-gray-900 leading-tight">
+                            {minPrice > 0 ? `${minPrice} ${cs}` : t('free')}
+                        </p>
                     </div>
                 </div>
             </div>
 
             {/* Event Status Banner */}
             {(isExpired || isSoldOut) && (
-                <div className={`mx-4 md:mx-6 max-w-7xl lg:mx-auto mt-4 p-4 md:p-5 rounded-2xl flex items-center gap-4 ${isExpired ? 'bg-red-50 border border-red-100' : 'bg-amber-50 border border-amber-100'}`}>
-                    <div className={`p-3 rounded-xl ${isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
-                        {isExpired ? (
-                            <XCircle className="w-6 h-6 text-red-600" />
-                        ) : (
-                            <AlertCircle className="w-6 h-6 text-amber-600" />
-                        )}
+                <div className={`mx-4 md:mx-auto max-w-6xl mt-4 p-4 rounded-xl flex items-center gap-3 ${isExpired ? 'bg-red-50 border border-red-100' : 'bg-amber-50 border border-amber-100'}`}>
+                    <div className={`p-2 rounded-lg shrink-0 ${isExpired ? 'bg-red-100' : 'bg-amber-100'}`}>
+                        {isExpired ? <XCircle className="w-5 h-5 text-red-600" /> : <AlertCircle className="w-5 h-5 text-amber-600" />}
                     </div>
                     <div>
-                        <p className={`font-black text-sm uppercase tracking-wide ${isExpired ? 'text-red-700' : 'text-amber-700'}`}>
+                        <p className={`font-bold text-sm ${isExpired ? 'text-red-700' : 'text-amber-700'}`}>
                             {isExpired ? t('status_expired') : t('status_sold_out')}
                         </p>
-                        <p className={`text-xs font-bold ${isExpired ? 'text-red-600' : 'text-amber-600'}`}>
+                        <p className={`text-xs ${isExpired ? 'text-red-600' : 'text-amber-600'}`}>
                             {isExpired ? t('expired_message') : t('sold_out_message')}
                         </p>
                     </div>
                 </div>
             )}
 
+            {/* ─── Main Content Grid ─────────────────────────────────── */}
+            <div className="max-w-6xl mx-auto px-4 md:px-8 grid md:grid-cols-12 gap-6 md:gap-10 mt-4 md:mt-8 relative z-10">
 
+                {/* ─── Left Column ──────────────────────────────────── */}
+                <div className="md:col-span-7 lg:col-span-8 space-y-5 md:space-y-8">
 
-            {/* 3. Main Content Wrapper */}
-            <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-8 md:gap-16 mt-6 md:mt-10 relative z-10">
+                    {/* Title + Quick Info */}
+                    <div className="space-y-4">
+                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight">
+                            {event.title}
+                        </h1>
 
-                {/* Left Column: Details */}
-                <div className="md:col-span-8 space-y-8 md:space-y-10">
-
-                    {/* Header Info - Side-by-Side Layout */}
-                    <div className="pt-24 md:pt-32">
-                        <div className="flex flex-col md:flex-row gap-8">
-                            {/* Image Column */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="w-full md:w-[280px] shrink-0"
-                            >
-                                <div className="aspect-[4/3] w-full rounded-[2rem] overflow-hidden relative shadow-2xl shadow-primary/10 border border-white/50 bg-gray-50">
-                                    <Image
-                                        src={event.image_url || '/images/hero_community.png'}
-                                        alt={event.title}
-                                        fill
-                                        className="object-cover"
-                                        priority
-                                    />
+                        {/* Rating Badge (inline) */}
+                        {reviewStats && reviewStats.review_count > 0 && (
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 text-amber-500">
+                                    <Star className="w-4 h-4 fill-current" />
+                                    <span className="text-sm font-bold text-gray-900">{Number(reviewStats.average_rating).toFixed(1)}</span>
                                 </div>
-                            </motion.div>
+                                <span className="text-xs text-gray-400">·</span>
+                                <span className="text-xs text-gray-500 font-medium">{reviewStats.review_count} reviews</span>
+                            </div>
+                        )}
+                    </div>
 
-                            {/* Content Column */}
-                            <div className="flex-1 space-y-6">
-                                <div className="space-y-4">
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <span className="px-4 py-1.5 bg-primary/10 backdrop-blur-md text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/20 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                            {event.category_name_en || t('default_category')}
-                                        </span>
-                                        {isProspectEvent ? (
-                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-500 uppercase tracking-widest">
-                                                <span className="w-4 h-4 text-amber-500">⚡</span>
-                                                <span>Coming Soon</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                                <span>{t('verified_community')}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-[1.1] tracking-tight">
-                                        {event.title}
-                                    </h1>
-                                </div>
+                    {/* ─── Event Info Strip (compact on mobile) ──────── */}
+                    <div className="flex flex-row gap-0 rounded-xl border border-gray-100 overflow-hidden bg-gray-50 divide-x divide-gray-100">
+                        {/* Date */}
+                        <div className="flex-1 flex flex-col items-center justify-center py-3 px-2 md:py-4 md:px-4 gap-1">
+                            <Calendar className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                            <p className="text-[9px] md:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{t('when')}</p>
+                            <p className="text-xs md:text-sm font-bold text-gray-900 text-center capitalize leading-tight">
+                                {new Date(event.date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                            </p>
+                        </div>
 
-                                <div className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-[2rem] shadow-xl shadow-primary/5 flex flex-col gap-5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100 shrink-0">
-                                            <Calendar className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('when')}</span>
-                                            <span className="text-sm font-black text-gray-900 capitalize">{new Date(event.date).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</span>
-                                        </div>
-                                    </div>
-                                    <div className="h-px bg-gray-200/50 w-full" />
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100 shrink-0">
-                                            <Clock className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('time')}</span>
-                                            <span className="text-sm font-black text-gray-900 capitalize" dir="ltr">
-                                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
-                                                {event.end_date && ` - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}`}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="h-px bg-gray-200/50 w-full" />
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-200/50 border border-gray-100 shrink-0">
-                                            <MapPin className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t('where')}</span>
-                                            <span className="text-sm font-black text-gray-900 underline underline-offset-4 decoration-primary/30">
-                                                {event.district && event.city ? `${event.district}, ${event.city}` : (event.location_name || t('default_location', { country: countryName }))}
-                                            </span>
-                                            {event.location_details && (
-                                                <span className="text-xs text-gray-500 font-medium italic mt-1">
-                                                    {event.location_details}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
+                        {/* Time */}
+                        <div className="flex-1 flex flex-col items-center justify-center py-3 px-2 md:py-4 md:px-4 gap-1">
+                            <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                            <p className="text-[9px] md:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{t('time')}</p>
+                            <p className="text-xs md:text-sm font-bold text-gray-900 text-center leading-tight" dir="ltr">
+                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'UTC' })}
+                            </p>
+                        </div>
+
+                        {/* Location */}
+                        <div className="flex-1 flex flex-col items-center justify-center py-3 px-2 md:py-4 md:px-4 gap-1">
+                            <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                            <p className="text-[9px] md:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{t('where')}</p>
+                            <p className="text-xs md:text-sm font-bold text-gray-900 text-center leading-tight truncate max-w-full">
+                                {event.district && event.city ? `${event.district}` : (event.location_name || countryName)}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* ─── Vendor Card ───────────────────────────────── */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <Link
+                            href={event.vendor?.slug ? `/v/${event.vendor.slug}` : `/vendor/${event.vendor_id}`}
+                            className="flex items-center gap-4 text-start group/vendor cursor-pointer flex-1 min-w-0"
+                        >
+                            <div className="relative w-11 h-11 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border-2 border-white shadow-md bg-white shrink-0 group-hover/vendor:shadow-lg transition-shadow">
+                                <Image
+                                    src={event.vendor?.company_logo || '/images/logo_nav.png'}
+                                    alt="Vendor"
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold text-primary uppercase tracking-wider">{t('elite_organizer')}</p>
+                                <h3 className="text-base font-bold text-gray-900 group-hover/vendor:text-primary transition-colors truncate">
+                                    {event.vendor?.business_name || t('default_partner')}
+                                </h3>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    {event.vendor_rating && event.vendor_rating.count > 0 && (
+                                        <>
+                                            <div className="flex items-center gap-1 text-amber-500">
+                                                <Star className="w-3 h-3 fill-current" />
+                                                <span className="text-xs font-bold text-gray-700">{event.vendor_rating.average.toFixed(1)}</span>
+                                            </div>
+                                            <span className="text-gray-300">·</span>
+                                        </>
+                                    )}
+                                    <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        {t('super_partner')}
+                                    </span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </Link>
 
-                    {/* Vendor Profile - Colorful Gradient Frame */}
-                    <div className="relative group overflow-hidden bg-gradient-to-br from-primary/5 via-white/40 to-secondary/5 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border border-white/60 shadow-2xl shadow-primary/5 transition-all hover:shadow-primary/10">
-                        <div className="absolute top-0 right-0 p-8 opacity-5">
-                            <Image src="/images/logo_nav.png" alt="Nuqta" width={100} height={100} className="object-contain" />
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 relative z-10">
-                            <Link
-                                href={event.vendor?.slug ? `/v/${event.vendor.slug}` : `/vendor/${event.vendor_id}`}
-                                className="flex flex-row items-center gap-4 sm:gap-6 text-start text-gray-900 group/vendor cursor-pointer hover:opacity-80 transition-opacity"
+                        {event.vendor?.whatsapp_number && (
+                            <a
+                                href={`https://wa.me/${event.vendor.whatsapp_number}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-semibold text-xs hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shrink-0"
                             >
-                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-white transition-transform group-hover/vendor:scale-105 shrink-0">
-                                    <Image
-                                        src={event.vendor?.company_logo || '/images/logo_nav.png'}
-                                        alt="Vendor"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{t('elite_organizer')}</p>
-                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2 group-hover/vendor:text-primary transition-colors">{event.vendor?.business_name || t('default_partner')}</h3>
-                                    <div className="flex items-center justify-start gap-4 flex-wrap">
-                                        {event.vendor_rating && event.vendor_rating.count > 0 && (
-                                            <>
-                                                <div className="flex items-center gap-1.5 text-amber-500">
-                                                    <Star className="w-4 h-4 fill-current" />
-                                                    <span className="text-sm font-black text-gray-900">{event.vendor_rating.average.toFixed(2)}</span>
-                                                </div>
-                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
-                                            </>
-                                        )}
-                                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            {t('super_partner')}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Link>
-
-                            {event.vendor?.whatsapp_number && (
-                                <a
-                                    href={`https://wa.me/${event.vendor.whatsapp_number}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-2xl font-black shadow-2xl shadow-[#25D366]/20 transition-all active:scale-95 text-xs uppercase tracking-widest"
-                                >
-                                    <MessageCircle className="w-4 h-4" />
-                                    <span>{t('inquire_whatsapp')}</span>
-                                </a>
-                            )}
-                        </div>
+                                <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                                <span>{t('inquire_whatsapp')}</span>
+                            </a>
+                        )}
                     </div>
 
-                    {/* Description - Sharp Typography */}
-                    <div className="space-y-6 px-2">
-                        <div className="flex items-center gap-4">
-                            <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{t('the_experience')}</h2>
-                            <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
-                        </div>
-                        <div className="prose prose-sm md:prose-base text-gray-600 leading-[1.8] font-medium max-w-none whitespace-pre-line selection:bg-primary/20">
+                    {/* ─── Description ───────────────────────────────── */}
+                    <div className="space-y-3">
+                        <h2 className="text-base md:text-lg font-bold text-gray-900">{t('the_experience')}</h2>
+                        <div className="prose prose-sm md:prose-base text-gray-600 leading-relaxed max-w-none whitespace-pre-line">
                             {event.description || t('default_description')}
                         </div>
                     </div>
 
-                    {/* Cancellation & Return Policy Section */}
+                    {/* ─── Cancellation & Return Policy ─────────────── */}
                     {hasAnyPolicy && (
-                        <div className="space-y-4 px-2">
+                        <div className="border border-gray-100 rounded-xl overflow-hidden">
                             <button
                                 onClick={() => setPolicyExpanded(!policyExpanded)}
-                                className="w-full flex items-center justify-between group"
+                                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
                             >
-                                <div className="flex items-center gap-4">
-                                    <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{t('cancellation_return_policy')}</h2>
+                                <div className="flex items-center gap-3">
+                                    <ShieldCheck className="w-5 h-5 text-gray-400" />
+                                    <h2 className="text-sm font-bold text-gray-900">{t('cancellation_return_policy')}</h2>
                                 </div>
-                                <div className={`p-2 rounded-xl bg-gray-50 group-hover:bg-gray-100 transition-all ${policyExpanded ? 'rotate-180' : ''}`}>
-                                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                                </div>
+                                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${policyExpanded ? 'rotate-180' : ''}`} />
                             </button>
 
                             {policyExpanded && (
                                 <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
-                                    className="space-y-4 overflow-hidden"
+                                    className="px-4 pb-4 space-y-3 overflow-hidden"
                                 >
                                     {hasCancellationPolicy && (
-                                        <div className="bg-violet-50/50 border border-violet-100 rounded-2xl p-5">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <ShieldCheck className="w-4 h-4 text-violet-600" />
-                                                <h4 className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('cancellation_policy')}</h4>
-                                            </div>
-                                            <p className="text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line">
+                                        <div className="p-4 bg-gray-50 rounded-lg">
+                                            <h4 className="text-xs font-bold text-gray-500 mb-2">{t('cancellation_policy')}</h4>
+                                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                                                 {event.vendor.cancellation_policy}
                                             </p>
                                         </div>
                                     )}
                                     {hasReturnPolicy && (
-                                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-5">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <ShieldCheck className="w-4 h-4 text-blue-600" />
-                                                <h4 className="text-xs font-black text-blue-700 uppercase tracking-widest">{t('return_policy')}</h4>
-                                            </div>
-                                            <p className="text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line">
+                                        <div className="p-4 bg-gray-50 rounded-lg">
+                                            <h4 className="text-xs font-bold text-gray-500 mb-2">{t('return_policy')}</h4>
+                                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                                                 {event.vendor.return_policy}
                                             </p>
                                         </div>
@@ -403,41 +379,37 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                         </div>
                     )}
 
-                    {/* Map Preview - Colorful Inset */}
+                    {/* ─── Map ───────────────────────────────────────── */}
                     {event.location_lat && (
-                        <div className="space-y-6 pt-4">
-                            <div className="flex items-center gap-4">
-                                <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{t('location_context')}</h2>
-                                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
-                            </div>
+                        <div className="space-y-3">
+                            <h2 className="text-base md:text-lg font-bold text-gray-900">{t('location_context')}</h2>
                             {(event.location_name || event.location_details) && (
-                                <div className="flex items-start gap-2 -mt-3">
+                                <div className="flex items-start gap-2">
                                     <MapPin className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                                     <div className="flex flex-col">
                                         {event.location_name && (
                                             <span className="text-sm font-semibold text-gray-700">{event.location_name}</span>
                                         )}
                                         {event.location_details && (
-                                            <span className="text-xs text-gray-500 italic mt-0.5">{event.location_details}</span>
+                                            <span className="text-xs text-gray-500 mt-0.5">{event.location_details}</span>
                                         )}
                                     </div>
                                 </div>
                             )}
-                            <div className="relative h-[350px] md:h-[450px] w-full rounded-[2.5rem] overflow-hidden border-8 border-white shadow-2xl shadow-primary/5 group">
+                            <div className="relative h-[200px] md:h-[300px] w-full rounded-xl overflow-hidden border border-gray-200 group">
                                 <Image
                                     src={`https://maps.googleapis.com/maps/api/staticmap?center=${event.location_lat},${event.location_long}&zoom=15&size=800x400&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&markers=color:0xF26522%7C${event.location_lat},${event.location_long}&style=feature:all|element:all|saturation:-20|lightness:10`}
                                     alt="Map"
                                     fill
-                                    className="object-cover group-hover:scale-105 transition-transform duration-1000"
+                                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
                                 />
-                                <div className="absolute inset-0 bg-primary/10 mix-blend-overlay pointer-events-none" />
-                                <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 bg-gradient-to-t from-black/60 to-transparent flex justify-center">
+                                <div className="absolute bottom-3 right-3">
                                     <a
                                         href={`https://www.google.com/maps/dir/?api=1&destination=${event.location_lat},${event.location_long}`}
                                         target="_blank"
-                                        className="inline-flex items-center gap-3 px-8 py-4 bg-white text-gray-900 rounded-2xl font-black shadow-2xl hover:bg-black hover:text-white transition-all transform hover:-translate-y-1 text-xs uppercase tracking-widest"
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-gray-900 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all text-xs border border-gray-100"
                                     >
-                                        <MapPin className="w-4 h-4 text-primary" />
+                                        <ExternalLink className="w-3.5 h-3.5 text-primary" />
                                         <span>{t('show_direct_route')}</span>
                                     </a>
                                 </div>
@@ -445,12 +417,9 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                         </div>
                     )}
 
-                    {/* Reviews Section */}
-                    <div className="space-y-8 pt-8" ref={reviewSectionRef}>
-                        <div className="flex items-center gap-4">
-                            <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{tReviews('title')}</h2>
-                            <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
-                        </div>
+                    {/* ─── Reviews Section ───────────────────────────── */}
+                    <div className="space-y-4 md:space-y-6 pt-2 md:pt-4" ref={reviewSectionRef}>
+                        <h2 className="text-base md:text-lg font-bold text-gray-900">{tReviews('title')}</h2>
 
                         {/* Review Stats */}
                         {reviewStats && reviewStats.review_count > 0 && (
@@ -485,13 +454,13 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                         }}
                                     />
                                 ) : userReview ? (
-                                    <div className="bg-gradient-to-br from-emerald-50 to-white/40 backdrop-blur-xl border border-emerald-200 p-6 rounded-2xl shadow-lg">
-                                        <p className="text-sm font-black text-emerald-700 mb-3">
+                                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl">
+                                        <p className="text-sm font-bold text-emerald-700 mb-2">
                                             {tReviews('you_reviewed')}
                                         </p>
                                         <button
                                             onClick={() => setEditingReview(true)}
-                                            className="text-sm font-bold text-primary hover:underline"
+                                            className="text-sm font-semibold text-primary hover:underline"
                                         >
                                             {tReviews('edit_review')}
                                         </button>
@@ -499,7 +468,7 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                 ) : (
                                     <button
                                         onClick={() => setShowReviewForm(true)}
-                                        className="w-full px-6 py-4 bg-white/40 backdrop-blur-xl border-2 border-primary/30 hover:border-primary text-primary rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-primary/5 transition-all shadow-lg"
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 hover:border-primary text-gray-700 rounded-xl font-bold text-sm hover:bg-primary/5 hover:text-primary transition-all"
                                     >
                                         {tReviews('write_review')}
                                     </button>
@@ -509,8 +478,8 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
 
                         {/* Show message if user cannot review */}
                         {user && !canReview && !userReview && reviewReason && (
-                            <div className="bg-gray-50 border border-gray-200 p-6 rounded-2xl">
-                                <p className="text-sm font-bold text-gray-600">
+                            <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl">
+                                <p className="text-sm text-gray-600">
                                     {reviewReason === 'not_attended' && tReviews('must_attend')}
                                     {reviewReason === 'event_not_passed' && tReviews('event_not_ended')}
                                 </p>
@@ -530,16 +499,15 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                     </div>
                 </div>
 
-                {/* Right Column: Booking Widget or Interest Widget */}
-                <div className="md:col-span-4 relative pb-20 md:pb-0" ref={bookingRef}>
-                    <div className="sticky top-48">
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="bg-white/40 backdrop-blur-3xl p-1 rounded-[2.5rem] border border-white/60 shadow-2xl shadow-primary/10 overflow-hidden relative"
-                        >
-                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full" />
-                            <div className="relative z-10">
+                {/* ─── Right Column: Booking Widget (Desktop) ──────── */}
+                <div className="md:col-span-5 lg:col-span-4 relative pb-20 md:pb-0" ref={bookingRef}>
+                    <div className="sticky top-28">
+                        <div className="hidden md:block">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
                                 {isProspectEvent && interestData ? (
                                     <InterestWidget
                                         eventId={event.id}
@@ -548,50 +516,36 @@ export default function EventDetailsClient({ event, user, interestData }: EventD
                                         interestCount={interestData.interestCount}
                                     />
                                 ) : (
-                                    <Suspense fallback={<div className="h-[450px] bg-white/50 animate-pulse rounded-[2.5rem]" />}>
+                                    <Suspense fallback={<div className="h-[300px] bg-gray-50 animate-pulse rounded-2xl" />}>
                                         <EventBookingForm event={event} tickets={event.tickets || []} />
                                     </Suspense>
                                 )}
-                            </div>
-                        </motion.div>
+                            </motion.div>
+                        </div>
 
-                        {/* Support Info - Elevated Glass */}
-                        <div className="mt-6 p-6 md:p-8 bg-black/5 backdrop-blur-xl rounded-[2.5rem] space-y-5 border border-white/20 shadow-xl shadow-gray-200/50">
-                            <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                        {/* Trust Badges */}
+                        <div className="hidden md:flex items-center justify-center gap-6 mt-5 py-4 text-gray-400">
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
                                 <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                                {t('why_book_title')}
-                            </h4>
-                            <ul className="space-y-4">
-                                <li className="flex gap-4 items-start">
-                                    <div className="p-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                                        <Sparkles className="w-4 h-4 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-black text-gray-900 mb-0.5 uppercase tracking-wide">{t('benefit_1_title')}</p>
-                                        <p className="text-[10px] text-gray-500 font-bold leading-relaxed">{t('benefit_1_desc')}</p>
-                                    </div>
-                                </li>
-                                <li className="flex gap-4 items-start">
-                                    <div className="p-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                                        <Clock className="w-4 h-4 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-black text-gray-900 mb-0.5 uppercase tracking-wide">{t('benefit_2_title')}</p>
-                                        <p className="text-[10px] text-gray-500 font-bold leading-relaxed">{t('benefit_2_desc')}</p>
-                                    </div>
-                                </li>
-                            </ul>
+                                <span>{t('benefit_1_title')}</span>
+                            </div>
+                            <div className="w-1 h-1 rounded-full bg-gray-200" />
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
+                                <Clock className="w-3.5 h-3.5 text-primary" />
+                                <span>{t('benefit_2_title')}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            {/* Mobile Booking Bar - Minimal Dark Mode */}
+            {/* Mobile Booking Bar */}
             <MobileBookingBar
                 price={minPrice}
                 country={event.country}
-                onReserve={scrollToBooking}
+                event={event}
+                tickets={event.tickets || []}
             />
         </div>
     );

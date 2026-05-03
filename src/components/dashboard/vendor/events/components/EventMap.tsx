@@ -188,6 +188,15 @@ export default function EventMap({ setValue, watch, vendorData, event }: EventMa
             if (event.district) setValue('district', event.district);
             if (event.city) setValue('city', event.city);
             if (event.country) setValue('country', event.country);
+        } else {
+            // Check if initialData (e.g. Instagram import) has set coordinates via defaultValues
+            const watchedLat = watch('location_lat');
+            const watchedLng = watch('location_long');
+            if (watchedLat && watchedLng) {
+                const pos = { lat: watchedLat, lng: watchedLng };
+                setMapCenter(pos);
+                setMarkerPos(pos);
+            }
         }
     }, [vendorData, event, setValue]);
 

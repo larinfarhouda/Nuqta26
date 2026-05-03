@@ -208,4 +208,13 @@ export class EventService {
         return await this.eventRepo.update(eventId, { status: 'published' });
     }
 
+    /**
+     * Count active (published) events for a vendor
+     * Used for subscription tier limit enforcement
+     */
+    async countActiveEventsByVendor(vendorId: string): Promise<number> {
+        logger.info('EventService: Counting active events', { vendorId });
+        return await this.eventRepo.countActiveEventsByVendor(vendorId);
+    }
+
 }

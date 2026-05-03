@@ -3,11 +3,19 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { trackActivity } from '@/lib/track-activity';
+import { checkRateLimit, RateLimiters } from '@/lib/rate-limit/rate-limiter';
+import { SubmitReviewSchema, validateInput } from '@/lib/validation/action-schemas';
 
 /**
  * Submit a new review for an event
  */
 export async function submitReview(eventId: string, rating: number, comment?: string) {
+    // Validate input
+    const validation = validateInput(SubmitReviewSchema, { eventId, rating, comment });
+    if (!validation.success) {
+        return { success: false, error: validation.error };
+    }
+
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -16,9 +24,10 @@ export async function submitReview(eventId: string, rating: number, comment?: st
         return { success: false, error: 'You must be logged in to submit a review' };
     }
 
-    // Validate rating
-    if (rating < 1 || rating > 5) {
-        return { success: false, error: 'Rating must be between 1 and 5' };
+    // Rate limit check
+    const rl = await checkRateLimit(user.id, RateLimiters.review);
+    if (!rl.allowed) {
+        return { success: false, error: 'Too many reviews submitted. Please try again later.' };
     }
 
     // Check if user can review this event
@@ -348,8 +357,11 @@ export async function flagReview(reviewId: string, reason?: string) {
         return { success: false, error: 'You must be logged in to flag a review' };
     }
 
-    // Optional: Rate limiting check (mock)
-    // if (await isFlaggingRateLimited(user.id)) return { success: false, error: 'Too many flags. Try again later.' };
+    // Rate limit - prevent flag abuse
+    const rl = await checkRateLimit(user.id, RateLimiters.general);
+    if (!rl.allowed) {
+        return { success: false, error: 'Too many flags. Try again later.' };
+    }
 
     // Insert into flags table
     const { error: flagError } = await (supabase

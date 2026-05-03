@@ -1,13 +1,45 @@
 /**
  * Subscription tier configuration and limits
- * Supports founder pricing (50% off locked in forever) for early adopters
+ * 
+ * Source of truth is the `subscription_tiers` database table,
+ * managed via the admin dashboard.
+ * 
+ * This file provides:
+ * - TypeScript types
+ * - Synchronous fallback constants (used when DB is unavailable or on client-side)
+ * - Async DB-backed helpers for server-side enforcement
  */
 
 // Launch period end date - founder pricing available until this date
 export const LAUNCH_END_DATE = new Date('2026-05-01'); // 3 months from Feb 1 launch
 
-export const SUBSCRIPTION_TIERS = {
+/**
+ * Type for tier IDs
+ */
+export type SubscriptionTier = 'starter' | 'growth' | 'professional';
+export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled';
+export type BadgeType = 'verified' | 'premium' | null;
+
+/**
+ * Shape of a subscription tier config (matches the DB schema)
+ */
+export interface SubscriptionTierConfig {
+    id: string;
+    name: string;
+    maxActiveEvents: number; // Infinity for unlimited
+    regularPrice: number;
+    founderPrice: number;
+    badge: BadgeType;
+    features: string[];
+}
+
+/**
+ * Hardcoded fallback tiers — used as defaults and for client-side rendering.
+ * The admin dashboard can override these values in the database.
+ */
+export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierConfig> = {
     starter: {
+        id: 'starter',
         maxActiveEvents: 1,
         name: 'Starter',
         regularPrice: 0,
@@ -24,10 +56,11 @@ export const SUBSCRIPTION_TIERS = {
         ],
     },
     growth: {
+        id: 'growth',
         maxActiveEvents: 3,
         name: 'Growth',
         regularPrice: 999,
-        founderPrice: 499, // 50% off locked in forever
+        founderPrice: 499,
         badge: 'verified' as const,
         features: [
             '✨ 3 active events simultaneously',
@@ -43,10 +76,11 @@ export const SUBSCRIPTION_TIERS = {
         ],
     },
     professional: {
+        id: 'professional',
         maxActiveEvents: Infinity,
         name: 'Professional',
         regularPrice: 1999,
-        founderPrice: 999, // 50% off locked in forever
+        founderPrice: 999,
         badge: 'premium' as const,
         features: [
             '🚀 Unlimited events',
@@ -63,11 +97,7 @@ export const SUBSCRIPTION_TIERS = {
             '📞 Free marketing consultations',
         ],
     },
-} as const;
-
-export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
-export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled';
-export type BadgeType = 'verified' | 'premium' | null;
+};
 
 /**
  * Determine if a vendor is eligible for founder pricing
@@ -78,7 +108,7 @@ export function isEligibleForFounderPricing(signupDate: Date): boolean {
 }
 
 /**
- * Get the subscription price for a vendor
+ * Get the subscription price for a vendor (synchronous fallback)
  * Takes into account founder pricing status
  */
 export function getSubscriptionPrice(
@@ -90,7 +120,7 @@ export function getSubscriptionPrice(
 }
 
 /**
- * Get the event limit for a subscription tier
+ * Get the event limit for a subscription tier (synchronous fallback)
  */
 export function getEventLimit(tier: SubscriptionTier): number {
     return SUBSCRIPTION_TIERS[tier].maxActiveEvents;
@@ -104,7 +134,7 @@ export function getBadgeType(tier: SubscriptionTier): BadgeType {
 }
 
 /**
- * Check if a vendor can create more events based on their tier
+ * Check if a vendor can create more events based on their tier (synchronous fallback)
  */
 export function canCreateEvent(
     tier: SubscriptionTier,
@@ -124,3 +154,6 @@ export function getRequiredUpgradeTier(
     if (currentTier === 'growth') return 'professional';
     return null; // Already on highest tier
 }
+
+// Server-side DB-backed helpers are in ./subscription-server.ts
+// to avoid pulling next/headers into client component bundles.

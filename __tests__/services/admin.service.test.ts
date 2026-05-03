@@ -4,29 +4,53 @@
  */
 
 import { AdminService } from '@/services/admin.service';
-import { AdminRepository } from '@/repositories/admin.repository';
+import { AdminDashboardRepository } from '@/repositories/admin/dashboard.repository';
+import { AdminVendorRepository } from '@/repositories/admin/vendor-management.repository';
+import { AdminPaymentRepository } from '@/repositories/admin/payment.repository';
+import { AdminModerationRepository } from '@/repositories/admin/moderation.repository';
+import { AdminProspectRepository } from '@/repositories/admin/prospect.repository';
+import { AdminActivityRepository } from '@/repositories/admin/activity.repository';
 
 describe('AdminService', () => {
     let adminService: AdminService;
-    let mockAdminRepo: jest.Mocked<AdminRepository>;
+    let mockDashboardRepo: jest.Mocked<AdminDashboardRepository>;
+    let mockVendorRepo: jest.Mocked<AdminVendorRepository>;
+    let mockPaymentRepo: jest.Mocked<AdminPaymentRepository>;
+    let mockModerationRepo: jest.Mocked<AdminModerationRepository>;
+    let mockProspectRepo: jest.Mocked<AdminProspectRepository>;
+    let mockActivityRepo: jest.Mocked<AdminActivityRepository>;
 
     beforeEach(() => {
-        mockAdminRepo = {
+        mockDashboardRepo = {
             getPlatformStats: jest.fn(),
             getSubscriptionRevenue: jest.fn(),
             get30DayTrend: jest.fn(),
             getTopCategories: jest.fn(),
             getEventStatusCounts: jest.fn(),
+        } as any;
+
+        mockVendorRepo = {
             getVendorDirectory: jest.fn(),
             updateVendorStatus: jest.fn(),
-            logActivity: jest.fn(),
+            getVendorFullDetails: jest.fn(),
+            updateVendorSubscription: jest.fn(),
+            updateVendorDetails: jest.fn(),
+        } as any;
+
+        mockPaymentRepo = {
             getBankTransferQueue: jest.fn(),
             confirmPayment: jest.fn(),
             rejectPayment: jest.fn(),
+        } as any;
+
+        mockModerationRepo = {
             getFlaggedReviews: jest.fn(),
             unflagReview: jest.fn(),
             deleteReview: jest.fn(),
             toggleFeatureEvent: jest.fn(),
+        } as any;
+
+        mockProspectRepo = {
             createProspectVendor: jest.fn(),
             getProspects: jest.fn(),
             updateProspectStatus: jest.fn(),
@@ -34,11 +58,26 @@ describe('AdminService', () => {
             createProspectEvent: jest.fn(),
             getProspectInterests: jest.fn(),
             convertProspect: jest.fn(),
-            getRecentActivity: jest.fn(),
         } as any;
 
-        adminService = new AdminService(mockAdminRepo);
+        mockActivityRepo = {
+            logActivity: jest.fn(),
+            getRecentActivity: jest.fn(),
+            getUserActivityFeed: jest.fn(),
+            getUserEngagementStats: jest.fn(),
+            getMostActiveUsers: jest.fn(),
+        } as any;
+
+        adminService = new AdminService(
+            mockDashboardRepo,
+            mockVendorRepo,
+            mockPaymentRepo,
+            mockModerationRepo,
+            mockProspectRepo,
+            mockActivityRepo,
+        );
     });
+
 
     afterEach(() => {
         jest.clearAllMocks();
@@ -54,11 +93,11 @@ describe('AdminService', () => {
             const categories = [{ name: 'Music', count: 20 }];
             const eventStatus = { published: 30, draft: 20 };
 
-            mockAdminRepo.getPlatformStats.mockResolvedValue(stats);
-            mockAdminRepo.getSubscriptionRevenue.mockResolvedValue(subscription);
-            mockAdminRepo.get30DayTrend.mockResolvedValue(trend);
-            mockAdminRepo.getTopCategories.mockResolvedValue(categories);
-            mockAdminRepo.getEventStatusCounts.mockResolvedValue(eventStatus);
+            mockDashboardRepo.getPlatformStats.mockResolvedValue(stats);
+            mockDashboardRepo.getSubscriptionRevenue.mockResolvedValue(subscription);
+            mockDashboardRepo.get30DayTrend.mockResolvedValue(trend);
+            mockDashboardRepo.getTopCategories.mockResolvedValue(categories);
+            mockDashboardRepo.getEventStatusCounts.mockResolvedValue(eventStatus);
 
             const result = await adminService.getDashboardData();
 
@@ -76,12 +115,12 @@ describe('AdminService', () => {
         it('should pass params to repository', async () => {
             const params = { page: 1, pageSize: 20, search: 'test' };
             const expected = { data: [], total: 0 };
-            mockAdminRepo.getVendorDirectory.mockResolvedValue(expected);
+            mockVendorRepo.getVendorDirectory.mockResolvedValue(expected);
 
             const result = await adminService.getVendorDirectory(params as any);
 
             expect(result).toEqual(expected);
-            expect(mockAdminRepo.getVendorDirectory).toHaveBeenCalledWith(params);
+            expect(mockVendorRepo.getVendorDirectory).toHaveBeenCalledWith(params);
         });
     });
 
@@ -89,8 +128,8 @@ describe('AdminService', () => {
         it('should update status and log activity', async () => {
             await adminService.approveVendor('vendor-123', 'admin-1');
 
-            expect(mockAdminRepo.updateVendorStatus).toHaveBeenCalledWith('vendor-123', 'approved', true);
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockVendorRepo.updateVendorStatus).toHaveBeenCalledWith('vendor-123', 'approved', true);
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     user_id: 'admin-1',
                     action: 'vendor_approved',
@@ -105,8 +144,8 @@ describe('AdminService', () => {
         it('should update status and log activity', async () => {
             await adminService.suspendVendor('vendor-123', 'admin-1');
 
-            expect(mockAdminRepo.updateVendorStatus).toHaveBeenCalledWith('vendor-123', 'suspended', false);
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockVendorRepo.updateVendorStatus).toHaveBeenCalledWith('vendor-123', 'suspended', false);
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'vendor_suspended',
                     entity_id: 'vendor-123',
@@ -119,19 +158,19 @@ describe('AdminService', () => {
 
     describe('getBankTransferQueue', () => {
         it('should use default pagination', async () => {
-            mockAdminRepo.getBankTransferQueue.mockResolvedValue({ data: [], total: 0 });
+            mockPaymentRepo.getBankTransferQueue.mockResolvedValue({ data: [], total: 0 });
 
             await adminService.getBankTransferQueue();
 
-            expect(mockAdminRepo.getBankTransferQueue).toHaveBeenCalledWith(1, 20);
+            expect(mockPaymentRepo.getBankTransferQueue).toHaveBeenCalledWith(1, 20);
         });
 
         it('should pass custom pagination', async () => {
-            mockAdminRepo.getBankTransferQueue.mockResolvedValue({ data: [], total: 0 });
+            mockPaymentRepo.getBankTransferQueue.mockResolvedValue({ data: [], total: 0 });
 
             await adminService.getBankTransferQueue(3, 50);
 
-            expect(mockAdminRepo.getBankTransferQueue).toHaveBeenCalledWith(3, 50);
+            expect(mockPaymentRepo.getBankTransferQueue).toHaveBeenCalledWith(3, 50);
         });
     });
 
@@ -139,8 +178,8 @@ describe('AdminService', () => {
         it('should confirm payment and log activity', async () => {
             await adminService.confirmPayment('booking-123', 'admin-1');
 
-            expect(mockAdminRepo.confirmPayment).toHaveBeenCalledWith('booking-123');
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockPaymentRepo.confirmPayment).toHaveBeenCalledWith('booking-123');
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'payment_confirmed',
                     entity_type: 'booking',
@@ -154,8 +193,8 @@ describe('AdminService', () => {
         it('should reject payment and log activity', async () => {
             await adminService.rejectPayment('booking-123', 'admin-1');
 
-            expect(mockAdminRepo.rejectPayment).toHaveBeenCalledWith('booking-123');
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockPaymentRepo.rejectPayment).toHaveBeenCalledWith('booking-123');
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'payment_rejected',
                     entity_type: 'booking',
@@ -169,11 +208,11 @@ describe('AdminService', () => {
 
     describe('getFlaggedReviews', () => {
         it('should use default pagination', async () => {
-            mockAdminRepo.getFlaggedReviews.mockResolvedValue({ data: [], total: 0 });
+            mockModerationRepo.getFlaggedReviews.mockResolvedValue({ data: [], total: 0 });
 
             await adminService.getFlaggedReviews();
 
-            expect(mockAdminRepo.getFlaggedReviews).toHaveBeenCalledWith(1, 20);
+            expect(mockModerationRepo.getFlaggedReviews).toHaveBeenCalledWith(1, 20);
         });
     });
 
@@ -181,7 +220,7 @@ describe('AdminService', () => {
         it('should call repo unflagReview', async () => {
             await adminService.unflagReview('review-123');
 
-            expect(mockAdminRepo.unflagReview).toHaveBeenCalledWith('review-123');
+            expect(mockModerationRepo.unflagReview).toHaveBeenCalledWith('review-123');
         });
     });
 
@@ -189,7 +228,7 @@ describe('AdminService', () => {
         it('should call repo deleteReview', async () => {
             await adminService.deleteReview('review-123');
 
-            expect(mockAdminRepo.deleteReview).toHaveBeenCalledWith('review-123');
+            expect(mockModerationRepo.deleteReview).toHaveBeenCalledWith('review-123');
         });
     });
 
@@ -197,8 +236,8 @@ describe('AdminService', () => {
         it('should toggle feature and log activity when featuring', async () => {
             await adminService.toggleFeatureEvent('event-123', true, 'admin-1');
 
-            expect(mockAdminRepo.toggleFeatureEvent).toHaveBeenCalledWith('event-123', true);
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockModerationRepo.toggleFeatureEvent).toHaveBeenCalledWith('event-123', true);
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'event_featured',
                     entity_id: 'event-123',
@@ -209,8 +248,8 @@ describe('AdminService', () => {
         it('should toggle feature but NOT log activity when unfeaturing', async () => {
             await adminService.toggleFeatureEvent('event-123', false, 'admin-1');
 
-            expect(mockAdminRepo.toggleFeatureEvent).toHaveBeenCalledWith('event-123', false);
-            expect(mockAdminRepo.logActivity).not.toHaveBeenCalled();
+            expect(mockModerationRepo.toggleFeatureEvent).toHaveBeenCalledWith('event-123', false);
+            expect(mockActivityRepo.logActivity).not.toHaveBeenCalled();
         });
     });
 
@@ -219,13 +258,13 @@ describe('AdminService', () => {
     describe('createProspectVendor', () => {
         it('should create prospect and log activity', async () => {
             const input = { business_name: 'New Vendor' } as any;
-            mockAdminRepo.createProspectVendor.mockResolvedValue({ id: 'prospect-1', ...input });
+            mockProspectRepo.createProspectVendor.mockResolvedValue({ id: 'prospect-1', ...input });
 
             const result = await adminService.createProspectVendor(input, 'admin-1');
 
             expect(result.id).toBe('prospect-1');
-            expect(mockAdminRepo.createProspectVendor).toHaveBeenCalledWith(input, 'admin-1');
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockProspectRepo.createProspectVendor).toHaveBeenCalledWith(input, 'admin-1');
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'prospect_created',
                     entity_type: 'prospect_vendor',
@@ -237,24 +276,24 @@ describe('AdminService', () => {
 
     describe('getProspects', () => {
         it('should pass pagination and status', async () => {
-            mockAdminRepo.getProspects.mockResolvedValue({ data: [], total: 0 });
+            mockProspectRepo.getProspects.mockResolvedValue({ data: [], total: 0 });
 
             await adminService.getProspects(2, 10, 'active');
 
-            expect(mockAdminRepo.getProspects).toHaveBeenCalledWith(2, 10, 'active');
+            expect(mockProspectRepo.getProspects).toHaveBeenCalledWith(2, 10, 'active');
         });
     });
 
     describe('contactProspect', () => {
         it('should update status, generate token, and log activity', async () => {
-            mockAdminRepo.generateClaimToken.mockResolvedValue('token-abc');
+            mockProspectRepo.generateClaimToken.mockResolvedValue('token-abc');
 
             const token = await adminService.contactProspect('prospect-1', 'admin-1');
 
             expect(token).toBe('token-abc');
-            expect(mockAdminRepo.updateProspectStatus).toHaveBeenCalledWith('prospect-1', 'contacted');
-            expect(mockAdminRepo.generateClaimToken).toHaveBeenCalledWith('prospect-1');
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockProspectRepo.updateProspectStatus).toHaveBeenCalledWith('prospect-1', 'contacted');
+            expect(mockProspectRepo.generateClaimToken).toHaveBeenCalledWith('prospect-1');
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'prospect_contacted',
                     entity_id: 'prospect-1',
@@ -266,11 +305,11 @@ describe('AdminService', () => {
     describe('createProspectEvent', () => {
         it('should delegate to repository', async () => {
             const input = { prospect_vendor_id: 'prospect-1', title: 'Event' } as any;
-            mockAdminRepo.createProspectEvent.mockResolvedValue({ id: 'event-1' });
+            mockProspectRepo.createProspectEvent.mockResolvedValue({ id: 'event-1' });
 
             const result = await adminService.createProspectEvent(input, 'sys-vendor-1');
 
-            expect(mockAdminRepo.createProspectEvent).toHaveBeenCalledWith(input, 'sys-vendor-1');
+            expect(mockProspectRepo.createProspectEvent).toHaveBeenCalledWith(input, 'sys-vendor-1');
             expect(result.id).toBe('event-1');
         });
     });
@@ -279,8 +318,8 @@ describe('AdminService', () => {
         it('should convert prospect and log activity with metadata', async () => {
             await adminService.convertProspect('prospect-1', 'vendor-1', 'sys-vendor', 'admin-1');
 
-            expect(mockAdminRepo.convertProspect).toHaveBeenCalledWith('prospect-1', 'vendor-1', 'sys-vendor');
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(
+            expect(mockProspectRepo.convertProspect).toHaveBeenCalledWith('prospect-1', 'vendor-1', 'sys-vendor');
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(
                 expect.objectContaining({
                     action: 'prospect_converted',
                     entity_id: 'prospect-1',
@@ -294,11 +333,11 @@ describe('AdminService', () => {
 
     describe('getRecentActivity', () => {
         it('should use default pagination', async () => {
-            mockAdminRepo.getRecentActivity.mockResolvedValue({ data: [], total: 0 });
+            mockActivityRepo.getRecentActivity.mockResolvedValue({ data: [], total: 0 });
 
             await adminService.getRecentActivity();
 
-            expect(mockAdminRepo.getRecentActivity).toHaveBeenCalledWith(1, 50);
+            expect(mockActivityRepo.getRecentActivity).toHaveBeenCalledWith(1, 50);
         });
     });
 
@@ -308,7 +347,7 @@ describe('AdminService', () => {
 
             await adminService.logActivity(input);
 
-            expect(mockAdminRepo.logActivity).toHaveBeenCalledWith(input);
+            expect(mockActivityRepo.logActivity).toHaveBeenCalledWith(input);
         });
     });
 });

@@ -5,12 +5,13 @@ import { revalidatePath } from 'next/cache';
 import { ServiceFactory } from '@/services/service-factory';
 import { logger } from '@/lib/logger/logger';
 import { UnauthorizedError } from '@/lib/errors/app-error';
+import { optimizeImageFile } from '@/utils/image-optimizer';
 import {
-    canCreateEvent,
-    getEventLimit,
-    getRequiredUpgradeTier,
-    type SubscriptionTier
-} from '@/lib/constants/subscription';
+    canCreateEventFromDB,
+    getEventLimitFromDB,
+    getRequiredUpgradeTierFromDB,
+} from '@/lib/constants/subscription-server';
+import { type SubscriptionTier } from '@/lib/constants/subscription';
 import { trackActivity } from '@/lib/track-activity';
 
 // --- Helpers ---
@@ -66,12 +67,12 @@ export async function createEvent(formData: FormData) {
 
         // Check subscription tier limits
         const factory = new ServiceFactory(supabase);
-        const eventRepository = factory.getEventRepository();
-        const activeEventsCount = await eventRepository.countActiveEventsByVendor(user.id);
+        const eventService = factory.getEventService();
+        const activeEventsCount = await eventService.countActiveEventsByVendor(user.id);
 
-        if (!canCreateEvent(tier, activeEventsCount)) {
-            const limit = getEventLimit(tier);
-            const upgradeTier = getRequiredUpgradeTier(tier);
+        if (!(await canCreateEventFromDB(tier, activeEventsCount))) {
+            const limit = await getEventLimitFromDB(tier);
+            const upgradeTier = await getRequiredUpgradeTierFromDB(tier);
 
             logger.warn('Event creation blocked - tier limit reached', {
                 vendorId: user.id,
@@ -116,17 +117,30 @@ export async function createEvent(formData: FormData) {
 
         // Handle image upload
         let image_url = null;
-        const imageFile = formData.get('image') as File;
-        if (imageFile && imageFile.size > 0) {
-            const fileExt = imageFile.name.split('.').pop();
-            const fileName = `${vendor.id}/${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage.from('vendor-public').upload(fileName, imageFile);
 
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage.from('vendor-public').getPublicUrl(fileName);
-                image_url = publicUrl;
-            } else {
-                logger.error('Image upload failed', { uploadError });
+        // Check if image was pre-uploaded via Instagram import
+        const existingImageUrl = formData.get('existing_image_url') as string;
+        if (existingImageUrl) {
+            image_url = existingImageUrl;
+        } else {
+            const imageFile = formData.get('image') as File;
+            if (imageFile && imageFile.size > 0) {
+                try {
+                    const optimized = await optimizeImageFile(imageFile);
+                    const fileName = `${vendor.id}/${Date.now()}.${optimized.extension}`;
+                    const { error: uploadError } = await supabase.storage.from('vendor-public').upload(fileName, optimized.buffer, {
+                        contentType: optimized.mimeType,
+                    });
+
+                    if (!uploadError) {
+                        const { data: { publicUrl } } = supabase.storage.from('vendor-public').getPublicUrl(fileName);
+                        image_url = publicUrl;
+                    } else {
+                        logger.error('Image upload failed', { uploadError });
+                    }
+                } catch (err) {
+                    logger.error('Image optimization failed', { error: err });
+                }
             }
         }
 
@@ -140,7 +154,6 @@ export async function createEvent(formData: FormData) {
         }
 
         // Use EventService to create (reuse factory from tier check above)
-        const eventService = factory.getEventService();
 
         const event = await eventService.createEvent(vendor.id, {
             ...rawData,
@@ -241,13 +254,19 @@ export async function updateEvent(eventId: string, formData: FormData) {
         let image_url = undefined;
         const imageFile = formData.get('image') as File;
         if (imageFile && imageFile.size > 0) {
-            const fileExt = imageFile.name.split('.').pop();
-            const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage.from('vendor-public').upload(fileName, imageFile);
+            try {
+                const optimized = await optimizeImageFile(imageFile);
+                const fileName = `${user.id}/${Date.now()}.${optimized.extension}`;
+                const { error: uploadError } = await supabase.storage.from('vendor-public').upload(fileName, optimized.buffer, {
+                    contentType: optimized.mimeType,
+                });
 
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage.from('vendor-public').getPublicUrl(fileName);
-                image_url = publicUrl;
+                if (!uploadError) {
+                    const { data: { publicUrl } } = supabase.storage.from('vendor-public').getPublicUrl(fileName);
+                    image_url = publicUrl;
+                }
+            } catch (err) {
+                logger.error('Image optimization failed during update', { error: err });
             }
         }
 

@@ -79,6 +79,103 @@ export async function suspendVendor(vendorId: string) {
     }
 }
 
+export async function getVendorFullDetails(vendorId: string) {
+    try {
+        // Run auth check in parallel with service creation
+        const [_, service] = await Promise.all([
+            requireAdmin(),
+            Promise.resolve(getAdminService()),
+        ]);
+        return await service.getVendorFullDetails(vendorId);
+    } catch (error) {
+        logger.error('Failed to get vendor full details', { error });
+        return null;
+    }
+}
+
+export async function updateVendorSubscription(vendorId: string, tier: string, isFounder: boolean) {
+    try {
+        const { user } = await requireAdmin();
+        const service = getAdminService();
+        await service.updateVendorSubscription(vendorId, tier, isFounder, user.id);
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to update vendor subscription', { error });
+        return { error: 'Failed to update subscription' };
+    }
+}
+
+export async function updateVendorDetails(vendorId: string, updates: Record<string, any>) {
+    try {
+        const { user } = await requireAdmin();
+        const service = getAdminService();
+        await service.updateVendorDetails(vendorId, updates, user.id);
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to update vendor details', { error });
+        return { error: 'Failed to update vendor details' };
+    }
+}
+
+export async function impersonateVendor(vendorId: string) {
+    try {
+        const { user } = await requireAdmin();
+        const adminClient = createAdminClient();
+
+        // Get vendor's email from profiles
+        const { data: profile } = await adminClient
+            .from('profiles')
+            .select('email')
+            .eq('id', vendorId)
+            .single();
+
+        if (!profile?.email) {
+            return { error: 'Vendor email not found' };
+        }
+
+        // Generate a magic link for the vendor
+        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+            type: 'magiclink',
+            email: profile.email,
+        });
+
+        if (linkError || !linkData) {
+            logger.error('Failed to generate impersonation link', { linkError });
+            return { error: 'Failed to generate login link' };
+        }
+
+        // Log the impersonation
+        const service = getAdminService();
+        await service.logActivity({
+            user_id: user.id,
+            action: 'vendor_impersonated',
+            entity_type: 'vendor',
+            entity_id: vendorId,
+            metadata: { vendor_email: profile.email },
+        });
+
+        // The generateLink response contains properties.action_link with the full URL
+        // We need to extract the token_hash and build our own callback URL
+        const actionLink = linkData.properties?.action_link;
+        if (!actionLink) {
+            return { error: 'Failed to generate token' };
+        }
+
+        // Parse the action link to extract the token
+        const url = new URL(actionLink);
+        const tokenHash = url.searchParams.get('token') || url.searchParams.get('token_hash');
+
+        // Build callback URL through our auth/callback using verifyOtp approach
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        const magicLink = actionLink.replace(url.origin, siteUrl);
+
+        return { success: true, url: actionLink };
+    } catch (error) {
+        logger.error('Failed to impersonate vendor', { error });
+        return { error: 'Failed to impersonate vendor' };
+    }
+}
+
 // ─── Booking (Bank Transfer) Management ─────────────────────────────────────
 
 export async function getAdminBankTransfers(page = 1, pageSize = 20) {
@@ -306,10 +403,8 @@ export async function getAdminUserActivity(
 ) {
     try {
         await requireAdmin();
-        const adminClient = createAdminClient();
-        const { AdminRepository } = await import('@/repositories/admin.repository');
-        const repo = new AdminRepository(adminClient);
-        return await repo.getUserActivityFeed(page, pageSize, filters);
+        const service = getAdminService();
+        return await service.getUserActivityFeed(page, pageSize, filters);
     } catch (error) {
         logger.error('Failed to get user activity feed', { error });
         return null;
@@ -319,10 +414,8 @@ export async function getAdminUserActivity(
 export async function getAdminUserEngagement() {
     try {
         await requireAdmin();
-        const adminClient = createAdminClient();
-        const { AdminRepository } = await import('@/repositories/admin.repository');
-        const repo = new AdminRepository(adminClient);
-        return await repo.getUserEngagementStats();
+        const service = getAdminService();
+        return await service.getUserEngagementStats();
     } catch (error) {
         logger.error('Failed to get user engagement stats', { error });
         return null;
@@ -332,10 +425,8 @@ export async function getAdminUserEngagement() {
 export async function getAdminMostActiveUsers(limit = 10) {
     try {
         await requireAdmin();
-        const adminClient = createAdminClient();
-        const { AdminRepository } = await import('@/repositories/admin.repository');
-        const repo = new AdminRepository(adminClient);
-        return await repo.getMostActiveUsers(limit);
+        const service = getAdminService();
+        return await service.getMostActiveUsers(limit);
     } catch (error) {
         logger.error('Failed to get most active users', { error });
         return [];

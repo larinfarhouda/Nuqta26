@@ -8,8 +8,16 @@ import { CategoryRepository } from '@/repositories/category.repository';
 import { ReviewRepository } from '@/repositories/review.repository';
 import { DiscountRepository } from '@/repositories/discount.repository';
 import { AnalyticsRepository } from '@/repositories/analytics.repository';
-import { AdminRepository } from '@/repositories/admin.repository';
 import { CountryRepository } from '@/repositories/country.repository';
+import { SubscriptionTierRepository } from '@/repositories/subscription-tier.repository';
+import {
+    AdminDashboardRepository,
+    AdminVendorRepository,
+    AdminPaymentRepository,
+    AdminModerationRepository,
+    AdminProspectRepository,
+    AdminActivityRepository,
+} from '@/repositories/admin/index';
 import { EventService } from '@/services/event.service';
 import { BookingService } from '@/services/booking.service';
 import { UserService } from '@/services/user.service';
@@ -21,12 +29,16 @@ import { AnalyticsService } from '@/services/analytics.service';
 import { NotificationService } from '@/services/notification.service';
 import { AdminService } from '@/services/admin.service';
 import { CountryService } from '@/services/country.service';
+import { SubscriptionTierService } from '@/services/subscription-tier.service';
 
 /**
  * Service Factory
- * Creates and initializes services with their dependencies
+ * Creates and initializes services with their dependencies.
+ * Service instances are cached (lazy singleton per factory instance)
+ * to avoid unnecessary object allocation.
  */
 export class ServiceFactory {
+    // Repositories (created eagerly — lightweight constructors)
     private eventRepo: EventRepository;
     private bookingRepo: BookingRepository;
     private userRepo: UserRepository;
@@ -36,8 +48,30 @@ export class ServiceFactory {
     private reviewRepo: ReviewRepository;
     private discountRepo: DiscountRepository;
     private analyticsRepo: AnalyticsRepository;
-    private adminRepo: AdminRepository;
     private countryRepo: CountryRepository;
+    private subscriptionTierRepo: SubscriptionTierRepository;
+
+    // Admin repositories (focused)
+    private adminDashboardRepo: AdminDashboardRepository;
+    private adminVendorRepo: AdminVendorRepository;
+    private adminPaymentRepo: AdminPaymentRepository;
+    private adminModerationRepo: AdminModerationRepository;
+    private adminProspectRepo: AdminProspectRepository;
+    private adminActivityRepo: AdminActivityRepository;
+
+    // Cached service instances (created lazily)
+    private _eventService?: EventService;
+    private _bookingService?: BookingService;
+    private _userService?: UserService;
+    private _vendorService?: VendorService;
+    private _categoryService?: CategoryService;
+    private _reviewService?: ReviewService;
+    private _discountService?: DiscountService;
+    private _analyticsService?: AnalyticsService;
+    private _notificationService?: NotificationService;
+    private _adminService?: AdminService;
+    private _countryService?: CountryService;
+    private _subscriptionTierService?: SubscriptionTierService;
 
     constructor(private supabase: SupabaseClient) {
         // Initialize all repositories
@@ -50,120 +84,156 @@ export class ServiceFactory {
         this.reviewRepo = new ReviewRepository(supabase);
         this.discountRepo = new DiscountRepository(supabase);
         this.analyticsRepo = new AnalyticsRepository(supabase);
-        this.adminRepo = new AdminRepository(supabase);
         this.countryRepo = new CountryRepository(supabase);
+        this.subscriptionTierRepo = new SubscriptionTierRepository(supabase);
+
+        // Admin repositories (focused, replacing monolithic AdminRepository)
+        this.adminDashboardRepo = new AdminDashboardRepository(supabase);
+        this.adminVendorRepo = new AdminVendorRepository(supabase);
+        this.adminPaymentRepo = new AdminPaymentRepository(supabase);
+        this.adminModerationRepo = new AdminModerationRepository(supabase);
+        this.adminProspectRepo = new AdminProspectRepository(supabase);
+        this.adminActivityRepo = new AdminActivityRepository(supabase);
     }
 
     /**
-     * Get EventService
+     * Get EventService (cached)
      */
     getEventService(): EventService {
-        return new EventService(
-            this.eventRepo,
-            this.ticketRepo,
-            this.vendorRepo,
-            this.reviewRepo,
-            this.discountRepo,
-            this.categoryRepo
-        );
+        if (!this._eventService) {
+            this._eventService = new EventService(
+                this.eventRepo,
+                this.ticketRepo,
+                this.vendorRepo,
+                this.reviewRepo,
+                this.discountRepo,
+                this.categoryRepo
+            );
+        }
+        return this._eventService;
     }
 
     /**
-     * Get BookingService
+     * Get BookingService (cached)
      */
     getBookingService(): BookingService {
-        return new BookingService(
-            this.bookingRepo,
-            this.eventRepo,
-            this.ticketRepo,
-            this.userRepo,
-            this.vendorRepo
-        );
+        if (!this._bookingService) {
+            this._bookingService = new BookingService(
+                this.bookingRepo,
+                this.eventRepo,
+                this.ticketRepo,
+                this.userRepo,
+                this.vendorRepo
+            );
+        }
+        return this._bookingService;
     }
 
     /**
-     * Get UserService
+     * Get UserService (cached)
      */
     getUserService(): UserService {
-        return new UserService(this.userRepo);
+        if (!this._userService) {
+            this._userService = new UserService(this.userRepo);
+        }
+        return this._userService;
     }
 
     /**
-     * Get VendorService
+     * Get VendorService (cached)
      */
     getVendorService(): VendorService {
-        return new VendorService(this.vendorRepo, this.ticketRepo, this.categoryRepo);
+        if (!this._vendorService) {
+            this._vendorService = new VendorService(this.vendorRepo, this.ticketRepo, this.categoryRepo);
+        }
+        return this._vendorService;
     }
 
     /**
-     * Get CategoryService
+     * Get CategoryService (cached)
      */
     getCategoryService(): CategoryService {
-        return new CategoryService(this.categoryRepo);
+        if (!this._categoryService) {
+            this._categoryService = new CategoryService(this.categoryRepo);
+        }
+        return this._categoryService;
     }
 
     /**
-     * Get ReviewService
+     * Get ReviewService (cached)
      */
     getReviewService(): ReviewService {
-        return new ReviewService(this.reviewRepo, this.userRepo);
+        if (!this._reviewService) {
+            this._reviewService = new ReviewService(this.reviewRepo, this.userRepo);
+        }
+        return this._reviewService;
     }
 
     /**
-     * Get DiscountService
+     * Get DiscountService (cached)
      */
     getDiscountService(): DiscountService {
-        return new DiscountService(this.discountRepo, this.eventRepo);
+        if (!this._discountService) {
+            this._discountService = new DiscountService(this.discountRepo, this.eventRepo);
+        }
+        return this._discountService;
     }
 
     /**
-     * Get AnalyticsService
+     * Get AnalyticsService (cached)
      */
     getAnalyticsService(): AnalyticsService {
-        return new AnalyticsService(this.analyticsRepo);
+        if (!this._analyticsService) {
+            this._analyticsService = new AnalyticsService(this.analyticsRepo);
+        }
+        return this._analyticsService;
     }
 
     /**
-     * Get NotificationService
+     * Get NotificationService (cached)
      */
     getNotificationService(): NotificationService {
-        return new NotificationService();
+        if (!this._notificationService) {
+            this._notificationService = new NotificationService();
+        }
+        return this._notificationService;
     }
 
     /**
-     * Get AdminService
+     * Get AdminService (cached)
+     * Uses 6 focused admin repositories instead of monolithic AdminRepository.
      */
     getAdminService(): AdminService {
-        return new AdminService(this.adminRepo);
+        if (!this._adminService) {
+            this._adminService = new AdminService(
+                this.adminDashboardRepo,
+                this.adminVendorRepo,
+                this.adminPaymentRepo,
+                this.adminModerationRepo,
+                this.adminProspectRepo,
+                this.adminActivityRepo,
+            );
+        }
+        return this._adminService;
     }
 
     /**
-     * Get BookingRepository
-     */
-    getBookingRepository(): BookingRepository {
-        return this.bookingRepo;
-    }
-
-    /**
-     * Get EventRepository
-     */
-    getEventRepository(): EventRepository {
-        return this.eventRepo;
-    }
-
-    /**
-     * Get CountryService
+     * Get CountryService (cached)
      */
     getCountryService(): CountryService {
-        return new CountryService(this.countryRepo);
+        if (!this._countryService) {
+            this._countryService = new CountryService(this.countryRepo);
+        }
+        return this._countryService;
     }
 
     /**
-     * Get CountryRepository
+     * Get SubscriptionTierService (cached)
      */
-    getCountryRepository(): CountryRepository {
-        return this.countryRepo;
+    getSubscriptionTierService(): SubscriptionTierService {
+        if (!this._subscriptionTierService) {
+            this._subscriptionTierService = new SubscriptionTierService(this.subscriptionTierRepo);
+        }
+        return this._subscriptionTierService;
     }
 }
-
-

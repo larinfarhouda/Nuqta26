@@ -22,17 +22,19 @@ import BulkDiscountManager from './components/BulkDiscountManager';
 import FormErrorBanner from './components/FormErrorBanner';
 import UpgradeModal from '../UpgradeModal';
 import type { SubscriptionTier } from '@/lib/constants/subscription';
+import type { InstagramImportResult } from '@/actions/vendor/instagram-import';
 
 
 
 interface Props {
     event?: any;
     vendorData?: any;
+    initialData?: InstagramImportResult;
     onClose: () => void;
     onSuccess: (createdEvent?: any) => void;
 }
 
-export default function EventForm({ event, vendorData, onClose, onSuccess }: Props) {
+export default function EventForm({ event, vendorData, initialData, onClose, onSuccess }: Props) {
     const t = useTranslations('Dashboard.vendor.events.form.validation');
     const [submitting, setSubmitting] = useState(false);
     const errorBannerRef = useRef<HTMLDivElement>(null);
@@ -49,7 +51,10 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
 
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(event?.image_url || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.image_url || event?.image_url || null);
+
+    // Track if image was pre-uploaded via Instagram import (no need to re-upload)
+    const [imageAlreadyUploaded, setImageAlreadyUploaded] = useState<boolean>(!!initialData?.image_url);
 
     // Bulk Discounts State (with id added for UI management)
     const [bulkDiscounts, setBulkDiscounts] = useState<(BulkDiscountInput & { id: string })[]>(
@@ -135,17 +140,20 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
         } : {
             is_recurring: false,
             recurrence_days: [],
-            location_name: '',
+            title: initialData?.title || '',
+            description: initialData?.description || '',
+            location_name: initialData?.location_name || '',
             location_details: '',
-            district: '',
-            city: '',
-            country: '',
-            location_lat: null as any,
-            location_long: null as any,
-            capacity: 100,
-            date: '',
-            event_type: '',
-            tickets: [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
+            district: initialData?.district || '',
+            city: initialData?.city || '',
+            country: initialData?.country || '',
+            location_lat: initialData?.location_lat ?? null as any,
+            location_long: initialData?.location_long ?? null as any,
+            capacity: initialData?.capacity || 100,
+            date: initialData?.date || '',
+            end_date: initialData?.end_date || '',
+            event_type: initialData?.category_id || '',
+            tickets: initialData?.tickets || [{ name: 'تذكرة عامة', price: 0, quantity: 100 }]
         }
     });
 
@@ -160,12 +168,12 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
     // This is needed because <select> options load async — the browser resets
     // the select to the placeholder if the UUID doesn't match any option yet.
     useEffect(() => {
-        if (!event || categories.length === 0) return;
+        if (categories.length === 0) return;
 
-        if (event.category_id) {
+        if (event?.category_id) {
             // Post-fix event: re-set the UUID value after options are available
             setValue('event_type', event.category_id);
-        } else if (event.event_type) {
+        } else if (event?.event_type) {
             // Pre-fix event: resolve slug → UUID
             const matchedCat = categories.find(
                 c => c.slug === event.event_type || c.slug === event.event_type?.toLowerCase()
@@ -173,8 +181,19 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
             if (matchedCat) {
                 setValue('event_type', matchedCat.id);
             }
+        } else if (initialData?.category_id) {
+            // Instagram import: set category UUID
+            setValue('event_type', initialData.category_id);
+        } else if (initialData?.event_type) {
+            // Instagram import: resolve slug → UUID
+            const matchedCat = categories.find(
+                c => c.slug === initialData.event_type || c.slug === initialData.event_type?.toLowerCase()
+            );
+            if (matchedCat) {
+                setValue('event_type', matchedCat.id);
+            }
         }
-    }, [categories, event, setValue]);
+    }, [categories, event, initialData, setValue]);
 
     const isRecurring = watch('is_recurring');
     const recurrenceType = watch('recurrence_type');
@@ -245,6 +264,9 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
 
         if (imageFile) {
             formData.append('image', imageFile);
+        } else if (imageAlreadyUploaded && initialData?.image_url) {
+            // Image was pre-uploaded via Instagram import, pass the URL directly
+            formData.append('existing_image_url', initialData.image_url);
         }
 
         let res;
@@ -307,7 +329,14 @@ export default function EventForm({ event, vendorData, onClose, onSuccess }: Pro
                 <div className="p-5 sm:p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-xl z-20">
                     <div>
                         <h3 className="text-2xl font-black text-gray-900 leading-tight">{event ? 'تعديل الفعالية' : 'فعالية جديدة'}</h3>
-                        <p className="text-sm text-gray-500 font-medium mt-1">أدخل تفاصيل الفعالية بدقة</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-gray-500 font-medium">أدخل تفاصيل الفعالية بدقة</p>
+                            {initialData && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
+                                    من انستقرام
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <button onClick={onClose} className="p-3 bg-gray-50 text-gray-500 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
                         <X className="w-6 h-6" />

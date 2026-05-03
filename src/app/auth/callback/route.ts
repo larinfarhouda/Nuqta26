@@ -60,7 +60,9 @@ export async function GET(request: Request) {
                             id: user.id,
                             business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
                             category: 'other',
-                            subscription_tier: 'starter'
+                            subscription_tier: 'starter',
+                            status: 'approved',
+                            is_verified: true,
                         } as any);
                     }
                 }
