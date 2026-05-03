@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
-    MessageCircle, Mail,
+    MessageCircle, Mail, Upload, TrendingUp, Clock, Target, Heart, AlertCircle,
 } from 'lucide-react';
 import {
     getAdminProspects,
@@ -11,18 +11,42 @@ import {
     contactProspect,
     createProspectEvent,
     getProspectInterests,
+    bulkCreateProspects,
 } from '@/actions/admin';
 import type { ProspectVendor, PaginatedResult, EventInterestSummary } from '@/types/admin.types';
 import {
-    colors, cardShell, font, inputStyle, cellStyle,
-    btnPrimary, btnDanger, btnGhost, badgeStyle, paginationBtn,
+    colors, cardStyle, cardShell, font, inputStyle,
+    btnPrimary, badgeStyle, paginationBtn,
     dialogOverlay, dialogPanel,
 } from './admin-tokens';
 
+interface ProspectStats {
+    total: number;
+    byStatus: { prospect: number; contacted: number; converted: number; rejected: number };
+    conversionRate: number;
+    avgConversionDays: number | null;
+    totalInterests: number;
+}
+
+const EVENT_TEMPLATES: Record<string, { event_type: string; capacity: number; description: string }> = {
+    workshop: { event_type: 'workshop', capacity: 30, description: 'A hands-on workshop experience.' },
+    concert: { event_type: 'concert', capacity: 200, description: 'Live music performance event.' },
+    exhibition: { event_type: 'exhibition', capacity: 100, description: 'Art and culture exhibition.' },
+    conference: { event_type: 'conference', capacity: 150, description: 'Industry conference and networking.' },
+    food: { event_type: 'food', capacity: 50, description: 'Food tasting and culinary experience.' },
+};
+
+function daysSince(dateStr: string | null): number | null {
+    if (!dateStr) return null;
+    return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+}
+
 export default function AdminProspectsClient({
     initialData,
+    stats,
 }: {
     initialData: PaginatedResult<ProspectVendor> | null;
+    stats: ProspectStats | null;
 }) {
     const [data, setData] = useState(initialData);
     const [page, setPage] = useState(1);
@@ -34,6 +58,9 @@ export default function AdminProspectsClient({
     const [claimUrl, setClaimUrl] = useState<string | null>(null);
     const [contactedProspect, setContactedProspect] = useState<ProspectVendor | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showBulk, setShowBulk] = useState(false);
+    const [bulkResult, setBulkResult] = useState<{ created: number; failed: number } | null>(null);
+    const fileRef = useRef<HTMLInputElement>(null);
 
     // Form states
     const [form, setForm] = useState({
@@ -103,7 +130,49 @@ export default function AdminProspectsClient({
         setLoading(false);
     };
 
-    const prospects = data?.data || [];
+    const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setLoading(true);
+        setBulkResult(null);
+        try {
+            const text = await file.text();
+            const lines = text.split('\n').filter(l => l.trim());
+            const header = lines[0].toLowerCase().split(',').map(h => h.trim());
+            const rows = lines.slice(1).map(line => {
+                const vals = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+                const obj: Record<string, string> = {};
+                header.forEach((h, i) => { obj[h] = vals[i] || ''; });
+                return {
+                    business_name: obj['business_name'] || obj['name'] || obj['business'] || '',
+                    contact_email: obj['contact_email'] || obj['email'] || undefined,
+                    contact_phone: obj['contact_phone'] || obj['phone'] || undefined,
+                    instagram: obj['instagram'] || undefined,
+                    website: obj['website'] || undefined,
+                    notes: obj['notes'] || undefined,
+                };
+            }).filter(r => r.business_name);
+
+            if (rows.length === 0) {
+                setBulkResult({ created: 0, failed: 0 });
+            } else {
+                const result = await bulkCreateProspects(rows);
+                if ('created' in result) {
+                    setBulkResult({ created: result.created!, failed: result.failed! });
+                }
+            }
+            reload();
+        } catch {
+            setBulkResult({ created: 0, failed: 1 });
+        }
+        setLoading(false);
+        if (fileRef.current) fileRef.current.value = '';
+    };
+
+    const applyTemplate = (key: string) => {
+        const t = EVENT_TEMPLATES[key];
+        if (t) setEventForm(prev => ({ ...prev, ...t }));
+    };
 
     const labelStyle: React.CSSProperties = font.label;
 
@@ -128,6 +197,80 @@ export default function AdminProspectsClient({
                     <Plus size={16} /> Add Prospect
                 </button>
             </div>
+
+            {/* Stats Dashboard */}
+            {stats && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                    {[
+                        { label: 'Total Prospects', value: stats.total, icon: <Target size={18} />, color: '#8b5cf6' },
+                        { label: 'Contacted', value: stats.byStatus.contacted, icon: <MessageCircle size={18} />, color: '#3b82f6' },
+                        { label: 'Converted', value: stats.byStatus.converted, icon: <TrendingUp size={18} />, color: '#10b981' },
+                        { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: <Heart size={18} />, color: '#f59e0b' },
+                        { label: 'Avg. Days to Convert', value: stats.avgConversionDays ?? '—', icon: <Clock size={18} />, color: '#6366f1' },
+                        { label: 'Total Interests', value: stats.totalInterests, icon: <Users size={18} />, color: '#ec4899' },
+                    ].map(s => (
+                        <div key={s.label} style={{ ...cardStyle, padding: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: colors.text.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
+                                <span style={{ color: s.color }}>{s.icon}</span>
+                            </div>
+                            <div style={{ fontSize: '22px', fontWeight: 800, color: colors.text.primary }}>{typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Action Bar: CSV Import + Filters */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    {['', 'prospect', 'contacted', 'converted'].map(s => (
+                        <button
+                            key={s}
+                            onClick={() => { setStatusFilter(s); setPage(1); reload(1, s); }}
+                            style={{
+                                padding: '8px 16px', borderRadius: '8px', border: `1px solid ${colors.border}`,
+                                background: statusFilter === s ? colors.accent : colors.card,
+                                color: statusFilter === s ? '#fff' : colors.text.secondary,
+                                fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                            }}
+                        >
+                            {s || 'All'}
+                        </button>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input type="file" ref={fileRef} accept=".csv" onChange={handleCsvImport} style={{ display: 'none' }} />
+                    <button
+                        onClick={() => fileRef.current?.click()}
+                        disabled={loading}
+                        style={{
+                            padding: '8px 14px', borderRadius: '8px',
+                            border: `1px solid ${colors.border}`, background: colors.card,
+                            color: colors.text.secondary, fontSize: '12px', fontWeight: 600,
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                        }}
+                    >
+                        <Upload size={14} /> Import CSV
+                    </button>
+                </div>
+            </div>
+
+            {/* Bulk Import Result */}
+            {bulkResult && (
+                <div style={{
+                    padding: '14px 20px', borderRadius: '10px', marginBottom: '16px',
+                    background: bulkResult.failed > 0 ? '#fef9c3' : '#dcfce7',
+                    border: `1px solid ${bulkResult.failed > 0 ? '#fde68a' : '#86efac'}`,
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    fontSize: '13px', fontWeight: 500,
+                }}>
+                    {bulkResult.failed > 0 ? <AlertCircle size={16} style={{ color: '#854d0e' }} /> : <TrendingUp size={16} style={{ color: '#166534' }} />}
+                    <span style={{ color: bulkResult.failed > 0 ? '#854d0e' : '#166534' }}>
+                        Imported {bulkResult.created} prospect{bulkResult.created !== 1 ? 's' : ''}{bulkResult.failed > 0 ? `, ${bulkResult.failed} failed` : ''}.
+                    </span>
+                    <button onClick={() => setBulkResult(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px' }}>✕</button>
+                </div>
+            )}
 
             {/* Claim URL Banner */}
             {claimUrl && (
@@ -204,24 +347,6 @@ export default function AdminProspectsClient({
                 </div>
             )}
 
-            {/* Status Filter */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                {['', 'new', 'contacted', 'converted'].map(s => (
-                    <button
-                        key={s}
-                        onClick={() => { setStatusFilter(s); setPage(1); reload(1, s); }}
-                        style={{
-                            padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0',
-                            background: statusFilter === s ? '#8b5cf6' : '#fff',
-                            color: statusFilter === s ? '#fff' : '#475569',
-                            fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                        }}
-                    >
-                        {s || 'All'}
-                    </button>
-                ))}
-            </div>
-
             {/* Create Prospect Modal */}
             {showCreate && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
@@ -278,6 +403,21 @@ export default function AdminProspectsClient({
                     <div onClick={(e) => e.stopPropagation()}
                         style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '520px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
                         <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>Create Phantom Event</h3>
+                        {/* Event Templates */}
+                        <div style={{ marginBottom: '16px' }}>
+                            <div style={{ fontSize: '11px', fontWeight: 600, color: colors.text.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Quick Templates</div>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {Object.keys(EVENT_TEMPLATES).map(k => (
+                                    <button
+                                        key={k}
+                                        onClick={() => applyTemplate(k)}
+                                        style={{ padding: '5px 12px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: eventForm.event_type === k ? '#ede9fe' : '#f8fafc', color: eventForm.event_type === k ? '#7c3aed' : '#64748b', fontSize: '11px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}
+                                    >
+                                        {k}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
                                 <label style={labelStyle}>Event Title *</label>
@@ -372,17 +512,20 @@ export default function AdminProspectsClient({
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                         <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                            {['Business', 'Status', 'Events', 'Interests', 'Contact', 'Actions'].map(h => (
+                            {['Business', 'Status', 'Events', 'Interests', 'Contact', 'Follow-up', 'Actions'].map(h => (
                                 <th key={h} style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {prospects.length === 0 && (
-                            <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No prospects yet. Create your first one!</td></tr>
+                        {(data?.data || []).length === 0 && (
+                            <tr><td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No prospects yet. Create your first one!</td></tr>
                         )}
-                        {prospects.map(p => (
-                            <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        {(data?.data || []).map(p => {
+                            const days = daysSince(p.status === 'contacted' ? (p.updated_at || p.created_at) : null);
+                            const stale = days !== null && days >= 7;
+                            return (
+                            <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: stale ? '#fffbeb' : undefined }}>
                                 <td style={{ padding: '14px 16px' }}>
                                     <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{p.business_name}</div>
                                     <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.instagram || p.contact_email || '—'}</div>
@@ -408,6 +551,17 @@ export default function AdminProspectsClient({
                                 </td>
                                 <td style={{ padding: '14px 16px', fontSize: '12px', color: '#94a3b8' }}>
                                     {p.contact_phone || p.contact_email || '—'}
+                                </td>
+                                <td style={{ padding: '14px 16px', fontSize: '12px' }}>
+                                    {p.status === 'contacted' && days !== null ? (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: stale ? '#dc2626' : '#64748b', fontWeight: stale ? 600 : 400 }}>
+                                            <Clock size={12} /> {days}d ago{stale ? ' ⚠️' : ''}
+                                        </span>
+                                    ) : p.status === 'converted' ? (
+                                        <span style={{ color: '#10b981', fontWeight: 500 }}>✓ Done</span>
+                                    ) : (
+                                        <span style={{ color: '#cbd5e1' }}>—</span>
+                                    )}
                                 </td>
                                 <td style={{ padding: '14px 16px' }}>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -444,7 +598,8 @@ export default function AdminProspectsClient({
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                        );})}
+
                     </tbody>
                 </table>
             </div>

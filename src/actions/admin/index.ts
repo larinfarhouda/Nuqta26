@@ -295,6 +295,92 @@ export async function getAdminProspects(page = 1, pageSize = 20, status?: string
     }
 }
 
+export async function getProspectStats() {
+    try {
+        await requireAdmin();
+        const adminClient = createAdminClient();
+
+        // Get all prospects with status counts
+        const { data: all } = await adminClient.from('prospect_vendors').select('id, status, created_at, updated_at');
+        const prospects = all || [];
+
+        const total = prospects.length;
+        const byStatus = { prospect: 0, contacted: 0, converted: 0, rejected: 0 };
+        let totalConversionDays = 0;
+        let convertedCount = 0;
+
+        prospects.forEach(p => {
+            if (p.status && p.status in byStatus) {
+                byStatus[p.status as keyof typeof byStatus]++;
+            }
+            if (p.status === 'converted' && p.created_at && p.updated_at) {
+                const days = (new Date(p.updated_at).getTime() - new Date(p.created_at).getTime()) / 86400000;
+                totalConversionDays += days;
+                convertedCount++;
+            }
+        });
+
+        // Get total interests across all prospect events
+        const prospectIds = prospects.map(p => p.id);
+        let totalInterests = 0;
+        if (prospectIds.length > 0) {
+            const { data: events } = await adminClient
+                .from('events')
+                .select('id')
+                .in('prospect_vendor_id', prospectIds);
+            if (events && events.length > 0) {
+                const { count } = await adminClient
+                    .from('event_interests')
+                    .select('*', { count: 'exact', head: true })
+                    .in('event_id', events.map(e => e.id));
+                totalInterests = count || 0;
+            }
+        }
+
+        return {
+            total,
+            byStatus,
+            conversionRate: total > 0 ? Math.round((byStatus.converted / total) * 100) : 0,
+            avgConversionDays: convertedCount > 0 ? Math.round(totalConversionDays / convertedCount) : null,
+            totalInterests,
+        };
+    } catch (error) {
+        logger.error('Failed to get prospect stats', { error });
+        return null;
+    }
+}
+
+export async function bulkCreateProspects(prospects: {
+    business_name: string;
+    contact_email?: string;
+    contact_phone?: string;
+    instagram?: string;
+    website?: string;
+    notes?: string;
+}[]) {
+    try {
+        const { user } = await requireAdmin();
+        const service = getAdminService();
+        let created = 0;
+        let failed = 0;
+
+        for (const p of prospects) {
+            if (!p.business_name) { failed++; continue; }
+            try {
+                await service.createProspectVendor(p, user.id);
+                created++;
+            } catch {
+                failed++;
+            }
+        }
+
+        return { success: true, created, failed };
+    } catch (error) {
+        logger.error('Failed to bulk create prospects', { error });
+        return { error: 'Failed to bulk create prospects' };
+    }
+}
+
 export async function contactProspect(prospectId: string) {
     try {
         const { user } = await requireAdmin();

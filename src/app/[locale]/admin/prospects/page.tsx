@@ -1,8 +1,11 @@
-import { getAdminProspects } from '@/actions/admin';
+import { getAdminProspects, getProspectStats } from '@/actions/admin';
 import AdminProspectsClient from '@/components/admin/AdminProspectsClient';
 
 export default async function AdminProspectsPage() {
-    const result = await getAdminProspects(1, 20);
+    const [result, stats] = await Promise.all([
+        getAdminProspects(1, 20),
+        getProspectStats(),
+    ]);
 
-    return <AdminProspectsClient initialData={result} />;
+    return <AdminProspectsClient initialData={result} stats={stats} />;
 }

@@ -160,6 +160,7 @@ export interface ProspectVendor {
     claim_token: string | null;
     converted_vendor_id: string | null;
     created_at: string | null;
+    updated_at: string | null;
     eventCount: number;
     totalInterests: number;
 }
