@@ -10,6 +10,7 @@ import {
     searchEventsForAdmin,
 } from '@/actions/admin';
 import type { FlaggedReview, PaginatedResult } from '@/types/admin.types';
+import { colors, cardShell, font, inputStyle, btnPrimary, badgeStyle } from './admin-tokens';
 
 export default function AdminModerationClient({
     initialReviews,
@@ -68,8 +69,8 @@ export default function AdminModerationClient({
     return (
         <div style={{ maxWidth: '1400px' }}>
             <div style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>Moderation</h1>
-                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                <h1 style={font.pageTitle}>Moderation</h1>
+                <p style={font.pageSubtitle}>
                     Review flagged content and feature events
                 </p>
             </div>

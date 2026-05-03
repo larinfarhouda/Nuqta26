@@ -12,6 +12,11 @@ import {
     getProspectInterests,
 } from '@/actions/admin';
 import type { ProspectVendor, PaginatedResult, EventInterestSummary } from '@/types/admin.types';
+import {
+    colors, cardShell, font, inputStyle, cellStyle,
+    btnPrimary, btnDanger, btnGhost, badgeStyle, paginationBtn,
+    dialogOverlay, dialogPanel,
+} from './admin-tokens';
 
 export default function AdminProspectsClient({
     initialData,
@@ -97,22 +102,14 @@ export default function AdminProspectsClient({
 
     const prospects = data?.data || [];
 
-    const inputStyle: React.CSSProperties = {
-        width: '100%', padding: '10px 14px', borderRadius: '10px',
-        border: '1px solid #e2e8f0', fontSize: '14px', outline: 'none',
-        color: '#1e293b', backgroundColor: '#fff',
-    };
-
-    const labelStyle: React.CSSProperties = {
-        fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px', display: 'block',
-    };
+    const labelStyle: React.CSSProperties = font.label;
 
     return (
         <div style={{ maxWidth: '1400px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <div>
-                    <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>Prospects</h1>
-                    <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                    <h1 style={font.pageTitle}>Prospects</h1>
+                    <p style={font.pageSubtitle}>
                         Phantom Listings — Vendor acquisition engine
                     </p>
                 </div>

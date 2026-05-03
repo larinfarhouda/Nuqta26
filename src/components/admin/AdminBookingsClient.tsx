@@ -4,6 +4,10 @@ import { useState, useTransition } from 'react';
 import { Eye, Check, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { getAdminBankTransfers, confirmBankPayment, rejectBankPayment } from '@/actions/admin';
 import type { BankTransferBooking, PaginatedResult } from '@/types/admin.types';
+import {
+    colors, cardShell, font, cellStyle,
+    btnPrimary, btnDanger, btnGhost, badgeStyle, paginationBtn,
+} from './admin-tokens';
 import { useToast } from '@/components/ui/Toast';
 import { getCurrencySymbol } from '@/utils/country-helpers';
 
@@ -57,8 +61,8 @@ export default function AdminBookingsClient({
     return (
         <div style={{ maxWidth: '1400px' }}>
             <div style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>Bookings</h1>
-                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                <h1 style={font.pageTitle}>Bookings</h1>
+                <p style={font.pageSubtitle}>
                     Bank transfer payment queue
                 </p>
             </div>

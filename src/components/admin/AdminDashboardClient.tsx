@@ -25,6 +25,7 @@ import {
     PieChart,
     Pie,
 } from 'recharts';
+import { colors, cardStyle, font, iconBox } from './admin-tokens';
 
 import type {
     PlatformStats,
@@ -61,57 +62,31 @@ function StatCard({
 }) {
     const isPositive = (growth ?? 0) >= 0;
     return (
-        <div
-            style={{
-                background: '#fff',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: '1px solid #e2e8f0',
-            }}
-        >
+        <div style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <div style={{ color: '#64748b', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>
+                    <div style={{ color: colors.text.muted, fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>
                         {title}
                     </div>
-                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em' }}>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: colors.text.primary, letterSpacing: '-0.02em' }}>
                         {prefix}{typeof value === 'number' ? value.toLocaleString() : value}
                     </div>
                 </div>
-                <div
-                    style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        background: `${color}15`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
+                <div style={iconBox(color)}>
                     <Icon size={22} style={{ color }} />
                 </div>
             </div>
             {growth !== undefined && (
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        marginTop: '12px',
-                        fontSize: '13px',
-                    }}
-                >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px', fontSize: '13px' }}>
                     {isPositive ? (
-                        <TrendingUp size={14} style={{ color: '#10b981' }} />
+                        <TrendingUp size={14} style={{ color: colors.success.accent }} />
                     ) : (
-                        <TrendingDown size={14} style={{ color: '#ef4444' }} />
+                        <TrendingDown size={14} style={{ color: colors.danger.accent }} />
                     )}
-                    <span style={{ color: isPositive ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                    <span style={{ color: isPositive ? colors.success.accent : colors.danger.accent, fontWeight: 600 }}>
                         {isPositive ? '+' : ''}{growth}%
                     </span>
-                    <span style={{ color: '#94a3b8' }}>vs last 30 days</span>
+                    <span style={{ color: colors.text.faint }}>vs last 30 days</span>
                 </div>
             )}
         </div>
@@ -219,8 +194,8 @@ export default function AdminDashboardClient({ data }: { data: DashboardData }) 
         <div style={{ maxWidth: '1400px' }}>
             {/* Header */}
             <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>Dashboard</h1>
-                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                <h1 style={font.pageTitle}>Dashboard</h1>
+                <p style={font.pageSubtitle}>
                     Platform overview and key metrics
                 </p>
             </div>

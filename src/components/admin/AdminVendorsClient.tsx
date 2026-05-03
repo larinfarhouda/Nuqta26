@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Search, Store, Loader2, LogIn, ChevronRight, Crown, Zap, Star } from 'lucide-react';
+import { Search, Store, Loader2, LogIn, ChevronRight, Zap, Star, Crown } from 'lucide-react';
 import { getAdminVendors, impersonateVendor } from '@/actions/admin';
 import type { AdminVendor, PaginatedResult } from '@/types/admin.types';
 import { useToast } from '@/components/ui/Toast';
 import AdminVendorDetailModal from './AdminVendorDetailModal';
+import {
+    colors, cardShell, font, inputStyle, cellStyle,
+    btnPrimary, badgeStyle, paginationBtn,
+} from './admin-tokens';
 
 const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     starter: { label: 'Starter', color: '#64748b', bg: '#f1f5f9', icon: Zap },
@@ -38,8 +42,6 @@ export default function AdminVendorsClient({
     const handleTier = (t: string) => { setTier(t); setPage(1); reload(1, search, t); };
     const handlePage = (p: number) => { setPage(p); reload(p, search, tier); };
 
-
-
     const handleLoginAs = async (e: React.MouseEvent, vendorId: string) => {
         e.stopPropagation();
         setImpersonatingId(vendorId);
@@ -61,9 +63,9 @@ export default function AdminVendorsClient({
 
     return (
         <div style={{ maxWidth: '1400px' }}>
-            <div style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>Vendors</h1>
-                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>Manage vendor accounts — click any row to view full details</p>
+            <div style={{ marginBottom: '28px' }}>
+                <h1 style={font.pageTitle}>Vendors</h1>
+                <p style={font.pageSubtitle}>Manage vendor accounts, tiers, and approval status</p>
             </div>
 
             {/* Controls */}

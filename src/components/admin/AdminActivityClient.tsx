@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Activity, User, Calendar, Store, ShoppingCart, Flag, UserPlus, Star } from 'lucide-react';
 import { getAdminActivity } from '@/actions/admin';
 import type { ActivityLog, PaginatedResult } from '@/types/admin.types';
+import { colors, cardShell, font } from './admin-tokens';
 
 const ACTION_MAP: Record<string, { label: string; icon: any; color: string }> = {
     vendor_approved: { label: 'Vendor Approved', icon: Store, color: '#10b981' },
@@ -50,19 +51,13 @@ export default function AdminActivityClient({
     return (
         <div style={{ maxWidth: '1000px' }}>
             <div style={{ marginBottom: '24px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>Activity Log</h1>
-                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                <h1 style={font.pageTitle}>Activity Log</h1>
+                <p style={font.pageSubtitle}>
                     Real-time audit trail of admin actions
                 </p>
             </div>
 
-            <div
-                style={{
-                    background: '#fff', borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0',
-                    overflow: 'hidden',
-                }}
-            >
+            <div style={cardShell}>
                 {logs.length === 0 ? (
                     <div style={{ padding: '60px 20px', textAlign: 'center' }}>
                         <Activity size={40} style={{ color: '#e2e8f0', margin: '0 auto 12px' }} />
