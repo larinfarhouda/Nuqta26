@@ -374,7 +374,36 @@ export default function AdminProspectsClient({
                             </div>
                             <div>
                                 <label style={labelStyle}>Instagram</label>
-                                <input placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={inputStyle} />
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <input placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                                    {form.instagram && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const handle = form.instagram.replace(/^@/, '').trim();
+                                                if (!handle) return;
+                                                // Auto-fill fields from Instagram handle
+                                                setForm(prev => ({
+                                                    ...prev,
+                                                    website: prev.website || `https://instagram.com/${handle}`,
+                                                    logo_url: prev.logo_url || `https://instagram.com/${handle}`,
+                                                    business_name: prev.business_name || handle,
+                                                }));
+                                                // Open Instagram profile for quick reference
+                                                window.open(`https://instagram.com/${handle}`, '_blank');
+                                            }}
+                                            style={{
+                                                padding: '8px 12px', borderRadius: '8px', border: 'none',
+                                                background: 'linear-gradient(135deg, #E1306C, #F77737)',
+                                                color: '#fff', fontSize: '11px', fontWeight: 700,
+                                                cursor: 'pointer', whiteSpace: 'nowrap',
+                                                display: 'flex', alignItems: 'center', gap: '4px',
+                                            }}
+                                        >
+                                            <ExternalLink size={12} /> Scout
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <label style={labelStyle}>Website</label>

@@ -97,10 +97,14 @@ export async function GET(request: Request) {
         supabase, bookingRepo, notificationService, yesterdayStart, yesterdayEnd
     );
 
+    // ─── Task 3: Prospect Follow-up Emails ───────────────────────────────
+    const prospectResult = await sendProspectFollowups(supabase);
+
     const summary = {
         success: true,
         reminders: reminderResult,
         reviewRequests: reviewResult,
+        prospectFollowups: prospectResult,
         durationMs: Date.now() - startTime,
     };
 
@@ -315,5 +319,104 @@ async function sendReviewRequests(
     } catch (error) {
         logger.error('Review requests task failed', { error });
         return { total: 0, sent: sentCount, failed: failedCount, error: 'Task failed' };
+    }
+}
+
+// ─── Prospect Follow-up Emails ───────────────────────────────────────────────
+
+import { sendEmail } from '@/utils/mail';
+
+const FOLLOWUP_DAYS = [3, 7]; // Send follow-ups at day 3 and day 7
+
+async function sendProspectFollowups(supabase: any) {
+    let sentCount = 0;
+    let skippedCount = 0;
+
+    try {
+        // Get all prospects in 'contacted' status with email
+        const { data: prospects } = await supabase
+            .from('prospect_vendors')
+            .select('id, business_name, contact_email, claim_token, updated_at, notes')
+            .eq('status', 'contacted')
+            .not('contact_email', 'is', null)
+            .not('claim_token', 'is', null);
+
+        if (!prospects || prospects.length === 0) {
+            return { total: 0, sent: 0, skipped: 0 };
+        }
+
+        const now = Date.now();
+
+        for (const prospect of prospects) {
+            const contactedAt = new Date(prospect.updated_at).getTime();
+            const daysSince = Math.floor((now - contactedAt) / 86400000);
+
+            // Check if today matches a follow-up day
+            if (!FOLLOWUP_DAYS.includes(daysSince)) {
+                skippedCount++;
+                continue;
+            }
+
+            // Check if we already sent this follow-up (tracked in notes)
+            const followupTag = `[followup-day-${daysSince}]`;
+            if (prospect.notes?.includes(followupTag)) {
+                skippedCount++;
+                continue;
+            }
+
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.events';
+            const claimUrl = `${siteUrl}/claim/${prospect.claim_token}`;
+
+            // Get interest count for this prospect
+            const { data: events } = await supabase
+                .from('events')
+                .select('id')
+                .eq('prospect_vendor_id', prospect.id);
+            let interestCount = 0;
+            if (events?.length > 0) {
+                const { count } = await supabase
+                    .from('event_interests')
+                    .select('*', { count: 'exact', head: true })
+                    .in('event_id', events.map((e: any) => e.id));
+                interestCount = count || 0;
+            }
+
+            const isDay3 = daysSince === 3;
+            const subject = isDay3
+                ? `Reminder: ${prospect.business_name}, your Nuqta page is waiting!`
+                : `Last chance: Claim your Nuqta page, ${prospect.business_name}`;
+
+            const body = isDay3
+                ? `Hi ${prospect.business_name},\n\nJust a friendly reminder — we created a page for you on Nuqta a few days ago.${interestCount > 0 ? ` ${interestCount} people have already expressed interest in your events!` : ''}\n\nClaim your free page to start managing bookings:\n${claimUrl}\n\nBest regards,\nThe Nuqta Team`
+                : `Hi ${prospect.business_name},\n\nWe reached out last week about your page on Nuqta.${interestCount > 0 ? ` ${interestCount} people are interested in your events — don't miss out!` : ' People are discovering your events on our platform.'}\n\nThis is the last automated reminder. Claim your free page anytime:\n${claimUrl}\n\nWe'd love to have you on board!\nThe Nuqta Team`;
+
+            try {
+                await sendEmail({
+                    to: prospect.contact_email,
+                    subject,
+                    html: body.replace(/\n/g, '<br>'),
+                });
+
+                // Mark this follow-up as sent in notes
+                const currentNotes = prospect.notes || '';
+                await supabase
+                    .from('prospect_vendors')
+                    .update({ notes: `${currentNotes} ${followupTag}`.trim() })
+                    .eq('id', prospect.id);
+
+                sentCount++;
+                logger.info('Prospect follow-up sent', { prospectId: prospect.id, day: daysSince });
+            } catch (err) {
+                logger.error('Failed to send prospect follow-up', { prospectId: prospect.id, error: err });
+            }
+
+            // Rate limit: 600ms between emails
+            await new Promise(resolve => setTimeout(resolve, 600));
+        }
+
+        return { total: prospects.length, sent: sentCount, skipped: skippedCount };
+    } catch (error) {
+        logger.error('Prospect follow-up task failed', { error });
+        return { total: 0, sent: sentCount, skipped: skippedCount, error: 'Task failed' };
     }
 }
