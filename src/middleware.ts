@@ -18,6 +18,11 @@ const COUNTRY_MAP: Record<string, string> = {
 export default function middleware(request: NextRequest) {
     const response = intlMiddleware(request);
 
+    // --- Request Tracing ---
+    // Generate a unique requestId for distributed tracing
+    const requestId = crypto.randomUUID();
+    response.headers.set('x-request-id', requestId);
+
     // Only set the referral cookie if it doesn't already exist
     if (!request.cookies.get(COOKIE_NAME)) {
         const url = request.nextUrl;

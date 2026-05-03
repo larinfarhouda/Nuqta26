@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
-    optimizePackageImports: ['lucide-react', 'framer-motion', '@supabase/supabase-js'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@supabase/supabase-js', 'recharts', '@react-email/components'],
     // Better code splitting
   },
   compiler: {
