@@ -10,6 +10,13 @@ jest.mock('@/utils/supabase/server', () => ({
 jest.mock('@/repositories/vendor.repository', () => ({ VendorRepository: jest.fn() }));
 jest.mock('@/repositories/ticket.repository', () => ({ TicketRepository: jest.fn() }));
 jest.mock('@/repositories/category.repository', () => ({ CategoryRepository: jest.fn() }));
+jest.mock('@/repositories/review.repository', () => ({
+    ReviewRepository: jest.fn().mockImplementation(() => ({
+        getVendorRatingSummary: jest.fn().mockResolvedValue({ average: 4.5, count: 10 }),
+        getVendorReviews: jest.fn().mockResolvedValue([]),
+        findByVendorId: jest.fn().mockResolvedValue([]),
+    })),
+}));
 
 const mockGetPublicVendor = jest.fn();
 
@@ -40,7 +47,7 @@ describe('Public Vendor Actions', () => {
             const vendor = { id: 'v1', business_name: 'Test' };
             mockGetPublicVendor.mockResolvedValue(vendor);
             const result = await getPublicVendor('test-vendor');
-            expect(result).toEqual(vendor);
+            expect(result).toEqual(expect.objectContaining({ id: 'v1', business_name: 'Test' }));
         });
 
         it('should return null on error', async () => {

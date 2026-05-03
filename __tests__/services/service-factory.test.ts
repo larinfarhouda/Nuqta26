@@ -9,6 +9,7 @@ jest.mock('@/components/emails/NotificationTemplate', () => ({ default: jest.fn(
 jest.mock('@/components/emails/EventReminderTemplate', () => ({ default: jest.fn() }));
 jest.mock('@/components/emails/EventSoldOutTemplate', () => ({ default: jest.fn() }));
 jest.mock('@/components/emails/ReviewReceivedTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/ReviewRequestTemplate', () => ({ default: jest.fn() }));
 jest.mock('@/components/emails/AuthActionTemplate', () => ({ default: jest.fn() }));
 jest.mock('@/components/emails/EmailLayout', () => ({ default: jest.fn() }));
 jest.mock('@/utils/mail', () => ({ sendEmail: jest.fn() }));
@@ -64,17 +65,21 @@ describe('ServiceFactory', () => {
         expect(factory.getAdminService()).toBeDefined();
     });
 
-    it('should return BookingRepository', () => {
-        expect(factory.getBookingRepository()).toBeDefined();
+    it('should return same service instance across calls (singleton caching)', () => {
+        const service1 = factory.getEventService();
+        const service2 = factory.getEventService();
+        expect(service1).toBe(service2);
     });
 
-    it('should return EventRepository', () => {
-        expect(factory.getEventRepository()).toBeDefined();
+    it('should return same BookingService instance across calls', () => {
+        const service1 = factory.getBookingService();
+        const service2 = factory.getBookingService();
+        expect(service1).toBe(service2);
     });
 
-    it('should return same repo instance across calls', () => {
-        const repo1 = factory.getEventRepository();
-        const repo2 = factory.getEventRepository();
-        expect(repo1).toBe(repo2);
+    it('should return same AdminService instance across calls', () => {
+        const service1 = factory.getAdminService();
+        const service2 = factory.getAdminService();
+        expect(service1).toBe(service2);
     });
 });

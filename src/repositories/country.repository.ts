@@ -15,10 +15,10 @@ export interface Country {
     timezone: string;
     is_active: boolean;
     sort_order: number;
-    subscription_growth_price: number;
-    subscription_professional_price: number;
-    subscription_growth_founder_price: number;
-    subscription_professional_founder_price: number;
+    subscription_pro_monthly_price: number;
+    subscription_business_monthly_price: number;
+    subscription_pro_annual_price: number;
+    subscription_business_annual_price: number;
 }
 
 export interface City {

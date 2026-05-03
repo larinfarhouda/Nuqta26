@@ -12,9 +12,9 @@ import {
 } from './admin-tokens';
 
 const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-    starter: { label: 'Starter', color: '#64748b', bg: '#f1f5f9', icon: Zap },
-    growth: { label: 'Growth', color: '#7c3aed', bg: '#ede9fe', icon: Star },
-    professional: { label: 'Professional', color: '#d97706', bg: '#fef3c7', icon: Crown },
+    free: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap },
+    pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star },
+    business: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown },
 };
 
 export default function AdminVendorsClient({

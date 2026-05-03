@@ -93,11 +93,11 @@ export async function getVendorFullDetails(vendorId: string) {
     }
 }
 
-export async function updateVendorSubscription(vendorId: string, tier: string, isFounder: boolean) {
+export async function updateVendorSubscription(vendorId: string, tier: string, billingPeriod: string) {
     try {
         const { user } = await requireAdmin();
         const service = getAdminService();
-        await service.updateVendorSubscription(vendorId, tier, isFounder, user.id);
+        await service.updateVendorSubscription(vendorId, tier, billingPeriod, user.id);
         return { success: true };
     } catch (error) {
         logger.error('Failed to update vendor subscription', { error });

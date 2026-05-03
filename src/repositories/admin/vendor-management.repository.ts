@@ -21,7 +21,7 @@ export class AdminVendorRepository extends BaseRepository {
             .from('vendors')
             .select(`
                 id, business_name, company_logo, slug, category, country,
-                status, is_verified, subscription_tier, is_founder_pricing, created_at,
+                status, is_verified, subscription_tier, billing_period, created_at,
                 profiles!inner(full_name, email)
             `, { count: 'exact' })
             .range(from, to)
@@ -58,7 +58,7 @@ export class AdminVendorRepository extends BaseRepository {
             status: v.status,
             is_verified: v.is_verified,
             subscription_tier: v.subscription_tier,
-            is_founder_pricing: v.is_founder_pricing,
+            billing_period: v.billing_period || 'monthly',
             created_at: v.created_at,
             country: v.country || null,
             email: v.profiles?.email || null,
@@ -98,7 +98,7 @@ export class AdminVendorRepository extends BaseRepository {
                     location_lat, location_long,
                     bank_name, bank_account_name, bank_iban,
                     subscription_tier, subscription_status, subscription_starts_at,
-                    subscription_expires_at, is_founder_pricing,
+                    subscription_expires_at, billing_period,
                     cancellation_policy, return_policy, tax_id_document, created_at,
                     profiles(full_name, email)
                 `)
@@ -119,12 +119,12 @@ export class AdminVendorRepository extends BaseRepository {
         };
     }
 
-    async updateVendorSubscription(vendorId: string, tier: string, isFounder: boolean) {
+    async updateVendorSubscription(vendorId: string, tier: string, billingPeriod: string) {
         const { error } = await this.client
             .from('vendors')
             .update({
                 subscription_tier: tier,
-                is_founder_pricing: isFounder,
+                billing_period: billingPeriod,
                 subscription_status: 'active',
                 subscription_starts_at: new Date().toISOString(),
                 subscription_expires_at: null, // admin override = no expiry

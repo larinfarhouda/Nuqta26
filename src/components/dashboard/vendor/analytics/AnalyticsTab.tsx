@@ -13,7 +13,7 @@ export default function AnalyticsTab({ vendorId, activeEventsCount = 0, demoMode
     const supabase = createClient();
     const [analytics, setAnalytics] = useState<VendorAnalyticsDTO | null>(null);
     const [segmentation, setSegmentation] = useState<SegmentationDataDTO | null>(null);
-    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'professional' : 'starter');
+    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'business' : 'free');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const t = useTranslations('Dashboard.vendor.analytics');
@@ -46,7 +46,7 @@ export default function AnalyticsTab({ vendorId, activeEventsCount = 0, demoMode
                     setAnalytics(a);
                     setSegmentation(s);
                     if (tierData.data) {
-                        setTier((tierData.data.subscription_tier || 'starter') as SubscriptionTier);
+                        setTier((tierData.data.subscription_tier || 'free') as SubscriptionTier);
                     }
                 }
             } catch (err: any) {
@@ -121,7 +121,7 @@ export default function AnalyticsTab({ vendorId, activeEventsCount = 0, demoMode
                     )}
 
                     {/* Upgrade Button */}
-                    {tier !== 'professional' && (
+                    {tier !== 'business' && (
                         <button className="mt-3 w-full py-1.5 px-3 bg-[#2CA58D] hover:bg-[#258f7a] text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 group">
                             <span>ترقية</span>
                             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />

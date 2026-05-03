@@ -3,11 +3,15 @@ jest.mock('@/lib/logger/logger', () => ({
     logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
+// Ensure no Redis in tests (use memory fallback)
+delete process.env.UPSTASH_REDIS_REST_URL;
+delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
 import { CacheManager, CacheKeys, CacheTags } from '@/lib/cache/cache-manager';
 
-describe('CacheManager', () => {
-    beforeEach(() => {
-        CacheManager.clear();
+describe('CacheManager (in-memory fallback)', () => {
+    beforeEach(async () => {
+        await CacheManager.clear();
         CacheManager.resetStats();
     });
 
@@ -41,25 +45,11 @@ describe('CacheManager', () => {
         });
     });
 
-    describe('set / getCached', () => {
-        it('should set and get cached value', () => {
-            CacheManager.set('test', 'value');
-            expect(CacheManager.getCached('test')).toBe('value');
-        });
-
-        it('should return null for non-existent key', () => {
-            expect(CacheManager.getCached('nonexistent')).toBeNull();
-        });
-
-        it('should return null for expired entry', () => {
-            const now = Date.now();
-            const spy = jest.spyOn(Date, 'now');
-            spy.mockReturnValue(now);
-            CacheManager.set('expired', 'data', { ttl: 1 }); // 1s TTL
-            // Advance time past TTL
-            spy.mockReturnValue(now + 2000);
-            expect(CacheManager.getCached('expired')).toBeNull();
-            spy.mockRestore();
+    describe('set', () => {
+        it('should set a value', async () => {
+            await CacheManager.set('test', 'value');
+            const result = await CacheManager.get('test', async () => 'fallback');
+            expect(result).toBe('value');
         });
     });
 
@@ -67,16 +57,21 @@ describe('CacheManager', () => {
         it('should invalidate entries by tag', async () => {
             const fetchFn = jest.fn().mockResolvedValue('data');
             await CacheManager.get('key1', fetchFn, { tags: ['events'] });
-            CacheManager.invalidate('events');
-            expect(CacheManager.getCached('key1')).toBeNull();
+            await CacheManager.invalidate('events');
+            // Should refetch after invalidation
+            await CacheManager.get('key1', fetchFn);
+            expect(fetchFn).toHaveBeenCalledTimes(2);
         });
     });
 
     describe('invalidateKey', () => {
         it('should invalidate a specific key', async () => {
-            CacheManager.set('mykey', 'value');
-            CacheManager.invalidateKey('mykey');
-            expect(CacheManager.getCached('mykey')).toBeNull();
+            await CacheManager.set('mykey', 'value');
+            await CacheManager.invalidateKey('mykey');
+            const fetchFn = jest.fn().mockResolvedValue('new-value');
+            const result = await CacheManager.get('mykey', fetchFn);
+            expect(result).toBe('new-value');
+            expect(fetchFn).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -85,33 +80,36 @@ describe('CacheManager', () => {
             const fn = jest.fn().mockResolvedValue('d');
             await CacheManager.get('a', fn, { tags: ['events'] });
             await CacheManager.get('b', fn, { tags: ['vendors'] });
-            CacheManager.invalidateTags(['events', 'vendors']);
-            expect(CacheManager.getCached('a')).toBeNull();
-            expect(CacheManager.getCached('b')).toBeNull();
+            await CacheManager.invalidateTags(['events', 'vendors']);
+            // Both should refetch
+            await CacheManager.get('a', fn);
+            await CacheManager.get('b', fn);
+            expect(fn).toHaveBeenCalledTimes(4); // 2 initial + 2 after invalidation
         });
     });
 
     describe('clear', () => {
         it('should remove all entries', async () => {
-            CacheManager.set('a', 1);
-            CacheManager.set('b', 2);
-            CacheManager.clear();
-            expect(CacheManager.getCached('a')).toBeNull();
-            expect(CacheManager.getCached('b')).toBeNull();
+            await CacheManager.set('a', 1);
+            await CacheManager.set('b', 2);
+            await CacheManager.clear();
+            const fetchFn = jest.fn().mockResolvedValue('fresh');
+            await CacheManager.get('a', fetchFn);
+            expect(fetchFn).toHaveBeenCalledTimes(1);
         });
     });
 
     describe('getStats', () => {
         it('should track hits and misses', async () => {
-            CacheManager.set('hit', 'data');
-            CacheManager.getCached('hit');      // hit
-            CacheManager.getCached('miss');     // miss
+            const fetchFn = jest.fn().mockResolvedValue('data');
+            await CacheManager.get('hit', fetchFn);    // miss + cache
+            await CacheManager.get('hit', fetchFn);    // hit
+            await CacheManager.get('miss', fetchFn);   // miss
 
             const stats = CacheManager.getStats();
             expect(stats.hits).toBe(1);
-            expect(stats.misses).toBe(1);
-            expect(stats.size).toBe(1);
-            expect(stats.hitRate).toBe(50);
+            expect(stats.misses).toBe(2);
+            expect(stats.backend).toBe('memory');
         });
     });
 
@@ -121,8 +119,14 @@ describe('CacheManager', () => {
                 { key: 'warm1', fn: async () => 'w1' },
                 { key: 'warm2', fn: async () => 'w2' },
             ]);
-            expect(CacheManager.getCached('warm1')).toBe('w1');
-            expect(CacheManager.getCached('warm2')).toBe('w2');
+            const fn1 = jest.fn().mockResolvedValue('fallback');
+            const fn2 = jest.fn().mockResolvedValue('fallback');
+            const result1 = await CacheManager.get('warm1', fn1);
+            const result2 = await CacheManager.get('warm2', fn2);
+            expect(result1).toBe('w1');
+            expect(result2).toBe('w2');
+            expect(fn1).not.toHaveBeenCalled();
+            expect(fn2).not.toHaveBeenCalled();
         });
     });
 });

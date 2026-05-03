@@ -33,6 +33,7 @@ describe('EventService', () => {
             update: jest.fn(),
             delete: jest.fn(),
             getAllForSitemap: jest.fn(),
+            countActiveEventsByVendor: jest.fn(),
         } as any;
 
         mockTicketRepo = {
@@ -50,6 +51,7 @@ describe('EventService', () => {
 
         mockReviewRepo = {
             getRatingSummary: jest.fn(),
+            getVendorRatingSummary: jest.fn().mockResolvedValue({ average: 0, count: 0 }),
             findByEventId: jest.fn(),
             canUserReview: jest.fn(),
             create: jest.fn(),

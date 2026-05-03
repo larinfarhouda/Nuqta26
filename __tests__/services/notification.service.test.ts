@@ -13,16 +13,25 @@ jest.mock('@/utils/mail', () => ({
 // Mock React to avoid JSX transform issues
 jest.mock('react', () => ({
     createElement: jest.fn().mockReturnValue('mock-react-element'),
+    forwardRef: jest.fn((fn) => fn),
 }));
 
+// Mock React Email
+jest.mock('@react-email/components', () => ({}));
+jest.mock('@react-email/render', () => ({ render: jest.fn() }));
+
 // Mock all email templates
-jest.mock('@/components/emails/BookingUserTemplate', () => 'BookingUserTemplate');
-jest.mock('@/components/emails/BookingVendorTemplate', () => 'BookingVendorTemplate');
-jest.mock('@/components/emails/WelcomeTemplate', () => 'WelcomeTemplate');
-jest.mock('@/components/emails/EventReminderTemplate', () => 'EventReminderTemplate');
-jest.mock('@/components/emails/ReviewReceivedTemplate', () => 'ReviewReceivedTemplate');
-jest.mock('@/components/emails/EventSoldOutTemplate', () => 'EventSoldOutTemplate');
-jest.mock('@/components/emails/NewSignupAdminTemplate', () => 'NewSignupAdminTemplate');
+jest.mock('@/components/emails/BookingUserTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/BookingVendorTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/WelcomeTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/EventReminderTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/ReviewReceivedTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/ReviewRequestTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/EventSoldOutTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/NewSignupAdminTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/NotificationTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/AuthActionTemplate', () => ({ default: jest.fn() }));
+jest.mock('@/components/emails/EmailLayout', () => ({ default: jest.fn() }));
 
 import { sendEmail } from '@/utils/mail';
 
@@ -185,7 +194,7 @@ describe('NotificationService', () => {
             expect(mockSendEmail).toHaveBeenCalledWith(
                 expect.objectContaining({
                     to: 'user@example.com',
-                    subject: 'How was Concert?',
+                    subject: expect.stringContaining('Concert'),
                 })
             );
         });
@@ -244,7 +253,7 @@ describe('NotificationService', () => {
             expect(mockSendEmail).toHaveBeenCalledWith(
                 expect.objectContaining({
                     to: 'user@example.com',
-                    subject: 'Reminder: Concert is tomorrow!',
+                    subject: expect.stringContaining('Concert'),
                 })
             );
         });

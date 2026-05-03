@@ -225,12 +225,12 @@ describe('SEO Utilities', () => {
         it('should generate organization schema in Arabic', () => {
             const result = generateOrganizationSchema('ar');
             expect(result['@type']).toBe('Organization');
-            expect(result.description).toContain('العربي');
+            expect(result.description).toContain('الرقمية');
         });
 
         it('should generate organization schema in English', () => {
             const result = generateOrganizationSchema('en');
-            expect(result.description).toContain('Arabic-speaking');
+            expect(result.description).toContain('digital marketplace');
         });
     });
 

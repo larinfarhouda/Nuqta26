@@ -76,15 +76,15 @@ export class AdminService {
         return this.vendorRepo.getVendorFullDetails(vendorId);
     }
 
-    async updateVendorSubscription(vendorId: string, tier: string, isFounder: boolean, adminId: string) {
-        logger.info('AdminService: Updating vendor subscription', { vendorId, tier, isFounder });
-        await this.vendorRepo.updateVendorSubscription(vendorId, tier, isFounder);
+    async updateVendorSubscription(vendorId: string, tier: string, billingPeriod: string, adminId: string) {
+        logger.info('AdminService: Updating vendor subscription', { vendorId, tier, billingPeriod });
+        await this.vendorRepo.updateVendorSubscription(vendorId, tier, billingPeriod);
         await this.activityRepo.logActivity({
             user_id: adminId,
             action: 'subscription_changed',
             entity_type: 'vendor',
             entity_id: vendorId,
-            metadata: { tier, is_founder: isFounder },
+            metadata: { tier, billing_period: billingPeriod },
         });
     }
 

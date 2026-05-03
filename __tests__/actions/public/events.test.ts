@@ -14,13 +14,23 @@ jest.mock('@/lib/track-activity', () => ({
     trackActivity: jest.fn(),
 }));
 
+jest.mock('@/lib/rate-limit/rate-limiter', () => ({
+    checkRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 10, reset: Date.now() + 60000 }),
+    RateLimiters: { booking: jest.fn() },
+}));
+
+jest.mock('@/lib/validation/action-schemas', () => ({
+    CreateBookingSchema: { safeParse: jest.fn().mockReturnValue({ success: true, data: {} }) },
+    validateInput: jest.fn().mockReturnValue({ success: true, data: {} }),
+}));
+
 const mockGetEventService = jest.fn();
-const mockGetBookingRepository = jest.fn();
+const mockGetBookingService = jest.fn();
 
 jest.mock('@/services/service-factory', () => ({
     ServiceFactory: jest.fn().mockImplementation(() => ({
         getEventService: mockGetEventService,
-        getBookingRepository: mockGetBookingRepository,
+        getBookingService: mockGetBookingService,
         getDiscountService: jest.fn().mockReturnValue({}),
         getNotificationService: jest.fn().mockReturnValue({}),
     })),

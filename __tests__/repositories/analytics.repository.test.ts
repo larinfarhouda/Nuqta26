@@ -14,6 +14,7 @@ function createAnalyticsMock() {
     const builder: any = {
         select: jest.fn(),
         eq: jest.fn(),
+        neq: jest.fn(),
         in: jest.fn(),
         single: jest.fn(),
     };
@@ -21,6 +22,7 @@ function createAnalyticsMock() {
     // All methods return builder for chaining
     builder.select.mockReturnValue(builder);
     builder.eq.mockReturnValue(builder);
+    builder.neq.mockReturnValue(builder);
     builder.in.mockReturnValue(builder);
 
     // Make builder thenable so await resolves with eqResolveData

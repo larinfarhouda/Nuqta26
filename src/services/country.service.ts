@@ -102,13 +102,13 @@ export class CountryService {
      */
     getSubscriptionPrice(
         country: Country,
-        tier: 'growth' | 'professional',
-        isFounder: boolean
+        tier: 'pro' | 'business',
+        period: 'monthly' | 'annual' = 'monthly'
     ): number {
-        if (tier === 'growth') {
-            return isFounder ? country.subscription_growth_founder_price : country.subscription_growth_price;
+        if (tier === 'pro') {
+            return period === 'annual' ? country.subscription_pro_annual_price : country.subscription_pro_monthly_price;
         }
-        return isFounder ? country.subscription_professional_founder_price : country.subscription_professional_price;
+        return period === 'annual' ? country.subscription_business_annual_price : country.subscription_business_monthly_price;
     }
 
     // ── Admin CRUD ─────────────────────────────────────────────

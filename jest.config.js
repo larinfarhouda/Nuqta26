@@ -11,6 +11,8 @@ const customJestConfig = {
     testEnvironment: 'jest-environment-jsdom',
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
+        '^@upstash/redis$': '<rootDir>/__tests__/mocks/upstash-redis.js',
+        '^@upstash/ratelimit$': '<rootDir>/__tests__/mocks/upstash-ratelimit.js',
     },
     testMatch: [
         '**/__tests__/**/*.test.ts',
@@ -24,12 +26,15 @@ const customJestConfig = {
     ],
     coverageThreshold: {
         global: {
-            branches: 10,    // Raised after Phase 7-8 test coverage improvements (439 tests)
-            functions: 12,   // Raised after Phase 7-8 test coverage improvements (439 tests)
-            lines: 12,       // Raised after Phase 7-8 test coverage improvements (439 tests)
-            statements: 12,  // Raised after Phase 7-8 test coverage improvements (439 tests)
+            branches: 10,
+            functions: 12,
+            lines: 12,
+            statements: 12,
         },
     },
+    transformIgnorePatterns: [
+        '/node_modules/(?!(uncrypto|@upstash)/)',
+    ],
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

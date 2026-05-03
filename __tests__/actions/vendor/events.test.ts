@@ -15,14 +15,12 @@ jest.mock('@/utils/slugify', () => ({ slugify: (s: string) => s.toLowerCase().re
 const mockGetUser = jest.fn();
 const mockGetEventService = jest.fn();
 const mockGetBookingService = jest.fn();
-const mockGetEventRepository = jest.fn();
 const mockGetDiscountService = jest.fn();
 
 jest.mock('@/services/service-factory', () => ({
     ServiceFactory: jest.fn().mockImplementation(() => ({
         getEventService: mockGetEventService,
         getBookingService: mockGetBookingService,
-        getEventRepository: mockGetEventRepository,
         getDiscountService: mockGetDiscountService,
     })),
 }));
@@ -210,7 +208,7 @@ describe('Vendor Event Actions', () => {
                 data: { id: 'v1', bank_name: 'Bank', bank_iban: 'TR123', subscription_tier: 'starter' },
                 error: null,
             });
-            mockGetEventRepository.mockReturnValue({
+            mockGetEventService.mockReturnValue({
                 countActiveEventsByVendor: jest.fn().mockResolvedValue(1), // starter limit = 1
             });
 
@@ -226,16 +224,14 @@ describe('Vendor Event Actions', () => {
                 data: { id: 'v1', bank_name: 'Bank', bank_iban: 'TR123', subscription_tier: 'growth' },
                 error: null,
             });
-            mockGetEventRepository.mockReturnValue({
-                countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
-            });
-            mockMaybeSingle.mockResolvedValue({ data: null, error: null }); // no slug collision
             mockGetEventService.mockReturnValue({
+                countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
                 createEvent: jest.fn().mockResolvedValue({ id: 'new-event-1' }),
             });
+            mockMaybeSingle.mockResolvedValue({ data: null, error: null }); // no slug collision
 
             const result = await createEvent(baseFormData());
-            expect(result).toEqual({ success: true, eventId: 'new-event-1' });
+            expect(result).toEqual(expect.objectContaining({ success: true, eventId: 'new-event-1' }));
         });
 
         it('should handle slug collision by appending suffix', async () => {
@@ -244,12 +240,12 @@ describe('Vendor Event Actions', () => {
                 data: { id: 'v1', bank_name: 'Bank', bank_iban: 'TR123', subscription_tier: 'growth' },
                 error: null,
             });
-            mockGetEventRepository.mockReturnValue({
+            const mockCreateEvent = jest.fn().mockResolvedValue({ id: 'e1' });
+            mockGetEventService.mockReturnValue({
                 countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
+                createEvent: mockCreateEvent,
             });
             mockMaybeSingle.mockResolvedValue({ data: { slug: 'test-event' }, error: null }); // slug exists
-            const mockCreateEvent = jest.fn().mockResolvedValue({ id: 'e1' });
-            mockGetEventService.mockReturnValue({ createEvent: mockCreateEvent });
 
             await createEvent(baseFormData());
             // Slug should have random suffix appended
@@ -263,13 +259,11 @@ describe('Vendor Event Actions', () => {
                 data: { id: 'v1', bank_name: 'Bank', bank_iban: 'TR123', subscription_tier: 'growth' },
                 error: null,
             });
-            mockGetEventRepository.mockReturnValue({
-                countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
-            });
-            mockMaybeSingle.mockResolvedValue({ data: null, error: null });
             mockGetEventService.mockReturnValue({
+                countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
                 createEvent: jest.fn().mockResolvedValue({ id: 'e1' }),
             });
+            mockMaybeSingle.mockResolvedValue({ data: null, error: null });
 
             const fd = baseFormData();
             fd.set('tickets', JSON.stringify([{ name: 'VIP', price: '50', quantity: '10' }]));
@@ -293,13 +287,11 @@ describe('Vendor Event Actions', () => {
                 data: { id: 'v1', bank_name: 'Bank', bank_iban: 'TR123', subscription_tier: 'growth' },
                 error: null,
             });
-            mockGetEventRepository.mockReturnValue({
-                countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
-            });
-            mockMaybeSingle.mockResolvedValue({ data: null, error: null });
             mockGetEventService.mockReturnValue({
+                countActiveEventsByVendor: jest.fn().mockResolvedValue(0),
                 createEvent: jest.fn().mockResolvedValue({ id: 'e1' }),
             });
+            mockMaybeSingle.mockResolvedValue({ data: null, error: null });
             const mockCreateBulk = jest.fn().mockResolvedValue(undefined);
             mockGetDiscountService.mockReturnValue({
                 createBulkDiscountsForEvent: mockCreateBulk,

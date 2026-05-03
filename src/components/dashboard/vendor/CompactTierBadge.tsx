@@ -6,7 +6,7 @@ import {
     SUBSCRIPTION_TIERS,
     type SubscriptionTier
 } from '@/lib/constants/subscription';
-import { Crown, CheckCircle2, Sparkles } from 'lucide-react';
+import { Crown, CheckCircle2 } from 'lucide-react';
 
 interface CompactTierBadgeProps {
     vendorId: string;
@@ -15,12 +15,10 @@ interface CompactTierBadgeProps {
 
 export default function CompactTierBadge({ vendorId, demoMode = false }: CompactTierBadgeProps) {
     const supabase = createClient();
-    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'professional' : 'starter');
-    const [isFounder, setIsFounder] = useState(false);
+    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'business' : 'free');
     const [loading, setLoading] = useState(!demoMode);
 
     useEffect(() => {
-        // Skip database fetch in demo mode
         if (demoMode) {
             setLoading(false);
             return;
@@ -29,13 +27,12 @@ export default function CompactTierBadge({ vendorId, demoMode = false }: Compact
         async function fetchSubscriptionInfo() {
             const { data } = await supabase
                 .from('vendors')
-                .select('subscription_tier, is_founder_pricing')
+                .select('subscription_tier')
                 .eq('id', vendorId)
                 .single();
 
             if (data) {
-                setTier((data.subscription_tier || 'starter') as SubscriptionTier);
-                setIsFounder(data.is_founder_pricing || false);
+                setTier((data.subscription_tier || 'free') as SubscriptionTier);
             }
             setLoading(false);
         }
@@ -49,32 +46,31 @@ export default function CompactTierBadge({ vendorId, demoMode = false }: Compact
         );
     }
 
-    // Don't show anything for starter tier
-    if (tier === 'starter') return null;
+    // Don't show anything for free tier
+    if (tier === 'free') return null;
 
     const tierConfig = SUBSCRIPTION_TIERS[tier];
 
-    // Tier-specific styling
     const tierStyles = {
-        growth: {
+        pro: {
             bg: 'bg-[#2CA58D]/10',
             border: 'border-[#2CA58D]/30',
             text: 'text-[#2CA58D]',
             icon: CheckCircle2,
             iconColor: 'text-[#2CA58D]',
-            label: tierConfig.name === 'Growth' ? 'موثق' : 'Verified'
+            label: 'موثق'
         },
-        professional: {
+        business: {
             bg: 'bg-gradient-to-r from-purple-500/10 to-pink-500/10',
             border: 'border-purple-300/50',
             text: 'text-purple-600',
             icon: Crown,
             iconColor: 'text-purple-600',
-            label: tierConfig.name === 'Professional' ? 'متميز' : 'Premium'
+            label: 'متميز'
         }
     };
 
-    const style = tierStyles[tier as 'growth' | 'professional'];
+    const style = tierStyles[tier as 'pro' | 'business'];
     const Icon = style.icon;
 
     return (
@@ -83,9 +79,6 @@ export default function CompactTierBadge({ vendorId, demoMode = false }: Compact
             <span className={`text-xs font-black ${style.text} uppercase tracking-wide`}>
                 {style.label}
             </span>
-            {isFounder && (
-                <Sparkles className="w-3 h-3 text-[#2CA58D]" />
-            )}
         </div>
     );
 }

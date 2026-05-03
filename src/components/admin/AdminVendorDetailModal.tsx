@@ -27,9 +27,9 @@ const TABS = ['overview', 'subscription', 'status', 'banking', 'policies'] as co
 type Tab = typeof TABS[number];
 
 const TIER_CONFIG = {
-    starter: { label: 'Starter', color: '#64748b', bg: '#f1f5f9' },
-    growth: { label: 'Growth', color: '#7c3aed', bg: '#ede9fe' },
-    professional: { label: 'Professional', color: '#d97706', bg: '#fef3c7' },
+    free: { label: 'Free', color: '#64748b', bg: '#f1f5f9' },
+    pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe' },
+    business: { label: 'Business', color: '#d97706', bg: '#fef3c7' },
 };
 
 export default function AdminVendorDetailModal({
@@ -83,8 +83,8 @@ export default function AdminVendorDetailModal({
         setSaveMsg('');
         const result = await updateVendorSubscription(
             vendorId,
-            editData.subscription_tier || 'starter',
-            editData.is_founder_pricing || false,
+            editData.subscription_tier || 'free',
+            editData.billing_period || 'monthly',
         );
         if ('success' in result) {
             setSaveMsg('Subscription updated!');
@@ -135,7 +135,7 @@ export default function AdminVendorDetailModal({
         );
     }
 
-    const tierCfg = TIER_CONFIG[(vendor.subscription_tier || 'starter') as keyof typeof TIER_CONFIG] || TIER_CONFIG.starter;
+    const tierCfg = TIER_CONFIG[(vendor.subscription_tier || 'free') as keyof typeof TIER_CONFIG] || TIER_CONFIG.free;
 
     return (
         <div style={overlayStyle}>

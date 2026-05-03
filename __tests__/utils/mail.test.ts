@@ -6,6 +6,16 @@ jest.mock('resend', () => ({
     })),
 }));
 
+// Mock logger to suppress output
+jest.mock('@/lib/logger/logger', () => ({
+    logger: {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+    },
+}));
+
 describe('sendEmail', () => {
     const originalEnv = process.env;
 
@@ -21,13 +31,14 @@ describe('sendEmail', () => {
 
     it('should return error when RESEND_API_KEY is not set', async () => {
         process.env.RESEND_API_KEY = '';
-        // Need to re-import to pick up env change
         jest.resetModules();
-        // Re-mock resend for the new module load
         jest.mock('resend', () => ({
             Resend: jest.fn().mockImplementation(() => ({
                 emails: { send: mockSend },
             })),
+        }));
+        jest.mock('@/lib/logger/logger', () => ({
+            logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
         }));
         const { sendEmail } = require('@/utils/mail');
         const result = await sendEmail({
@@ -36,7 +47,7 @@ describe('sendEmail', () => {
             react: null,
         });
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Missing API Key');
+        expect(result.error.message).toBe('Missing API Key');
     });
 
     it('should send email successfully', async () => {
@@ -47,6 +58,9 @@ describe('sendEmail', () => {
                     send: jest.fn().mockResolvedValue({ data: { id: 'email-123' }, error: null }),
                 },
             })),
+        }));
+        jest.mock('@/lib/logger/logger', () => ({
+            logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
         }));
         process.env.RESEND_API_KEY = 'test-key';
         const { sendEmail } = require('@/utils/mail');
@@ -59,14 +73,20 @@ describe('sendEmail', () => {
         expect(result.data).toEqual({ id: 'email-123' });
     });
 
-    it('should handle Resend API errors', async () => {
+    it('should handle Resend API errors (non-retryable)', async () => {
         jest.resetModules();
         jest.mock('resend', () => ({
             Resend: jest.fn().mockImplementation(() => ({
                 emails: {
-                    send: jest.fn().mockResolvedValue({ data: null, error: { message: 'Rate limited' } }),
+                    send: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: { statusCode: 400, message: 'Bad request' },
+                    }),
                 },
             })),
+        }));
+        jest.mock('@/lib/logger/logger', () => ({
+            logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
         }));
         process.env.RESEND_API_KEY = 'test-key';
         const { sendEmail } = require('@/utils/mail');
@@ -86,6 +106,9 @@ describe('sendEmail', () => {
                     send: jest.fn().mockRejectedValue(new Error('Network error')),
                 },
             })),
+        }));
+        jest.mock('@/lib/logger/logger', () => ({
+            logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
         }));
         process.env.RESEND_API_KEY = 'test-key';
         const { sendEmail } = require('@/utils/mail');

@@ -6,9 +6,11 @@ import {
     SUBSCRIPTION_TIERS,
     getSubscriptionPrice,
     getEventLimit,
-    type SubscriptionTier
+    getAnnualSavings,
+    type SubscriptionTier,
+    type BillingPeriod
 } from '@/lib/constants/subscription';
-import { Crown, Sparkles, Check, TrendingUp } from 'lucide-react';
+import { Crown, Sparkles, Check, TrendingUp, Calendar } from 'lucide-react';
 import { getCurrencySymbol } from '@/utils/country-helpers';
 
 interface SubscriptionBadgeProps {
@@ -21,8 +23,8 @@ interface SubscriptionBadgeProps {
 export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, demoMode = false, vendorCountry }: SubscriptionBadgeProps) {
     const cs = getCurrencySymbol(vendorCountry);
     const supabase = createClient();
-    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'professional' : 'starter');
-    const [isFounder, setIsFounder] = useState(false);
+    const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'business' : 'free');
+    const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
     const [loading, setLoading] = useState(!demoMode);
 
     useEffect(() => {
@@ -35,13 +37,13 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
         async function fetchSubscriptionInfo() {
             const { data } = await supabase
                 .from('vendors')
-                .select('subscription_tier, is_founder_pricing')
+                .select('subscription_tier, billing_period')
                 .eq('id', vendorId)
                 .single();
 
             if (data) {
-                setTier((data.subscription_tier || 'starter') as SubscriptionTier);
-                setIsFounder(data.is_founder_pricing || false);
+                setTier((data.subscription_tier || 'free') as SubscriptionTier);
+                setBillingPeriod((data.billing_period || 'monthly') as BillingPeriod);
             }
             setLoading(false);
         }
@@ -56,13 +58,14 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
     }
 
     const tierConfig = SUBSCRIPTION_TIERS[tier];
-    const price = getSubscriptionPrice(tier, isFounder);
+    const price = getSubscriptionPrice(tier, billingPeriod);
     const limit = getEventLimit(tier);
     const limitReached = activeEventsCount >= limit;
+    const annualSavings = getAnnualSavings(tier);
 
     // Tier-specific styling - Using brand colors
     const tierStyles = {
-        starter: {
+        free: {
             bg: 'bg-gradient-to-br from-gray-50 to-gray-100',
             border: 'border-gray-200',
             text: 'text-gray-700',
@@ -71,7 +74,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
             iconColor: 'text-gray-500',
             accentBg: 'bg-gray-100'
         },
-        growth: {
+        pro: {
             bg: 'bg-gradient-to-br from-[#2CA58D]/5 to-[#2CA58D]/10',
             border: 'border-[#2CA58D]/30',
             text: 'text-[#2CA58D]',
@@ -80,7 +83,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
             iconColor: 'text-[#2CA58D]',
             accentBg: 'bg-[#2CA58D]/10'
         },
-        professional: {
+        business: {
             bg: 'bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50',
             border: 'border-purple-300',
             text: 'text-purple-900',
@@ -104,9 +107,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className={`text-lg font-black ${style.text}`}>
-                                {tierConfig.name === 'Starter' ? 'باقة مجانية' :
-                                    tierConfig.name === 'Growth' ? 'باقة النمو' :
-                                        'باقة احترافية'}
+                                {tierConfig.nameAr}
                             </h3>
                             {tierConfig.badge && (
                                 <span className={`${style.badge} text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm`}>
@@ -114,10 +115,12 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
                                 </span>
                             )}
                         </div>
-                        {isFounder && tier !== 'starter' && (
+                        {tier !== 'free' && (
                             <div className="flex items-center gap-1 mt-1">
-                                <Sparkles className="w-3 h-3 text-[#2CA58D]" />
-                                <span className="text-xs font-bold text-[#2CA58D]">تسعير المؤسسين</span>
+                                <Calendar className="w-3 h-3 text-gray-400" />
+                                <span className="text-xs font-bold text-gray-500">
+                                    {billingPeriod === 'annual' ? 'اشتراك سنوي' : 'اشتراك شهري'}
+                                </span>
                             </div>
                         )}
                     </div>
@@ -128,10 +131,12 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
                         <div className={`text-2xl font-black ${style.text}`}>
                             {price.toLocaleString()} {cs}
                         </div>
-                        <div className="text-xs text-gray-500 font-medium">/ شهرياً</div>
-                        {isFounder && (
-                            <div className="text-xs text-gray-400 font-bold line-through opacity-60">
-                                {tierConfig.regularPrice.toLocaleString()} {cs}
+                        <div className="text-xs text-gray-500 font-medium">
+                            / {billingPeriod === 'annual' ? 'سنوياً' : 'شهرياً'}
+                        </div>
+                        {billingPeriod === 'annual' && annualSavings > 0 && (
+                            <div className="text-xs text-[#2CA58D] font-bold">
+                                وفرت {annualSavings.toLocaleString()} {cs}
                             </div>
                         )}
                     </div>
@@ -156,7 +161,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
                     </div>
                 )}
 
-                {limitReached && tier !== 'professional' && (
+                {limitReached && tier !== 'business' && (
                     <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
                         <p className="text-xs font-bold text-red-700 text-center">
                             ⚠️ وصلت للحد الأقصى - قم بالترقية لإنشاء المزيد من الفعاليات
@@ -168,7 +173,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
             {/* Features List */}
             <div className="mt-4 pt-4 border-t border-white/50">
                 <div className="space-y-2">
-                    {tierConfig.features.slice(0, 3).map((feature, idx) => (
+                    {tierConfig.featuresAr.slice(0, 3).map((feature, idx) => (
                         <div key={idx} className="flex items-start gap-2 text-xs">
                             <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                             <span className="text-gray-700 font-medium leading-tight">{feature}</span>
@@ -178,14 +183,14 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
             </div>
 
             {/* Upgrade CTA */}
-            {tier === 'starter' && (
+            {tier === 'free' && (
                 <button className="mt-4 w-full py-3 bg-[#2CA58D] hover:bg-[#258f7a] text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
-                    ترقية إلى باقة النمو ←
+                    ترقية إلى برو ←
                 </button>
             )}
-            {tier === 'growth' && (
+            {tier === 'pro' && (
                 <button className="mt-4 w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
-                    ترقية إلى الباقة الاحترافية ←
+                    ترقية إلى الأعمال ←
                 </button>
             )}
         </div>

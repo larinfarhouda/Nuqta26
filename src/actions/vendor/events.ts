@@ -49,7 +49,7 @@ export async function createEvent(formData: FormData) {
         // Get vendor profile with subscription info
         const { data: vendor } = await supabase
             .from('vendors')
-            .select('id, bank_name, bank_iban, bank_account_name, subscription_tier, is_founder_pricing')
+            .select('id, bank_name, bank_iban, bank_account_name, subscription_tier')
             .eq('id', user.id)
             .single();
 
@@ -63,7 +63,7 @@ export async function createEvent(formData: FormData) {
             };
         }
 
-        const tier = (vendor.subscription_tier || 'starter') as SubscriptionTier;
+        const tier = (vendor.subscription_tier || 'free') as SubscriptionTier;
 
         // Check subscription tier limits
         const factory = new ServiceFactory(supabase);
@@ -88,7 +88,6 @@ export async function createEvent(formData: FormData) {
                 activeEvents: activeEventsCount,
                 limit,
                 upgradeTier,
-                isFounder: vendor.is_founder_pricing || false
             };
         }
 

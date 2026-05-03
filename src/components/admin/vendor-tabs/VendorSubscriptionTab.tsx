@@ -1,13 +1,18 @@
 'use client';
 
-import { Save, Loader2, Zap, Star, Crown } from 'lucide-react';
+import { Save, Loader2, Zap, Star, Crown, Calendar } from 'lucide-react';
 import { colors, inputStyle, font, sectionStyle, btnPrimary } from '../admin-tokens';
 
 const TIER_CONFIG = {
-    starter: { label: 'Starter', color: '#64748b', bg: '#f1f5f9', icon: Zap },
-    growth: { label: 'Growth', color: '#7c3aed', bg: '#ede9fe', icon: Star },
-    professional: { label: 'Professional', color: '#d97706', bg: '#fef3c7', icon: Crown },
+    free: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap },
+    pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star },
+    business: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown },
 };
+
+const BILLING_OPTIONS = [
+    { key: 'monthly', label: 'Monthly' },
+    { key: 'annual', label: 'Annual (2 months free)' },
+];
 
 interface Props {
     editData: Record<string, any>;
@@ -28,7 +33,7 @@ export default function VendorSubscriptionTab({ editData, vendor, updateField, o
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                     {Object.entries(TIER_CONFIG).map(([key, cfg]) => {
                         const Icon = cfg.icon;
-                        const isSelected = (editData.subscription_tier || 'starter') === key;
+                        const isSelected = (editData.subscription_tier || 'free') === key;
                         return (
                             <div
                                 key={key}
@@ -52,25 +57,32 @@ export default function VendorSubscriptionTab({ editData, vendor, updateField, o
             <div style={sectionStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                        <h3 style={{ ...font.sectionSubtitle, margin: '0 0 4px' }}>Founder Pricing</h3>
-                        <p style={{ fontSize: '12px', color: colors.text.muted, margin: 0 }}>Lock in special pricing for early adopters</p>
+                        <h3 style={{ ...font.sectionSubtitle, margin: '0 0 4px' }}>Billing Period</h3>
+                        <p style={{ fontSize: '12px', color: colors.text.muted, margin: 0 }}>Annual saves ~17% (2 months free)</p>
                     </div>
-                    <button
-                        onClick={() => updateField('is_founder_pricing', !editData.is_founder_pricing)}
-                        style={{
-                            width: '48px', height: '28px', borderRadius: '14px',
-                            background: editData.is_founder_pricing ? colors.accent : colors.border,
-                            border: 'none', cursor: 'pointer', position: 'relative',
-                            transition: 'background 0.2s',
-                        }}
-                    >
-                        <div style={{
-                            width: '22px', height: '22px', borderRadius: '11px',
-                            background: '#fff', position: 'absolute', top: '3px',
-                            left: editData.is_founder_pricing ? '23px' : '3px',
-                            transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                        }} />
-                    </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                    {BILLING_OPTIONS.map(opt => {
+                        const isSelected = (editData.billing_period || 'monthly') === opt.key;
+                        return (
+                            <div
+                                key={opt.key}
+                                onClick={() => updateField('billing_period', opt.key)}
+                                style={{
+                                    padding: '12px 16px', borderRadius: '12px',
+                                    border: `2px solid ${isSelected ? colors.accent : colors.border}`,
+                                    background: isSelected ? `${colors.accent}10` : colors.card,
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                <Calendar size={16} style={{ color: isSelected ? colors.accent : colors.text.muted }} />
+                                <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? colors.accent : colors.text.primary }}>
+                                    {opt.label}
+                                </span>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 

@@ -53,7 +53,7 @@ export interface AdminVendor {
     status: string | null;
     is_verified: boolean | null;
     subscription_tier: string | null;
-    is_founder_pricing: boolean | null;
+    billing_period: string;
     created_at: string | null;
     email: string | null;
     full_name: string | null;
@@ -86,7 +86,7 @@ export interface AdminVendorDetail {
     subscription_status: string | null;
     subscription_starts_at: string | null;
     subscription_expires_at: string | null;
-    is_founder_pricing: boolean | null;
+    billing_period: string;
     cancellation_policy: string | null;
     return_policy: string | null;
     tax_id_document: string | null;

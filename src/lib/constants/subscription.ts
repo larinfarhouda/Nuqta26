@@ -10,13 +10,11 @@
  * - Async DB-backed helpers for server-side enforcement
  */
 
-// Launch period end date - founder pricing available until this date
-export const LAUNCH_END_DATE = new Date('2026-05-01'); // 3 months from Feb 1 launch
-
 /**
  * Type for tier IDs
  */
-export type SubscriptionTier = 'starter' | 'growth' | 'professional';
+export type SubscriptionTier = 'free' | 'pro' | 'business';
+export type BillingPeriod = 'monthly' | 'annual';
 export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled';
 export type BadgeType = 'verified' | 'premium' | null;
 
@@ -26,11 +24,15 @@ export type BadgeType = 'verified' | 'premium' | null;
 export interface SubscriptionTierConfig {
     id: string;
     name: string;
+    nameAr: string;
     maxActiveEvents: number; // Infinity for unlimited
-    regularPrice: number;
-    founderPrice: number;
+    maxTicketTypes: number;  // Per event
+    maxGalleryPhotos: number; // Per event
+    monthlyPrice: number;
+    annualPrice: number;
     badge: BadgeType;
     features: string[];
+    featuresAr: string[];
 }
 
 /**
@@ -38,85 +40,139 @@ export interface SubscriptionTierConfig {
  * The admin dashboard can override these values in the database.
  */
 export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, SubscriptionTierConfig> = {
-    starter: {
-        id: 'starter',
-        maxActiveEvents: 1,
-        name: 'Starter',
-        regularPrice: 0,
-        founderPrice: 0,
+    free: {
+        id: 'free',
+        name: 'Free',
+        nameAr: 'مجاني',
+        maxActiveEvents: 3,
+        maxTicketTypes: 1,
+        maxGalleryPhotos: 5,
+        monthlyPrice: 0,
+        annualPrice: 0,
         badge: null,
         features: [
-            '✅ 1 active event',
-            '📧 Email notifications to customers',
-            '📊 Basic dashboard',
+            '✅ 3 active events',
+            '🌐 Custom vendor landing page',
+            '📧 Bilingual email notifications',
             '💳 Accept & confirm bookings',
-            '📍 Public event page',
+            '📍 Public event page with map',
             '📷 Photo gallery (up to 5 photos)',
-            '💬 Email support',
+            '📊 Basic dashboard',
+            '📱 Instagram event import',
+            '🔗 One-tap social share cards',
+        ],
+        featuresAr: [
+            '✅ 3 فعاليات نشطة',
+            '🌐 صفحة هبوط خاصة بك',
+            '📧 إشعارات بريدية بالعربية والإنجليزية',
+            '💳 استقبال وتأكيد الحجوزات',
+            '📍 صفحة فعالية عامة مع خريطة',
+            '📷 معرض صور (حتى 5 صور)',
+            '📊 لوحة تحكم أساسية',
+            '📱 استيراد من انستغرام',
+            '🔗 بطاقات مشاركة اجتماعية',
         ],
     },
-    growth: {
-        id: 'growth',
-        maxActiveEvents: 3,
-        name: 'Growth',
-        regularPrice: 999,
-        founderPrice: 499,
+    pro: {
+        id: 'pro',
+        name: 'Pro',
+        nameAr: 'برو',
+        maxActiveEvents: Infinity,
+        maxTicketTypes: Infinity,
+        maxGalleryPhotos: Infinity,
+        monthlyPrice: 299,
+        annualPrice: 2990,
         badge: 'verified' as const,
         features: [
-            '✨ 3 active events simultaneously',
-            '✅ Verified account badge',
-            '📊 Advanced analytics (gender, age, sales)',
-            '👥 Customer & booking management',
-            '📧 Automated bilingual email notifications',
-            '💰 Discount codes & special offers',
-            '🎫 Multiple tickets & bulk discounts',
+            '🚀 Unlimited active events',
+            '✅ Verified badge',
+            '🎫 Multiple ticket types per event',
+            '💰 Discount codes & coupons',
+            '📦 Bulk discounts',
+            '👥 Customer management CRM',
+            '📈 Advanced analytics (gender, age, loyalty)',
+            '⭐ Automated review request emails',
             '📷 Unlimited photo gallery',
-            '⚡ Priority support',
-            '🌟 Featured in search results',
+            '🌟 Priority in search results',
+            '🔔 Event sold-out notifications',
+        ],
+        featuresAr: [
+            '🚀 فعاليات نشطة بلا حدود',
+            '✅ شارة موثق',
+            '🎫 أنواع تذاكر متعددة لكل فعالية',
+            '💰 أكواد خصم وكوبونات',
+            '📦 خصومات جماعية',
+            '👥 إدارة العملاء CRM',
+            '📈 تحليلات متقدمة (جنس، عمر، ولاء)',
+            '⭐ إيميلات طلب تقييم تلقائية',
+            '📷 معرض صور بلا حدود',
+            '🌟 أولوية في نتائج البحث',
+            '🔔 إشعارات عند نفاذ التذاكر',
         ],
     },
-    professional: {
-        id: 'professional',
+    business: {
+        id: 'business',
+        name: 'Business',
+        nameAr: 'الأعمال',
         maxActiveEvents: Infinity,
-        name: 'Professional',
-        regularPrice: 1999,
-        founderPrice: 999,
+        maxTicketTypes: Infinity,
+        maxGalleryPhotos: Infinity,
+        monthlyPrice: 499,
+        annualPrice: 4990,
         badge: 'premium' as const,
         features: [
-            '🚀 Unlimited events',
             '⭐ Premium partner badge',
-            '📈 Comprehensive analytics & custom reports',
+            '✅ Everything in Pro',
             '👨‍💼 Dedicated account manager',
-            '📧 Custom email template branding',
-            '🎯 Top priority in search results',
-            '💳 Payment gateway integration (coming soon)',
-            '📱 WhatsApp API notifications (coming soon)',
-            '🔧 API for system integration',
-            '🎨 Full brand customization',
             '💬 24/7 WhatsApp support',
             '📞 Free marketing consultations',
+            '🎨 Custom email branding (coming soon)',
+            '📱 WhatsApp API notifications (coming soon)',
+            '🔧 API access for integrations (coming soon)',
+        ],
+        featuresAr: [
+            '⭐ شارة شريك متميز',
+            '✅ كل مزايا برو',
+            '👨‍💼 مدير حساب مخصص',
+            '💬 دعم واتساب 24/7',
+            '📞 استشارات تسويقية مجانية',
+            '🎨 تخصيص البريد الإلكتروني (قريبًا)',
+            '📱 إشعارات واتساب API (قريبًا)',
+            '🔧 واجهة API للتكامل (قريبًا)',
         ],
     },
 };
 
 /**
- * Determine if a vendor is eligible for founder pricing
- * based on when they signed up to the platform
- */
-export function isEligibleForFounderPricing(signupDate: Date): boolean {
-    return signupDate < LAUNCH_END_DATE;
-}
-
-/**
- * Get the subscription price for a vendor (synchronous fallback)
- * Takes into account founder pricing status
+ * Get the subscription price for a vendor
+ * Takes into account billing period (monthly vs annual)
  */
 export function getSubscriptionPrice(
     tier: SubscriptionTier,
-    isFounder: boolean
+    period: BillingPeriod = 'monthly'
 ): number {
     const tierConfig = SUBSCRIPTION_TIERS[tier];
-    return isFounder ? tierConfig.founderPrice : tierConfig.regularPrice;
+    return period === 'annual' ? tierConfig.annualPrice : tierConfig.monthlyPrice;
+}
+
+/**
+ * Get the effective monthly price (for display purposes)
+ * Annual price divided by 12
+ */
+export function getEffectiveMonthlyPrice(
+    tier: SubscriptionTier,
+    period: BillingPeriod = 'monthly'
+): number {
+    if (period === 'monthly') return SUBSCRIPTION_TIERS[tier].monthlyPrice;
+    return Math.round(SUBSCRIPTION_TIERS[tier].annualPrice / 12);
+}
+
+/**
+ * Get annual savings amount
+ */
+export function getAnnualSavings(tier: SubscriptionTier): number {
+    const config = SUBSCRIPTION_TIERS[tier];
+    return (config.monthlyPrice * 12) - config.annualPrice;
 }
 
 /**
@@ -150,8 +206,8 @@ export function canCreateEvent(
 export function getRequiredUpgradeTier(
     currentTier: SubscriptionTier
 ): SubscriptionTier | null {
-    if (currentTier === 'starter') return 'growth';
-    if (currentTier === 'growth') return 'professional';
+    if (currentTier === 'free') return 'pro';
+    if (currentTier === 'pro') return 'business';
     return null; // Already on highest tier
 }
 

@@ -95,9 +95,9 @@ function StatCard({
 
 function SubscriptionCard({ sub }: { sub: SubscriptionRevenue }) {
     const tiers = [
-        { name: 'Starter', count: sub.starterCount, color: '#94a3b8' },
-        { name: 'Growth', count: sub.growthCount, color: '#8b5cf6' },
-        { name: 'Professional', count: sub.professionalCount, color: '#f59e0b' },
+        { name: 'Free', count: sub.starterCount, color: '#94a3b8' },
+        { name: 'Pro', count: sub.growthCount, color: '#8b5cf6' },
+        { name: 'Business', count: sub.professionalCount, color: '#f59e0b' },
     ];
     const total = sub.totalVendors || 1;
 
