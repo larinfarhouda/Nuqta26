@@ -1,24 +1,4 @@
-import { type SubscriptionTier, SUBSCRIPTION_TIERS } from '@/lib/constants/subscription';
-
-/**
- * Map legacy / DB tier names to the canonical client-side tier IDs.
- * The database may store 'starter', 'growth', 'professional' while
- * the client constants use 'free', 'pro', 'business'.
- */
-const TIER_ALIAS_MAP: Record<string, SubscriptionTier> = {
-    starter: 'free',
-    growth: 'pro',
-    professional: 'business',
-    // canonical names map to themselves
-    free: 'free',
-    pro: 'pro',
-    business: 'business',
-};
-
-function normalizeTier(raw: string | null | undefined): SubscriptionTier {
-    if (!raw) return 'free';
-    return TIER_ALIAS_MAP[raw] ?? 'free';
-}
+import { type SubscriptionTier, SUBSCRIPTION_TIERS, normalizeTier } from '@/lib/constants/subscription';
 
 /**
  * Feature gate hook — returns what a vendor can/can't do based on their tier.

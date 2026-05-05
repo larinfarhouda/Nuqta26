@@ -213,3 +213,22 @@ export function getRequiredUpgradeTier(
 
 // Server-side DB-backed helpers are in ./subscription-server.ts
 // to avoid pulling next/headers into client component bundles.
+
+/**
+ * Map legacy / DB tier names to the canonical client-side tier IDs.
+ * The database may store 'starter', 'growth', 'professional' while
+ * the client constants use 'free', 'pro', 'business'.
+ */
+const TIER_ALIAS_MAP: Record<string, SubscriptionTier> = {
+    starter: 'free',
+    growth: 'pro',
+    professional: 'business',
+    free: 'free',
+    pro: 'pro',
+    business: 'business',
+};
+
+export function normalizeTier(raw: string | null | undefined): SubscriptionTier {
+    if (!raw) return 'free';
+    return TIER_ALIAS_MAP[raw] ?? 'free';
+}

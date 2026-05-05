@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import {
     SUBSCRIPTION_TIERS,
+    normalizeTier,
     type SubscriptionTier
 } from '@/lib/constants/subscription';
 import { Crown, CheckCircle2 } from 'lucide-react';
@@ -32,7 +33,7 @@ export default function CompactTierBadge({ vendorId, demoMode = false }: Compact
                 .single();
 
             if (data) {
-                setTier((data.subscription_tier || 'free') as SubscriptionTier);
+                setTier(normalizeTier(data.subscription_tier));
             }
             setLoading(false);
         }

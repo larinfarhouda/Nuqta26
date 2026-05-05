@@ -7,7 +7,7 @@ import { VendorAnalyticsDTO, SegmentationDataDTO } from '@/types/dto/analytics.d
 import { useTranslations } from 'next-intl';
 import { getDemoAnalytics } from '@/lib/demoData';
 import { createClient } from '@/utils/supabase/client';
-import { SUBSCRIPTION_TIERS, getEventLimit, type SubscriptionTier } from '@/lib/constants/subscription';
+import { SUBSCRIPTION_TIERS, getEventLimit, normalizeTier, type SubscriptionTier } from '@/lib/constants/subscription';
 
 export default function AnalyticsTab({ vendorId, activeEventsCount = 0, demoMode = false }: { vendorId?: string; activeEventsCount?: number; demoMode?: boolean }) {
     const supabase = createClient();
@@ -46,7 +46,7 @@ export default function AnalyticsTab({ vendorId, activeEventsCount = 0, demoMode
                     setAnalytics(a);
                     setSegmentation(s);
                     if (tierData.data) {
-                        setTier((tierData.data.subscription_tier || 'free') as SubscriptionTier);
+                        setTier(normalizeTier(tierData.data.subscription_tier));
                     }
                 }
             } catch (err: any) {

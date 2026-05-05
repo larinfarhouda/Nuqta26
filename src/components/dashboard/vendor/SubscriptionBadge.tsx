@@ -7,6 +7,7 @@ import {
     getSubscriptionPrice,
     getEventLimit,
     getAnnualSavings,
+    normalizeTier,
     type SubscriptionTier,
     type BillingPeriod
 } from '@/lib/constants/subscription';
@@ -42,7 +43,7 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
                 .single();
 
             if (data) {
-                setTier((data.subscription_tier || 'free') as SubscriptionTier);
+                setTier(normalizeTier(data.subscription_tier));
                 setBillingPeriod((data.billing_period || 'monthly') as BillingPeriod);
             }
             setLoading(false);
