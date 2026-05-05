@@ -2,250 +2,261 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, ArrowRight, Zap, Sparkles, Crown, TrendingUp, Calendar } from 'lucide-react';
+import { Check, ArrowRight, Zap, Sparkles, Crown, TrendingUp, Calendar, Shield } from 'lucide-react';
 import { Link } from '@/navigation';
 
 export default function VendorPricing() {
     const t = useTranslations('VendorLanding.Pricing');
-    const [isAnnual, setIsAnnual] = useState(false);
-
-    const tiers = [
-        {
-            name: t('starter_tier'),
-            price: t('starter_price'),
-            priceLabel: t('starter_price_label'),
-            period: '',
-            eventCount: t('starter_events_count'),
-            eventLabel: t('starter_events'),
-            desc: t('starter_desc'),
-            highlight: false,
-            cta: t('get_started'),
-            ctaStyle: 'bg-gray-900 text-white hover:bg-gray-800',
-            cardStyle: 'border-gray-200 bg-white hover:border-gray-300',
-            icon: Sparkles,
-            iconColor: 'text-gray-500',
-            iconBg: 'bg-gray-100',
-            badge: null,
-            savings: null,
-            annualTotal: null,
-        },
-        {
-            name: t('growth_tier'),
-            price: isAnnual ? t('growth_price_annual') : t('growth_price_monthly'),
-            priceLabel: isAnnual ? t('billed_annually') : null,
-            period: t('growth_period'),
-            eventCount: t('growth_events_count'),
-            eventLabel: t('growth_events'),
-            desc: t('growth_desc'),
-            highlight: true,
-            badge: t('growth_badge'),
-            cta: t('scale_now'),
-            ctaStyle: 'bg-[#2CA58D] text-white shadow-lg hover:shadow-xl hover:bg-[#258f7a]',
-            cardStyle: 'border-[#2CA58D] bg-gradient-to-br from-[#2CA58D]/5 to-[#2CA58D]/10 shadow-xl shadow-[#2CA58D]/10',
-            icon: TrendingUp,
-            iconColor: 'text-[#2CA58D]',
-            iconBg: 'bg-[#2CA58D]/20',
-            savings: isAnnual ? t('growth_annual_savings') : null,
-            annualTotal: isAnnual ? t('growth_annual_total') : null,
-        },
-        {
-            name: t('professional_tier'),
-            price: isAnnual ? t('professional_price_annual') : t('professional_price_monthly'),
-            priceLabel: isAnnual ? t('billed_annually') : null,
-            period: t('professional_period'),
-            eventCount: t('professional_events_count'),
-            eventLabel: t('professional_events'),
-            desc: t('professional_desc'),
-            highlight: false,
-            cta: t('get_professional'),
-            ctaStyle: 'bg-purple-700 text-white hover:bg-purple-800',
-            cardStyle: 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50 hover:border-purple-400',
-            icon: Crown,
-            iconColor: 'text-purple-600',
-            iconBg: 'bg-purple-100',
-            badge: null,
-            savings: isAnnual ? t('professional_annual_savings') : null,
-            annualTotal: isAnnual ? t('professional_annual_total') : null,
-        }
-    ];
+    const [isAnnual, setIsAnnual] = useState(true);
 
     const freeFeatures = t.raw('features_list') as string[];
     const proFeatures = t.raw('pro_features_list') as string[];
     const businessFeatures = t.raw('business_features_list') as string[];
 
     return (
-        <section id="pricing" className="py-12 md:py-20 lg:py-24 bg-gray-50 relative overflow-hidden">
-            {/* Subtle background decoration */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-[#2CA58D]/5 rounded-full blur-3xl pointer-events-none" />
+        <section id="pricing" className="py-16 md:py-24 lg:py-28 bg-[#fafbfc] relative overflow-hidden">
+            {/* Background decorations */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#2CA58D]/5 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="container mx-auto px-4 relative z-10">
                 {/* Header */}
-                <div className="max-w-3xl mx-auto text-center mb-8 md:mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#2CA58D]/10 text-[#2CA58D] rounded-full text-xs md:text-sm font-bold uppercase tracking-wider mb-4">
-                        <Zap className="w-4 h-4" />
+                <div className="max-w-2xl mx-auto text-center mb-10 md:mb-14">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#2CA58D]/10 text-[#2CA58D] rounded-full text-xs font-bold uppercase tracking-wider mb-5">
+                        <Zap className="w-3.5 h-3.5" />
                         <span>{t('simple_growth')}</span>
                     </div>
-                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 mb-3">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight mb-4">
                         {t('title')}
                     </h2>
-                    <p className="text-base md:text-lg text-gray-600 font-medium">
+                    <p className="text-base md:text-lg text-gray-500 font-medium max-w-lg mx-auto">
                         {t('subtitle')}
                     </p>
 
                     {/* Billing Toggle */}
-                    <div className="mt-6 flex items-center justify-center gap-4">
-                        <span className={`text-sm font-bold transition-colors ${!isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
-                            {t('billing_monthly')}
-                        </span>
+                    <div className="mt-8 inline-flex items-center p-1.5 bg-white rounded-2xl border border-gray-200 shadow-sm">
                         <button
-                            onClick={() => setIsAnnual(!isAnnual)}
-                            className={`relative w-14 h-8 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#2CA58D]/50 ${isAnnual ? 'bg-[#2CA58D]' : 'bg-gray-300'}`}
-                            aria-label="Toggle billing period"
+                            onClick={() => setIsAnnual(false)}
+                            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                                !isAnnual
+                                    ? 'bg-gray-900 text-white shadow-md'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
                         >
-                            <div className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${isAnnual ? 'translate-x-7 rtl:-translate-x-7' : 'translate-x-1 rtl:-translate-x-1'}`} />
+                            {t('billing_monthly')}
                         </button>
-                        <span className={`text-sm font-bold transition-colors ${isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
+                        <button
+                            onClick={() => setIsAnnual(true)}
+                            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 ${
+                                isAnnual
+                                    ? 'bg-gray-900 text-white shadow-md'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
                             {t('billing_annual')}
-                        </span>
-                        {isAnnual && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold animate-fade-in">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {t('annual_savings_badge')}
+                            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                isAnnual ? 'bg-green-400 text-green-900' : 'bg-green-100 text-green-700'
+                            }`}>
+                                -17%
                             </span>
-                        )}
+                        </button>
                     </div>
                 </div>
 
-                {/* Pricing Tier Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto mb-12 md:mb-16">
-                    {tiers.map((tier, idx) => (
-                        <div
-                            key={idx}
-                            className={`relative p-6 md:p-7 rounded-2xl md:rounded-3xl border-2 transition-all duration-300 flex flex-col ${tier.cardStyle} ${tier.highlight ? 'md:scale-105 shadow-2xl' : 'hover:shadow-lg'}`}
+                {/* Pricing Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-4 lg:gap-5 max-w-6xl mx-auto items-start">
+
+                    {/* === FREE TIER === */}
+                    <div className="relative bg-white rounded-3xl border border-gray-200 p-7 md:p-8 hover:border-gray-300 transition-all duration-300 hover:shadow-lg flex flex-col">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 rounded-xl bg-gray-100">
+                                <Sparkles className="w-5 h-5 text-gray-500" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900">{t('starter_tier')}</h3>
+                                <p className="text-xs text-gray-500 font-medium">{t('starter_desc')}</p>
+                            </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="mb-6">
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-5xl font-black text-gray-900">{t('starter_price')}</span>
+                            </div>
+                            <p className="text-sm text-gray-500 font-medium mt-1">{t('starter_price_label')}</p>
+                        </div>
+
+                        {/* Event limit pill */}
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-100 mb-6">
+                            <span className="text-xl font-black text-gray-900">{t('starter_events_count')}</span>
+                            <span className="text-sm text-gray-600 font-medium">{t('starter_events')}</span>
+                        </div>
+
+                        {/* CTA */}
+                        <Link
+                            href="/register?role=vendor"
+                            className="w-full py-3.5 rounded-xl font-bold text-sm bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-200 flex items-center justify-center gap-2 group mb-6"
                         >
-                            {/* Badge */}
-                            {tier.highlight && tier.badge && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[#2CA58D] text-white rounded-full text-xs font-black uppercase tracking-wide shadow-lg whitespace-nowrap">
-                                    {tier.badge}
+                            {t('get_started')}
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+                        </Link>
+
+                        {/* Features */}
+                        <div className="border-t border-gray-100 pt-5">
+                            <div className="space-y-3">
+                                {freeFeatures.map((feature: string, idx: number) => (
+                                    <div key={idx} className="flex items-start gap-2.5">
+                                        <Check className="w-4 h-4 text-gray-400 stroke-[3] flex-shrink-0 mt-0.5" />
+                                        <span className="text-[13px] text-gray-600 leading-snug">{feature}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* === PRO TIER (HIGHLIGHTED) === */}
+                    <div className="relative bg-gray-900 rounded-3xl p-7 md:p-8 shadow-2xl shadow-gray-900/20 md:-mt-4 md:mb-0 flex flex-col ring-1 ring-gray-900">
+                        {/* Most Popular Badge */}
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
+                            <div className="px-5 py-1.5 bg-[#2CA58D] text-white rounded-full text-xs font-black uppercase tracking-wider shadow-lg shadow-[#2CA58D]/30 whitespace-nowrap">
+                                {t('growth_badge')}
+                            </div>
+                        </div>
+
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 rounded-xl bg-[#2CA58D]/20">
+                                <TrendingUp className="w-5 h-5 text-[#2CA58D]" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white">{t('growth_tier')}</h3>
+                                <p className="text-xs text-gray-400 font-medium">{t('growth_desc')}</p>
+                            </div>
+                        </div>
+
+                        {/* Price with anchoring */}
+                        <div className="mb-6">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-black text-white">
+                                    {isAnnual ? t('growth_price_annual') : t('growth_price_monthly')}
+                                </span>
+                                <span className="text-base text-gray-400 font-medium">{t('growth_period')}</span>
+                            </div>
+                            {isAnnual && (
+                                <div className="flex items-center gap-3 mt-2">
+                                    <span className="text-sm text-gray-500 line-through font-medium">{t('growth_price_monthly')}{t('growth_period')}</span>
+                                    <span className="inline-flex px-2.5 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">
+                                        {t('save_badge', { amount: t('growth_annual_savings') })}
+                                    </span>
                                 </div>
                             )}
+                            {isAnnual && (
+                                <p className="text-xs text-gray-500 mt-1">{t('growth_annual_total')} · {t('billed_annually')}</p>
+                            )}
+                        </div>
 
-                            {/* Tier Icon & Name */}
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className={`p-2.5 rounded-xl ${tier.iconBg}`}>
-                                    <tier.icon className={`w-6 h-6 ${tier.iconColor}`} />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg md:text-xl font-black text-gray-900">{tier.name}</h3>
-                                </div>
+                        {/* Event limit pill */}
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-white/10 rounded-xl border border-white/10 mb-6">
+                            <span className="text-xl font-black text-[#2CA58D]">{t('growth_events_count')}</span>
+                            <span className="text-sm text-gray-300 font-medium">{t('growth_events')}</span>
+                        </div>
+
+                        {/* CTA */}
+                        <Link
+                            href="/register?role=vendor"
+                            className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#2CA58D] text-white hover:bg-[#25917b] transition-all duration-200 shadow-lg shadow-[#2CA58D]/25 hover:shadow-xl hover:shadow-[#2CA58D]/30 flex items-center justify-center gap-2 group mb-6"
+                        >
+                            {t('scale_now')}
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+                        </Link>
+
+                        {/* Features */}
+                        <div className="border-t border-white/10 pt-5">
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-3">{t('pro_features_title')}</p>
+                            <div className="space-y-3">
+                                {proFeatures.map((feature: string, idx: number) => (
+                                    <div key={idx} className="flex items-start gap-2.5">
+                                        <Check className="w-4 h-4 text-[#2CA58D] stroke-[3] flex-shrink-0 mt-0.5" />
+                                        <span className="text-[13px] text-gray-300 leading-snug">{feature}</span>
+                                    </div>
+                                ))}
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Price — HERO ELEMENT */}
-                            <div className="mb-5">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl md:text-5xl font-black text-gray-900">{tier.price}</span>
-                                    {tier.period && <span className="text-base text-gray-500 font-medium">{tier.period}</span>}
-                                </div>
-                                {tier.priceLabel && (
-                                    <p className="text-xs text-gray-500 font-medium mt-1">{tier.priceLabel}</p>
-                                )}
-                                {tier.annualTotal && (
-                                    <p className="text-xs text-gray-500 font-medium mt-0.5">{tier.annualTotal}</p>
-                                )}
-                                {tier.savings && (
-                                    <span className="inline-flex items-center mt-2 px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                                        {t('save_badge', { amount: tier.savings })}
-                                    </span>
-                                )}
+                    {/* === BUSINESS TIER === */}
+                    <div className="relative bg-white rounded-3xl border border-purple-200 p-7 md:p-8 hover:border-purple-300 transition-all duration-300 hover:shadow-lg flex flex-col bg-gradient-to-br from-white via-white to-purple-50/50">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 rounded-xl bg-purple-100">
+                                <Crown className="w-5 h-5 text-purple-600" />
                             </div>
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900">{t('professional_tier')}</h3>
+                                <p className="text-xs text-gray-500 font-medium">{t('professional_desc')}</p>
+                            </div>
+                        </div>
 
-                            {/* Description */}
-                            <p className="text-sm text-gray-600 mb-4">{tier.desc}</p>
-
-                            {/* Event count — compact line */}
-                            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg mb-5 ${tier.highlight ? 'bg-[#2CA58D]/10' : 'bg-gray-100'}`}>
-                                <span className={`text-lg font-black ${tier.highlight ? 'text-[#2CA58D]' : 'text-gray-900'}`}>
-                                    {tier.eventCount}
+                        {/* Price with anchoring */}
+                        <div className="mb-6">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-black text-gray-900">
+                                    {isAnnual ? t('professional_price_annual') : t('professional_price_monthly')}
                                 </span>
-                                <span className="text-sm text-gray-600 font-medium">{tier.eventLabel}</span>
+                                <span className="text-base text-gray-500 font-medium">{t('professional_period')}</span>
                             </div>
+                            {isAnnual && (
+                                <div className="flex items-center gap-3 mt-2">
+                                    <span className="text-sm text-gray-400 line-through font-medium">{t('professional_price_monthly')}{t('professional_period')}</span>
+                                    <span className="inline-flex px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                        {t('save_badge', { amount: t('professional_annual_savings') })}
+                                    </span>
+                                </div>
+                            )}
+                            {isAnnual && (
+                                <p className="text-xs text-gray-500 mt-1">{t('professional_annual_total')} · {t('billed_annually')}</p>
+                            )}
+                        </div>
 
-                            {/* CTA Button */}
-                            <div className="mt-auto">
-                                <Link
-                                    href="/register?role=vendor"
-                                    className={`w-full py-3.5 rounded-xl font-black text-sm md:text-base transition-all flex items-center justify-center gap-2 group/btn ${tier.ctaStyle}`}
-                                >
-                                    {tier.cta}
-                                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform rtl:rotate-180 rtl:group-hover/btn:-translate-x-1" />
-                                </Link>
-                                {tier.highlight && (
-                                    <p className="text-center text-xs text-gray-500 mt-2 font-medium">{t('cta_secondary')}</p>
-                                )}
+                        {/* Event limit pill */}
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-purple-50 rounded-xl border border-purple-100 mb-6">
+                            <span className="text-xl font-black text-purple-700">{t('professional_events_count')}</span>
+                            <span className="text-sm text-gray-600 font-medium">{t('professional_events')}</span>
+                        </div>
+
+                        {/* CTA */}
+                        <Link
+                            href="/register?role=vendor"
+                            className="w-full py-3.5 rounded-xl font-bold text-sm bg-purple-700 text-white hover:bg-purple-800 transition-all duration-200 shadow-lg shadow-purple-700/15 flex items-center justify-center gap-2 group mb-6"
+                        >
+                            {t('get_professional')}
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+                        </Link>
+
+                        {/* Features */}
+                        <div className="border-t border-purple-100 pt-5">
+                            <p className="text-xs text-purple-600 font-bold uppercase tracking-wider mb-3">{t('business_features_title')}</p>
+                            <div className="space-y-3">
+                                {businessFeatures.map((feature: string, idx: number) => (
+                                    <div key={idx} className="flex items-start gap-2.5">
+                                        <Check className="w-4 h-4 text-purple-500 stroke-[3] flex-shrink-0 mt-0.5" />
+                                        <span className="text-[13px] text-gray-600 leading-snug">{feature}</span>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Feature Comparison — Three Columns */}
-                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {/* Free Features */}
-                    <div className="bg-white rounded-2xl md:rounded-3xl border-2 border-gray-200 p-5 md:p-7 shadow-sm">
-                        <h3 className="text-base font-black text-gray-900 mb-4">
-                            {t('all_features_included')}
-                        </h3>
-                        <div className="space-y-2.5">
-                            {freeFeatures.map((feature: string, idx: number) => (
-                                <div key={idx} className="flex items-start gap-2.5">
-                                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Check className="w-3 h-3 text-gray-600 stroke-[3]" />
-                                    </div>
-                                    <span className="text-sm text-gray-700 font-medium leading-snug">{feature}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Pro Features */}
-                    <div className="bg-gradient-to-br from-[#2CA58D]/5 to-[#2CA58D]/10 rounded-2xl md:rounded-3xl border-2 border-[#2CA58D]/30 p-5 md:p-7 shadow-sm">
-                        <h3 className="text-base font-black text-[#2CA58D] mb-4">
-                            {t('pro_features_title')}
-                        </h3>
-                        <div className="space-y-2.5">
-                            {proFeatures.map((feature: string, idx: number) => (
-                                <div key={idx} className="flex items-start gap-2.5">
-                                    <div className="w-5 h-5 rounded-full bg-[#2CA58D] flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Check className="w-3 h-3 text-white stroke-[3]" />
-                                    </div>
-                                    <span className="text-sm text-gray-800 font-medium leading-snug">{feature}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Business Features */}
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl md:rounded-3xl border-2 border-purple-200 p-5 md:p-7 shadow-sm">
-                        <h3 className="text-base font-black text-purple-700 mb-4">
-                            {t('business_features_title')}
-                        </h3>
-                        <div className="space-y-2.5">
-                            {businessFeatures.map((feature: string, idx: number) => (
-                                <div key={idx} className="flex items-start gap-2.5">
-                                    <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Check className="w-3 h-3 text-white stroke-[3]" />
-                                    </div>
-                                    <span className="text-sm text-gray-800 font-medium leading-snug">{feature}</span>
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom note */}
-                <div className="mt-8 text-center">
-                    <p className="text-xs md:text-sm text-gray-500">
-                        💡 {t('no_credit_card')}
-                    </p>
+                {/* Trust bar */}
+                <div className="mt-10 md:mt-14 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 text-sm text-gray-400">
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        <span className="font-medium">{t('cta_secondary')}</span>
+                    </div>
+                    <div className="hidden md:block w-1 h-1 rounded-full bg-gray-300" />
+                    <span className="font-medium">💡 {t('no_credit_card')}</span>
                 </div>
             </div>
         </section>
