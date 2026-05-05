@@ -1,20 +1,41 @@
 import { type SubscriptionTier, SUBSCRIPTION_TIERS } from '@/lib/constants/subscription';
 
 /**
+ * Map legacy / DB tier names to the canonical client-side tier IDs.
+ * The database may store 'starter', 'growth', 'professional' while
+ * the client constants use 'free', 'pro', 'business'.
+ */
+const TIER_ALIAS_MAP: Record<string, SubscriptionTier> = {
+    starter: 'free',
+    growth: 'pro',
+    professional: 'business',
+    // canonical names map to themselves
+    free: 'free',
+    pro: 'pro',
+    business: 'business',
+};
+
+function normalizeTier(raw: string | null | undefined): SubscriptionTier {
+    if (!raw) return 'free';
+    return TIER_ALIAS_MAP[raw] ?? 'free';
+}
+
+/**
  * Feature gate hook — returns what a vendor can/can't do based on their tier.
  * Use this to conditionally render or lock UI features.
  */
-export function useFeatureGate(vendorTier: SubscriptionTier = 'free') {
-    const config = SUBSCRIPTION_TIERS[vendorTier];
+export function useFeatureGate(vendorTier: string = 'free') {
+    const normalizedTier = normalizeTier(vendorTier);
+    const config = SUBSCRIPTION_TIERS[normalizedTier];
 
     return {
         // Feature access
-        canUseDiscounts: vendorTier !== 'free',
-        canUseCustomerCRM: vendorTier !== 'free',
-        canUseAdvancedAnalytics: vendorTier !== 'free',
-        canUseMultipleTickets: vendorTier !== 'free',
-        canUseBulkDiscounts: vendorTier !== 'free',
-        canUseReviewRequests: vendorTier !== 'free',
+        canUseDiscounts: normalizedTier !== 'free',
+        canUseCustomerCRM: normalizedTier !== 'free',
+        canUseAdvancedAnalytics: normalizedTier !== 'free',
+        canUseMultipleTickets: normalizedTier !== 'free',
+        canUseBulkDiscounts: normalizedTier !== 'free',
+        canUseReviewRequests: normalizedTier !== 'free',
 
         // Limits
         maxGalleryPhotos: config.maxGalleryPhotos,
@@ -26,13 +47,13 @@ export function useFeatureGate(vendorTier: SubscriptionTier = 'free') {
         badgeType: config.badge,
 
         // Priority
-        hasPrioritySearch: vendorTier !== 'free',
+        hasPrioritySearch: normalizedTier !== 'free',
 
         // Tier info
-        tier: vendorTier,
+        tier: normalizedTier,
         tierName: config.name,
         tierNameAr: config.nameAr,
-        isPaid: vendorTier !== 'free',
+        isPaid: normalizedTier !== 'free',
     };
 }
 
