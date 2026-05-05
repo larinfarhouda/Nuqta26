@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
 
 const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'), {
-    loading: () => <div className="h-[70vh] w-full animate-pulse bg-[#264653]" />
+    loading: () => <div className="h-[70vh] w-full animate-pulse bg-gray-950" />
 });
 
 const VendorLogoStrip = dynamic(() => import('@/components/vendor-landing/VendorLogoStrip'), {
