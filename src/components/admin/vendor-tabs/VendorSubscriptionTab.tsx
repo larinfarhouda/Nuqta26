@@ -2,11 +2,12 @@
 
 import { Save, Loader2, Zap, Star, Crown, Calendar } from 'lucide-react';
 import { colors, inputStyle, font, sectionStyle, btnPrimary } from '../admin-tokens';
+import { normalizeTier } from '@/lib/constants/subscription';
 
-const TIER_CONFIG = {
-    free: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap },
-    pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star },
-    business: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown },
+const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any; canonical: string }> = {
+    free: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap, canonical: 'free' },
+    pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star, canonical: 'pro' },
+    business: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown, canonical: 'business' },
 };
 
 const BILLING_OPTIONS = [
@@ -33,7 +34,7 @@ export default function VendorSubscriptionTab({ editData, vendor, updateField, o
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                     {Object.entries(TIER_CONFIG).map(([key, cfg]) => {
                         const Icon = cfg.icon;
-                        const isSelected = (editData.subscription_tier || 'free') === key;
+                        const isSelected = normalizeTier(editData.subscription_tier) === key;
                         return (
                             <div
                                 key={key}

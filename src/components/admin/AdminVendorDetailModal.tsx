@@ -26,10 +26,13 @@ import VendorPoliciesTab from './vendor-tabs/VendorPoliciesTab';
 const TABS = ['overview', 'subscription', 'status', 'banking', 'policies'] as const;
 type Tab = typeof TABS[number];
 
-const TIER_CONFIG = {
+const TIER_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
     free: { label: 'Free', color: '#64748b', bg: '#f1f5f9' },
+    starter: { label: 'Free', color: '#64748b', bg: '#f1f5f9' },
     pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe' },
+    growth: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe' },
     business: { label: 'Business', color: '#d97706', bg: '#fef3c7' },
+    professional: { label: 'Business', color: '#d97706', bg: '#fef3c7' },
 };
 
 export default function AdminVendorDetailModal({

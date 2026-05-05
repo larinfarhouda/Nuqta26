@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Crown } from 'lucide-react';
 import type { SubscriptionTier } from '@/lib/constants/subscription';
+import { normalizeTier } from '@/lib/constants/subscription';
 
 interface TierBadgeProps {
     tier: SubscriptionTier | null | undefined;
@@ -9,7 +10,8 @@ interface TierBadgeProps {
     showLabel?: boolean;
 }
 
-export default function TierBadge({ tier, size = 'sm', showLabel = true }: TierBadgeProps) {
+export default function TierBadge({ tier: rawTier, size = 'sm', showLabel = true }: TierBadgeProps) {
+    const tier = normalizeTier(rawTier);
     if (!tier || tier === 'free') return null;
 
     const sizeClasses = {

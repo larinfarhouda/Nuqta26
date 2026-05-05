@@ -11,7 +11,7 @@ import {
     getEventLimitFromDB,
     getRequiredUpgradeTierFromDB,
 } from '@/lib/constants/subscription-server';
-import { type SubscriptionTier } from '@/lib/constants/subscription';
+import { type SubscriptionTier, normalizeTier } from '@/lib/constants/subscription';
 import { trackActivity } from '@/lib/track-activity';
 
 // --- Helpers ---
@@ -63,7 +63,7 @@ export async function createEvent(formData: FormData) {
             };
         }
 
-        const tier = (vendor.subscription_tier || 'free') as SubscriptionTier;
+        const tier = normalizeTier(vendor.subscription_tier);
 
         // Check subscription tier limits
         const factory = new ServiceFactory(supabase);

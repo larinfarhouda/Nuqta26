@@ -13,8 +13,11 @@ import {
 
 const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     free: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap },
+    starter: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap },
     pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star },
+    growth: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star },
     business: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown },
+    professional: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown },
 };
 
 export default function AdminVendorsClient({
