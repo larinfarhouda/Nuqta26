@@ -19,13 +19,7 @@ const VendorHowItWorks = dynamic(() => import('@/components/vendor-landing/Vendo
     loading: () => <div className="h-[400px] w-full animate-pulse bg-white" />
 });
 
-const VendorBenefits = dynamic(() => import('@/components/vendor-landing/VendorBenefits'), {
-    loading: () => <div className="h-[500px] w-full animate-pulse bg-white" />
-});
 
-const VendorSmartShare = dynamic(() => import('@/components/vendor-landing/VendorSmartShare'), {
-    loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
-});
 
 const VendorTestimonials = dynamic(() => import('@/components/vendor-landing/VendorTestimonials'), {
     loading: () => <div className="h-[600px] w-full animate-pulse bg-[#fffcf9]" />
@@ -280,11 +274,9 @@ export default async function VendorLandingPage({ params }: Props) {
                 <VendorLogoStrip />
                 <VendorPainPoints />
                 <VendorHowItWorks />
-                <VendorBenefits />
-                <VendorSmartShare />
+                <VendorPricing />
                 <VendorTestimonials />
                 <VendorFAQ />
-                <VendorPricing />
                 <VendorFinalCTA />
             </main>
         </>
