@@ -115,24 +115,24 @@ export default async function VendorLandingPage({ params }: Props) {
                         offers: [
                             {
                                 '@type': 'Offer',
-                                name: 'Starter Plan',
+                                name: 'Free Plan',
                                 price: '0',
                                 priceCurrency: 'TRY',
-                                description: 'Free plan with 1 event'
+                                description: 'Up to 3 active events with full automation, bilingual emails, and custom landing page'
                             },
                             {
                                 '@type': 'Offer',
-                                name: 'Growth Plan',
-                                price: '999',
+                                name: 'Pro Plan',
+                                price: '299',
                                 priceCurrency: 'TRY',
-                                description: 'For active organizers with 3 events per month'
+                                description: 'Unlimited events, verified badge, discount codes, CRM, and advanced analytics'
                             },
                             {
                                 '@type': 'Offer',
-                                name: 'Professional Plan',
-                                price: '1999',
+                                name: 'Business Plan',
+                                price: '499',
                                 priceCurrency: 'TRY',
-                                description: 'Unlimited events for large organizations'
+                                description: 'Everything in Pro plus dedicated account manager and priority WhatsApp support'
                             }
                         ],
                         description: 'Professional event management platform for organizers. Automated bilingual bookings, verified reviews, and comprehensive event tools.',
@@ -189,7 +189,7 @@ export default async function VendorLandingPage({ params }: Props) {
                         '@context': 'https://schema.org',
                         '@type': 'Product',
                         name: 'Nuqta Event Management Platform',
-                        description: 'Professional event management platform for Arab organizers in Turkey. Save 15 hours per event with full automation, bilingual system, and verified reviews.',
+                        description: 'Professional event management platform for organizers. Save 14+ hours per event with full automation, bilingual system, and verified reviews.',
                         brand: {
                             '@type': 'Brand',
                             name: 'Nuqta'
@@ -198,7 +198,7 @@ export default async function VendorLandingPage({ params }: Props) {
                             '@type': 'AggregateOffer',
                             priceCurrency: 'TRY',
                             lowPrice: '0',
-                            highPrice: '1999',
+                            highPrice: '499',
                             offerCount: '3'
                         }
                     })
@@ -236,39 +236,39 @@ export default async function VendorLandingPage({ params }: Props) {
                     __html: JSON.stringify({
                         '@context': 'https://schema.org',
                         '@type': 'HowTo',
-                        name: 'How to Grow Your Event Attendance with Nuqta',
-                        description: 'Step-by-step guide to automating your event management and growing attendance by over 127%',
+                        name: 'How to Automate Your Event Management with Nuqta',
+                        description: 'Step-by-step guide to automating your event management and saving 14+ hours per event',
                         totalTime: 'PT2M',
                         step: [
                             {
                                 '@type': 'HowToStep',
                                 position: 1,
                                 name: 'Create Free Account',
-                                text: 'Register for free in 2 minutes without credit card.'
+                                text: 'Register for free in 2 minutes. No credit card required.'
                             },
                             {
                                 '@type': 'HowToStep',
                                 position: 2,
                                 name: 'Create Your First Event',
-                                text: 'Set up your event with bilingual descriptions, ticket types, and pricing.'
+                                text: 'Set up your event with bilingual descriptions, ticket types, and pricing. Your professional event page goes live instantly.'
                             },
                             {
                                 '@type': 'HowToStep',
                                 position: 3,
-                                name: 'Share Event Link',
-                                text: 'Share your event with 5,000+ active Arab users in Turkey.'
+                                name: 'Share With Your Audience',
+                                text: 'Use auto-generated branded share cards and bilingual captions to promote on Instagram, WhatsApp, and Facebook in one tap.'
                             },
                             {
                                 '@type': 'HowToStep',
                                 position: 4,
-                                name: 'Automated Management',
-                                text: 'System sends automatic bilingual confirmations and manages attendance. Save 15 hours per event.'
+                                name: 'Let Automation Handle the Rest',
+                                text: 'Bilingual confirmations, reminders, and attendance tracking run automatically. Save 14+ hours per event.'
                             },
                             {
                                 '@type': 'HowToStep',
                                 position: 5,
-                                name: 'Collect Verified Reviews',
-                                text: 'Only real attendees can review. Build authentic reputation with 100% verified reviews.'
+                                name: 'Grow With Verified Reviews',
+                                text: 'Only real attendees can review. Build authentic reputation and trust that drives repeat bookings.'
                             }
                         ]
                     })
