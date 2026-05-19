@@ -102,6 +102,8 @@ export const inputStyle: CSSProperties = {
     borderRadius: radius.lg,
     border: `1px solid ${colors.border}`,
     fontSize: '14px',
+    color: colors.text.primary,
+    backgroundColor: '#ffffff',
     outline: 'none',
     transition: 'border-color 0.2s',
 };
@@ -109,7 +111,7 @@ export const inputStyle: CSSProperties = {
 /** Read-only / disabled input variant */
 export const inputDisabled: CSSProperties = {
     ...inputStyle,
-    background: colors.cardAlt,
+    backgroundColor: colors.cardAlt,
     color: colors.text.muted,
 };
 
