@@ -557,11 +557,17 @@ export async function scoutInstagramProfile(handle: string) {
         const username = handle.replace(/^@/, '').trim();
         if (!username) return { error: 'Invalid handle' };
 
-        const res = await fetch(`https://www.instagram.com/${username}/`, {
+        const res = await fetch(`https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+                'x-ig-app-id': '936619743392459',
+                'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9',
+                'Origin': 'https://www.instagram.com',
+                'Referer': 'https://www.instagram.com/',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-site',
             },
             next: { revalidate: 3600 }
         });
@@ -574,32 +580,19 @@ export async function scoutInstagramProfile(handle: string) {
             };
         }
 
-        const html = await res.text();
-        
-        const ogImageMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
-        let logoUrl = ogImageMatch ? ogImageMatch[1].replace(/&amp;/g, '&') : null;
+        const data = await res.json();
+        const user = data?.data?.user;
 
-        if (!logoUrl) {
-            const ogImageMatchAlt = html.match(/content="([^"]+)"\s+property="og:image"/);
-            logoUrl = ogImageMatchAlt ? ogImageMatchAlt[1].replace(/&amp;/g, '&') : null;
+        if (!user) {
+            return {
+                logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`,
+                website: `https://instagram.com/${username}`,
+                businessName: username
+            };
         }
 
-        if (!logoUrl) {
-            logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`;
-        }
-
-        const ogTitleMatch = html.match(/property="og:title"\s+content="([^"]+)"/);
-        let businessName = username;
-        if (ogTitleMatch) {
-            const title = ogTitleMatch[1];
-            const nameMatch = title.match(/^([^(]+)\s+\(@/);
-            if (nameMatch) {
-                businessName = nameMatch[1].trim();
-            } else {
-                const nameMatchAlt = title.match(/^([^(]+)/);
-                if (nameMatchAlt) businessName = nameMatchAlt[1].trim();
-            }
-        }
+        const logoUrl = user.profile_pic_url_hd || user.profile_pic_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`;
+        const businessName = user.full_name ? user.full_name.trim() : username;
 
         return {
             success: true,
