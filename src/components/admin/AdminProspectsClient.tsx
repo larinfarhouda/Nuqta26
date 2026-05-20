@@ -415,7 +415,7 @@ export default function AdminProspectsClient({
                                                 setForm(prev => ({
                                                     ...prev,
                                                     website: prev.website || `https://instagram.com/${handle}`,
-                                                    logo_url: prev.logo_url || `https://instagram.com/${handle}`,
+                                                    logo_url: prev.logo_url || `https://unavatar.io/instagram/${handle}`,
                                                     business_name: prev.business_name || handle,
                                                 }));
                                                 // Open Instagram profile for quick reference
@@ -492,7 +492,7 @@ export default function AdminProspectsClient({
                                                 setEditForm(prev => ({
                                                     ...prev,
                                                     website: prev.website || `https://instagram.com/${handle}`,
-                                                    logo_url: prev.logo_url || `https://instagram.com/${handle}`,
+                                                    logo_url: prev.logo_url || `https://unavatar.io/instagram/${handle}`,
                                                     business_name: prev.business_name || handle,
                                                 }));
                                                 // Open Instagram profile for quick reference
