@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
     MessageCircle, Mail, Upload, TrendingUp, Clock, Target, Heart, AlertCircle,
+    Store, Edit2, Trash2,
 } from 'lucide-react';
 import {
     getAdminProspects,
@@ -12,6 +13,8 @@ import {
     createProspectEvent,
     getProspectInterests,
     bulkCreateProspects,
+    updateProspectVendor,
+    deleteProspectVendor,
 } from '@/actions/admin';
 import type { ProspectVendor, PaginatedResult, EventInterestSummary } from '@/types/admin.types';
 import {
@@ -62,8 +65,16 @@ export default function AdminProspectsClient({
     const [bulkResult, setBulkResult] = useState<{ created: number; failed: number } | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
+    // Edit/Delete states
+    const [editingProspect, setEditingProspect] = useState<ProspectVendor | null>(null);
+    const [deletingProspect, setDeletingProspect] = useState<ProspectVendor | null>(null);
+
     // Form states
     const [form, setForm] = useState({
+        business_name: '', logo_url: '', contact_email: '',
+        contact_phone: '', instagram: '', website: '', notes: '',
+    });
+    const [editForm, setEditForm] = useState({
         business_name: '', logo_url: '', contact_email: '',
         contact_phone: '', instagram: '', website: '', notes: '',
     });
@@ -86,6 +97,24 @@ export default function AdminProspectsClient({
         await createProspectVendor(form);
         setForm({ business_name: '', logo_url: '', contact_email: '', contact_phone: '', instagram: '', website: '', notes: '' });
         setShowCreate(false);
+        setLoading(false);
+        reload();
+    };
+
+    const handleEdit = async () => {
+        if (!editingProspect || !editForm.business_name) return;
+        setLoading(true);
+        await updateProspectVendor(editingProspect.id, editForm);
+        setEditingProspect(null);
+        setLoading(false);
+        reload();
+    };
+
+    const handleDelete = async () => {
+        if (!deletingProspect) return;
+        setLoading(true);
+        await deleteProspectVendor(deletingProspect.id);
+        setDeletingProspect(null);
         setLoading(false);
         reload();
     };
@@ -424,6 +453,111 @@ export default function AdminProspectsClient({
                 </div>
             )}
 
+            {/* Edit Prospect Modal */}
+            {editingProspect && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                    onClick={() => setEditingProspect(null)}
+                >
+                    <div onClick={(e) => e.stopPropagation()}
+                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '480px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>Edit Prospect Vendor</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div>
+                                <label style={labelStyle}>Business Name *</label>
+                                <input placeholder="e.g. Café Istanbul" value={editForm.business_name} onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Logo URL</label>
+                                <input placeholder="https://..." value={editForm.logo_url} onChange={(e) => setEditForm({ ...editForm, logo_url: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Email</label>
+                                <input placeholder="vendor@example.com" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Phone</label>
+                                <input placeholder="+90 5XX XXX XX XX" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Instagram</label>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <input placeholder="@handle" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                                    {editForm.instagram && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const handle = editForm.instagram.replace(/^@/, '').trim();
+                                                if (!handle) return;
+                                                // Auto-fill fields from Instagram handle
+                                                setEditForm(prev => ({
+                                                    ...prev,
+                                                    website: prev.website || `https://instagram.com/${handle}`,
+                                                    logo_url: prev.logo_url || `https://instagram.com/${handle}`,
+                                                    business_name: prev.business_name || handle,
+                                                }));
+                                                // Open Instagram profile for quick reference
+                                                window.open(`https://instagram.com/${handle}`, '_blank');
+                                            }}
+                                            style={{
+                                                padding: '8px 12px', borderRadius: '8px', border: 'none',
+                                                background: 'linear-gradient(135deg, #E1306C, #F77737)',
+                                                color: '#fff', fontSize: '11px', fontWeight: 700,
+                                                cursor: 'pointer', whiteSpace: 'nowrap',
+                                                display: 'flex', alignItems: 'center', gap: '4px',
+                                            }}
+                                        >
+                                            <ExternalLink size={12} /> Scout
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Website</label>
+                                <input placeholder="https://..." value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Notes</label>
+                                <textarea placeholder="Any additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+                            <button onClick={() => setEditingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
+                            <button onClick={handleEdit} disabled={loading || !editForm.business_name} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Prospect Modal */}
+            {deletingProspect && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                    onClick={() => setDeletingProspect(null)}
+                >
+                    <div onClick={(e) => e.stopPropagation()}
+                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '440px', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#dc2626' }}>
+                            <AlertCircle size={24} />
+                            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Delete Prospect Vendor?</h3>
+                        </div>
+                        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5' }}>
+                            Are you sure you want to permanently delete <strong>{deletingProspect.business_name}</strong>?
+                            <br /><br />
+                            <span style={{ color: '#b45309', fontWeight: 500 }}>
+                                Note: Any associated phantom events will be safely disconnected (not deleted), but this prospect listing and all its logs will be permanently removed.
+                            </span>
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={() => setDeletingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
+                            <button onClick={handleDelete} disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Delete Prospect'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Create Event Modal */}
             {showEvent && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
@@ -556,8 +690,69 @@ export default function AdminProspectsClient({
                             return (
                             <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: stale ? '#fffbeb' : undefined }}>
                                 <td style={{ padding: '14px 16px' }}>
-                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{p.business_name}</div>
-                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.instagram || p.contact_email || '—'}</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        {p.logo_url ? (
+                                            <img
+                                                src={p.logo_url}
+                                                alt={`${p.business_name} logo`}
+                                                style={{
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '50%',
+                                                    objectFit: 'cover',
+                                                    border: '1px solid #e2e8f0',
+                                                    flexShrink: 0,
+                                                }}
+                                                onError={(e) => {
+                                                    // Fallback if image fails to load
+                                                    (e.target as HTMLElement).style.display = 'none';
+                                                    const parent = (e.target as HTMLElement).parentElement;
+                                                    if (parent) {
+                                                        const fallback = parent.querySelector('.logo-fallback');
+                                                        if (fallback) fallback.setAttribute('style', 'display: flex; width: 36px; height: 36px; border-radius: 50%; background: #ede9fe; color: #7c3aed; align-items: center; justify-content: center; flex-shrink: 0;');
+                                                    }
+                                                }}
+                                            />
+                                        ) : null}
+                                        {(!p.logo_url) ? (
+                                            <div
+                                                style={{
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '50%',
+                                                    background: '#ede9fe',
+                                                    color: '#7c3aed',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                <Store size={18} />
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className="logo-fallback"
+                                                style={{
+                                                    display: 'none',
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '50%',
+                                                    background: '#ede9fe',
+                                                    color: '#7c3aed',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                <Store size={18} />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{p.business_name}</div>
+                                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.instagram || p.contact_email || '—'}</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td style={{ padding: '14px 16px' }}>
                                     <span style={{
@@ -593,7 +788,7 @@ export default function AdminProspectsClient({
                                     )}
                                 </td>
                                 <td style={{ padding: '14px 16px' }}>
-                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                                         <button
                                             onClick={() => setShowEvent(p.id)}
                                             style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#ede9fe', color: '#6d28d9', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
@@ -624,6 +819,29 @@ export default function AdminProspectsClient({
                                                 <MessageCircle size={10} /> WA
                                             </a>
                                         )}
+                                        <button
+                                            onClick={() => {
+                                                setEditingProspect(p);
+                                                setEditForm({
+                                                    business_name: p.business_name || '',
+                                                    logo_url: p.logo_url || '',
+                                                    contact_email: p.contact_email || '',
+                                                    contact_phone: p.contact_phone || '',
+                                                    instagram: p.instagram || '',
+                                                    website: p.website || '',
+                                                    notes: p.notes || '',
+                                                });
+                                            }}
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '5px 8px', borderRadius: '6px', border: 'none', background: '#f1f5f9', color: '#475569', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                        >
+                                            <Edit2 size={11} /> Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setDeletingProspect(p)}
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '5px 8px', borderRadius: '6px', border: 'none', background: '#fee2e2', color: '#dc2626', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                        >
+                                            <Trash2 size={11} /> Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

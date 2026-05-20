@@ -445,6 +445,38 @@ export async function getProspectInterests(prospectId: string) {
     }
 }
 
+export async function updateProspectVendor(prospectId: string, data: {
+    business_name: string;
+    logo_url?: string;
+    contact_email?: string;
+    contact_phone?: string;
+    instagram?: string;
+    website?: string;
+    notes?: string;
+}) {
+    try {
+        const { user } = await requireAdmin();
+        const service = getAdminService();
+        await service.updateProspectVendor(prospectId, data, user.id);
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to update prospect vendor', { error });
+        return { error: 'Failed to update prospect vendor' };
+    }
+}
+
+export async function deleteProspectVendor(prospectId: string) {
+    try {
+        const { user } = await requireAdmin();
+        const service = getAdminService();
+        await service.deleteProspectVendor(prospectId, user.id);
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to delete prospect vendor', { error });
+        return { error: 'Failed to delete prospect vendor' };
+    }
+}
+
 // ─── Activity Logs ──────────────────────────────────────────────────────────
 
 export async function getAdminActivity(page = 1, pageSize = 50) {

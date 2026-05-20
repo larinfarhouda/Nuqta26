@@ -214,6 +214,29 @@ export class AdminService {
         });
     }
 
+    async updateProspectVendor(prospectId: string, input: Partial<CreateProspectVendorInput>, adminId: string) {
+        logger.info('AdminService: Updating prospect vendor', { prospectId });
+        await this.prospectRepo.updateProspectVendor(prospectId, input);
+        await this.activityRepo.logActivity({
+            user_id: adminId,
+            action: 'prospect_updated',
+            entity_type: 'prospect_vendor',
+            entity_id: prospectId,
+            metadata: { fields: Object.keys(input) },
+        });
+    }
+
+    async deleteProspectVendor(prospectId: string, adminId: string) {
+        logger.info('AdminService: Deleting prospect vendor', { prospectId });
+        await this.prospectRepo.deleteProspectVendor(prospectId);
+        await this.activityRepo.logActivity({
+            user_id: adminId,
+            action: 'prospect_deleted',
+            entity_type: 'prospect_vendor',
+            entity_id: prospectId,
+        });
+    }
+
     // ─── Activity Logs ──────────────────────────────────────────────────
 
     async getRecentActivity(page = 1, pageSize = 50) {

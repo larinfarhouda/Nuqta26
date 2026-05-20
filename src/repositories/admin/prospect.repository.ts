@@ -199,4 +199,31 @@ export class AdminProspectRepository extends BaseRepository {
 
         if (updateError) this.handleError(updateError, 'AdminProspectRepository.convertProspect.update');
     }
+
+    async updateProspectVendor(prospectId: string, input: Partial<CreateProspectVendorInput>): Promise<void> {
+        const { error } = await this.client
+            .from('prospect_vendors')
+            .update({ ...input, updated_at: new Date().toISOString() })
+            .eq('id', prospectId);
+
+        if (error) this.handleError(error, 'AdminProspectRepository.updateProspectVendor');
+    }
+
+    async deleteProspectVendor(prospectId: string): Promise<void> {
+        // Disconnect associated events first to prevent FK constraint failures
+        const { error: eventError } = await this.client
+            .from('events')
+            .update({ prospect_vendor_id: null, updated_at: new Date().toISOString() })
+            .eq('prospect_vendor_id', prospectId);
+
+        if (eventError) this.handleError(eventError, 'AdminProspectRepository.deleteProspectVendor.disconnectEvents');
+
+        // Delete the prospect vendor row
+        const { error } = await this.client
+            .from('prospect_vendors')
+            .delete()
+            .eq('id', prospectId);
+
+        if (error) this.handleError(error, 'AdminProspectRepository.deleteProspectVendor');
+    }
 }

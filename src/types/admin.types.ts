@@ -224,6 +224,8 @@ export type ActivityAction =
     | 'prospect_created'
     | 'prospect_contacted'
     | 'prospect_converted'
+    | 'prospect_updated'
+    | 'prospect_deleted'
     | 'event_featured'
     | 'interest_expressed'
     | 'subscription_changed'
