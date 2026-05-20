@@ -25,7 +25,7 @@ export async function claimProspectBusiness(claimToken: string) {
 
         let adminClient;
         try {
-            adminClient = createAdminClient();
+            adminClient = await createAdminClient();
         } catch {
             return { error: 'Service unavailable. Please try again later.' };
         }

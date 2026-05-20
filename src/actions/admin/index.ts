@@ -23,8 +23,8 @@ async function requireAdmin() {
     return { user, supabase };
 }
 
-function getAdminService() {
-    const adminClient = createAdminClient();
+async function getAdminService() {
+    const adminClient = await createAdminClient();
     const factory = new ServiceFactory(adminClient);
     return factory.getAdminService();
 }
@@ -34,7 +34,7 @@ function getAdminService() {
 export async function getAdminDashboardData() {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getDashboardData();
     } catch (error) {
         logger.error('Failed to get admin dashboard data', { error });
@@ -47,7 +47,7 @@ export async function getAdminDashboardData() {
 export async function getAdminVendors(page = 1, pageSize = 20, search?: string, tier?: string) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getVendorDirectory({ page, pageSize, search, tier });
     } catch (error) {
         logger.error('Failed to get admin vendors', { error });
@@ -58,7 +58,7 @@ export async function getAdminVendors(page = 1, pageSize = 20, search?: string, 
 export async function approveVendor(vendorId: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.approveVendor(vendorId, user.id);
         return { success: true };
     } catch (error) {
@@ -70,7 +70,7 @@ export async function approveVendor(vendorId: string) {
 export async function suspendVendor(vendorId: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.suspendVendor(vendorId, user.id);
         return { success: true };
     } catch (error) {
@@ -84,7 +84,7 @@ export async function getVendorFullDetails(vendorId: string) {
         // Run auth check in parallel with service creation
         const [_, service] = await Promise.all([
             requireAdmin(),
-            Promise.resolve(getAdminService()),
+            getAdminService(),
         ]);
         return await service.getVendorFullDetails(vendorId);
     } catch (error) {
@@ -96,7 +96,7 @@ export async function getVendorFullDetails(vendorId: string) {
 export async function updateVendorSubscription(vendorId: string, tier: string, billingPeriod: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.updateVendorSubscription(vendorId, tier, billingPeriod, user.id);
         return { success: true };
     } catch (error) {
@@ -108,7 +108,7 @@ export async function updateVendorSubscription(vendorId: string, tier: string, b
 export async function updateVendorDetails(vendorId: string, updates: Record<string, any>) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.updateVendorDetails(vendorId, updates, user.id);
         return { success: true };
     } catch (error) {
@@ -120,7 +120,7 @@ export async function updateVendorDetails(vendorId: string, updates: Record<stri
 export async function impersonateVendor(vendorId: string) {
     try {
         const { user } = await requireAdmin();
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
 
         // Get vendor's email from profiles
         const { data: profile } = await adminClient
@@ -145,7 +145,7 @@ export async function impersonateVendor(vendorId: string) {
         }
 
         // Log the impersonation
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.logActivity({
             user_id: user.id,
             action: 'vendor_impersonated',
@@ -181,7 +181,7 @@ export async function impersonateVendor(vendorId: string) {
 export async function getAdminBankTransfers(page = 1, pageSize = 20) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getBankTransferQueue(page, pageSize);
     } catch (error) {
         logger.error('Failed to get bank transfers', { error });
@@ -192,7 +192,7 @@ export async function getAdminBankTransfers(page = 1, pageSize = 20) {
 export async function confirmBankPayment(bookingId: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.confirmPayment(bookingId, user.id);
         return { success: true };
     } catch (error) {
@@ -204,7 +204,7 @@ export async function confirmBankPayment(bookingId: string) {
 export async function rejectBankPayment(bookingId: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.rejectPayment(bookingId, user.id);
         return { success: true };
     } catch (error) {
@@ -218,7 +218,7 @@ export async function rejectBankPayment(bookingId: string) {
 export async function getAdminFlaggedReviews(page = 1, pageSize = 20) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getFlaggedReviews(page, pageSize);
     } catch (error) {
         logger.error('Failed to get flagged reviews', { error });
@@ -229,7 +229,7 @@ export async function getAdminFlaggedReviews(page = 1, pageSize = 20) {
 export async function unflagReview(reviewId: string) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.unflagReview(reviewId);
         return { success: true };
     } catch (error) {
@@ -241,7 +241,7 @@ export async function unflagReview(reviewId: string) {
 export async function deleteReview(reviewId: string) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.deleteReview(reviewId);
         return { success: true };
     } catch (error) {
@@ -253,7 +253,7 @@ export async function deleteReview(reviewId: string) {
 export async function toggleFeatureEvent(eventId: string, featured: boolean) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.toggleFeatureEvent(eventId, featured, user.id);
         return { success: true };
     } catch (error) {
@@ -275,7 +275,7 @@ export async function createProspectVendor(data: {
 }) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         const prospect = await service.createProspectVendor(data, user.id);
         return { success: true, prospect };
     } catch (error) {
@@ -287,7 +287,7 @@ export async function createProspectVendor(data: {
 export async function getAdminProspects(page = 1, pageSize = 20, status?: string) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getProspects(page, pageSize, status);
     } catch (error) {
         logger.error('Failed to get prospects', { error });
@@ -298,7 +298,7 @@ export async function getAdminProspects(page = 1, pageSize = 20, status?: string
 export async function getProspectStats() {
     try {
         await requireAdmin();
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
 
         // Get all prospects with status counts
         const { data: all } = await adminClient.from('prospect_vendors').select('id, status, created_at, updated_at');
@@ -360,7 +360,7 @@ export async function bulkCreateProspects(prospects: {
 }[]) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         let created = 0;
         let failed = 0;
 
@@ -384,7 +384,7 @@ export async function bulkCreateProspects(prospects: {
 export async function contactProspect(prospectId: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         const claimToken = await service.contactProspect(prospectId, user.id);
         const claimUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist'}/claim/${claimToken}`;
         return { success: true, claimUrl, claimToken };
@@ -412,10 +412,10 @@ export async function createProspectEvent(data: {
 }) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
 
         // Get system vendor ID
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
         const { data: systemVendor } = await adminClient
             .from('vendors')
             .select('id')
@@ -437,7 +437,7 @@ export async function createProspectEvent(data: {
 export async function getProspectInterests(prospectId: string) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getProspectInterests(prospectId);
     } catch (error) {
         logger.error('Failed to get prospect interests', { error });
@@ -456,7 +456,7 @@ export async function updateProspectVendor(prospectId: string, data: {
 }) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.updateProspectVendor(prospectId, data, user.id);
         return { success: true };
     } catch (error) {
@@ -468,7 +468,7 @@ export async function updateProspectVendor(prospectId: string, data: {
 export async function deleteProspectVendor(prospectId: string) {
     try {
         const { user } = await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         await service.deleteProspectVendor(prospectId, user.id);
         return { success: true };
     } catch (error) {
@@ -482,7 +482,7 @@ export async function deleteProspectVendor(prospectId: string) {
 export async function getAdminActivity(page = 1, pageSize = 50) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getRecentActivity(page, pageSize);
     } catch (error) {
         logger.error('Failed to get admin activity', { error });
@@ -495,7 +495,7 @@ export async function getAdminActivity(page = 1, pageSize = 50) {
 export async function searchEventsForAdmin(query: string) {
     try {
         await requireAdmin();
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
 
         const { data, error } = await adminClient
             .from('events')
@@ -521,7 +521,7 @@ export async function getAdminUserActivity(
 ) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getUserActivityFeed(page, pageSize, filters);
     } catch (error) {
         logger.error('Failed to get user activity feed', { error });
@@ -532,7 +532,7 @@ export async function getAdminUserActivity(
 export async function getAdminUserEngagement() {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getUserEngagementStats();
     } catch (error) {
         logger.error('Failed to get user engagement stats', { error });
@@ -543,7 +543,7 @@ export async function getAdminUserEngagement() {
 export async function getAdminMostActiveUsers(limit = 10) {
     try {
         await requireAdmin();
-        const service = getAdminService();
+        const service = await getAdminService();
         return await service.getMostActiveUsers(limit);
     } catch (error) {
         logger.error('Failed to get most active users', { error });

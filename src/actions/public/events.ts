@@ -248,7 +248,7 @@ export async function createBooking(
             // Get vendor email from auth.users (service role required)
             let vendorEmail = '';
             try {
-                const adminClient = createAdminClient();
+                const adminClient = await createAdminClient();
                 const { data: { user: vendorUser } } = await adminClient.auth.admin.getUserById(vendorId);
                 vendorEmail = vendorUser?.email || '';
             } catch {

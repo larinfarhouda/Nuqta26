@@ -16,15 +16,15 @@
  * ```
  */
 
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import type { Ratelimit } from '@upstash/ratelimit';
+import type { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger/logger';
 
 // ─── Redis Client ────────────────────────────────────────────────────────────
 
 let redis: Redis | null = null;
 
-function getRedis(): Redis | null {
+async function getRedis(): Promise<Redis | null> {
     if (redis) return redis;
 
     const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -35,6 +35,7 @@ function getRedis(): Redis | null {
         return null;
     }
 
+    const { Redis } = await import('@upstash/redis');
     redis = new Redis({ url, token });
     return redis;
 }
@@ -45,14 +46,15 @@ function getRedis(): Redis | null {
  * Create a rate limiter with the given configuration.
  * Returns null if Redis is not configured (dev mode).
  */
-function createLimiter(
+async function createLimiter(
     requests: number,
     window: `${number} s` | `${number} m` | `${number} h`,
     prefix: string
-): Ratelimit | null {
-    const r = getRedis();
+): Promise<Ratelimit | null> {
+    const r = await getRedis();
     if (!r) return null;
 
+    const { Ratelimit } = await import('@upstash/ratelimit');
     return new Ratelimit({
         redis: r,
         limiter: Ratelimit.slidingWindow(requests, window),
@@ -101,9 +103,9 @@ export interface RateLimitResult {
  */
 export async function checkRateLimit(
     identifier: string,
-    limiterFn: () => Ratelimit | null
+    limiterFn: () => Promise<Ratelimit | null> | Ratelimit | null
 ): Promise<RateLimitResult> {
-    const limiter = limiterFn();
+    const limiter = await limiterFn();
 
     // If no limiter (Redis not configured), allow all requests
     if (!limiter) {

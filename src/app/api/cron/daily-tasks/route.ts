@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         hasAuthHeader: !!authHeader,
     });
 
-    const supabase = createAdminClient();
+    const supabase = await createAdminClient();
     const bookingRepo = new BookingRepository(supabase);
     const notificationService = new NotificationService();
 

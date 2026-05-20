@@ -15,7 +15,7 @@ import { SUBSCRIPTION_TIERS, type SubscriptionTierConfig, type BadgeType } from 
 export async function loadTiersFromDB(): Promise<Record<string, SubscriptionTierConfig>> {
     try {
         const { createAdminClient } = await import('@/utils/supabase/server');
-        const client = createAdminClient();
+        const client = await createAdminClient();
         const { data, error } = await (client as any)
             .from('subscription_tiers')
             .select('*')

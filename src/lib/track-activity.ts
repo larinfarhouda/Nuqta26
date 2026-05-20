@@ -22,7 +22,7 @@ export function trackActivity(input: TrackActivityInput): void {
 
 async function _doTrack(input: TrackActivityInput): Promise<void> {
     try {
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
         await adminClient.from('user_activity_logs').insert({
             user_id: input.userId,
             user_role: input.userRole || 'customer',

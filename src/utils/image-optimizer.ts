@@ -1,4 +1,3 @@
-import sharp from 'sharp';
 import { logger } from '@/lib/logger/logger';
 
 /**
@@ -32,6 +31,7 @@ export async function optimizeImageBuffer(
     const originalSize = inputBuffer.length;
 
     try {
+        const sharp = (await import('sharp')).default;
         let pipeline = sharp(inputBuffer)
             .resize(maxWidth, null, {
                 withoutEnlargement: true, // Don't upscale small images

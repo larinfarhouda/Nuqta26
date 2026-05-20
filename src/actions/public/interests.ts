@@ -19,7 +19,7 @@ export async function expressInterest(eventId: string) {
 
         let adminClient;
         try {
-            adminClient = createAdminClient();
+            adminClient = await createAdminClient();
         } catch {
             return { error: 'Admin features not available in this environment.' };
         }
@@ -78,7 +78,7 @@ export async function hasExpressedInterest(eventId: string) {
 
         let adminClient;
         try {
-            adminClient = createAdminClient();
+            adminClient = await createAdminClient();
         } catch {
             return false;
         }
@@ -102,7 +102,7 @@ export async function getEventInterestCount(eventId: string): Promise<number> {
     try {
         let adminClient;
         try {
-            adminClient = createAdminClient();
+            adminClient = await createAdminClient();
         } catch {
             return 0;
         }

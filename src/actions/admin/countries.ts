@@ -22,8 +22,8 @@ async function requireAdmin() {
     return { user, supabase };
 }
 
-function getCountryService() {
-    const adminClient = createAdminClient();
+async function getCountryService() {
+    const adminClient = await createAdminClient();
     const factory = new ServiceFactory(adminClient);
     return factory.getCountryService();
 }
@@ -33,7 +33,7 @@ function getCountryService() {
 export async function getAdminCountries() {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         return await service.getAllCountries();
     } catch (error) {
         logger.error('Failed to get countries', { error });
@@ -44,7 +44,7 @@ export async function getAdminCountries() {
 export async function getAdminCountryConfig(countryId: string) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         return await service.getFullConfig(countryId);
     } catch (error) {
         logger.error('Failed to get country config', { error });
@@ -57,7 +57,7 @@ export async function getAdminCountryConfig(countryId: string) {
 export async function saveCountry(data: Partial<Country> & { id: string }) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
 
         // Check if exists
         const existing = await service.getCountry(data.id);
@@ -76,7 +76,7 @@ export async function saveCountry(data: Partial<Country> & { id: string }) {
 export async function toggleCountryActive(countryId: string, isActive: boolean) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.updateCountry(countryId, { is_active: isActive });
         return { success: true };
     } catch (error) {
@@ -90,7 +90,7 @@ export async function toggleCountryActive(countryId: string, isActive: boolean) 
 export async function addCity(countryId: string, id: string, nameEn: string, nameAr: string) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.createCity({ id, country_id: countryId, name_en: nameEn, name_ar: nameAr });
         return { success: true };
     } catch (error) {
@@ -102,7 +102,7 @@ export async function addCity(countryId: string, id: string, nameEn: string, nam
 export async function updateCity(cityId: string, updates: Partial<City>) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.updateCity(cityId, updates);
         return { success: true };
     } catch (error) {
@@ -114,7 +114,7 @@ export async function updateCity(cityId: string, updates: Partial<City>) {
 export async function removeCity(cityId: string) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.deleteCity(cityId);
         return { success: true };
     } catch (error) {
@@ -128,7 +128,7 @@ export async function removeCity(cityId: string) {
 export async function addBank(countryId: string, name: string) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.createBank({ country_id: countryId, name });
         return { success: true };
     } catch (error) {
@@ -140,7 +140,7 @@ export async function addBank(countryId: string, name: string) {
 export async function updateBankAction(bankId: string, updates: Partial<Bank>) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.updateBank(bankId, updates);
         return { success: true };
     } catch (error) {
@@ -152,7 +152,7 @@ export async function updateBankAction(bankId: string, updates: Partial<Bank>) {
 export async function removeBank(bankId: string) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.deleteBank(bankId);
         return { success: true };
     } catch (error) {
@@ -175,7 +175,7 @@ export async function addPaymentMethod(data: {
 }) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.createPaymentMethod(data as any);
         return { success: true };
     } catch (error) {
@@ -187,7 +187,7 @@ export async function addPaymentMethod(data: {
 export async function updatePaymentMethodAction(pmId: string, updates: Partial<PaymentMethod>) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.updatePaymentMethod(pmId, updates);
         return { success: true };
     } catch (error) {
@@ -199,7 +199,7 @@ export async function updatePaymentMethodAction(pmId: string, updates: Partial<P
 export async function removePaymentMethod(pmId: string) {
     try {
         await requireAdmin();
-        const service = getCountryService();
+        const service = await getCountryService();
         await service.deletePaymentMethod(pmId);
         return { success: true };
     } catch (error) {

@@ -1,13 +1,5 @@
 import { sendEmail } from '@/utils/mail';
 import { logger } from '@/lib/logger/logger';
-import BookingUserTemplate from '@/components/emails/BookingUserTemplate';
-import BookingVendorTemplate from '@/components/emails/BookingVendorTemplate';
-import WelcomeTemplate from '@/components/emails/WelcomeTemplate';
-import EventReminderTemplate from '@/components/emails/EventReminderTemplate';
-import ReviewReceivedTemplate from '@/components/emails/ReviewReceivedTemplate';
-import ReviewRequestTemplate from '@/components/emails/ReviewRequestTemplate';
-import EventSoldOutTemplate from '@/components/emails/EventSoldOutTemplate';
-import NewSignupAdminTemplate from '@/components/emails/NewSignupAdminTemplate';
 import React from 'react';
 
 const ADMIN_NOTIFICATION_EMAIL = 'nuqta.events@gmail.com';
@@ -38,6 +30,7 @@ export class NotificationService {
         });
 
         try {
+            const BookingUserTemplate = (await import('@/components/emails/BookingUserTemplate')).default;
             await sendEmail({
                 to: params.customerEmail,
                 subject: locale === 'ar'
@@ -82,6 +75,7 @@ export class NotificationService {
         });
 
         try {
+            const BookingUserTemplate = (await import('@/components/emails/BookingUserTemplate')).default;
             await sendEmail({
                 to: params.customerEmail,
                 subject: locale === 'ar'
@@ -125,6 +119,7 @@ export class NotificationService {
         });
 
         try {
+            const BookingVendorTemplate = (await import('@/components/emails/BookingVendorTemplate')).default;
             await sendEmail({
                 to: params.vendorEmail,
                 subject: locale === 'ar'
@@ -188,6 +183,7 @@ export class NotificationService {
         });
 
         try {
+            const WelcomeTemplate = (await import('@/components/emails/WelcomeTemplate')).default;
             await sendEmail({
                 to: params.email,
                 subject: 'Welcome to Nuqta!',
@@ -225,6 +221,7 @@ export class NotificationService {
         });
 
         try {
+            const ReviewRequestTemplate = (await import('@/components/emails/ReviewRequestTemplate')).default;
             const result = await sendEmail({
                 to: params.customerEmail,
                 subject: isAr
@@ -269,6 +266,7 @@ export class NotificationService {
         });
 
         try {
+            const EventSoldOutTemplate = (await import('@/components/emails/EventSoldOutTemplate')).default;
             await sendEmail({
                 to: params.vendorEmail,
                 subject: locale === 'ar'
@@ -307,6 +305,7 @@ export class NotificationService {
         });
 
         try {
+            const ReviewReceivedTemplate = (await import('@/components/emails/ReviewReceivedTemplate')).default;
             await sendEmail({
                 to: params.vendorEmail,
                 subject: `New ${params.rating}⭐ Review: ${params.eventTitle}`,
@@ -350,6 +349,7 @@ export class NotificationService {
         });
 
         try {
+            const EventReminderTemplate = (await import('@/components/emails/EventReminderTemplate')).default;
             const result = await sendEmail({
                 to: params.customerEmail,
                 subject: isAr
@@ -397,6 +397,7 @@ export class NotificationService {
         });
 
         try {
+            const NewSignupAdminTemplate = (await import('@/components/emails/NewSignupAdminTemplate')).default;
             const timestamp = new Date().toLocaleString('en-US', {
                 timeZone: 'Europe/Istanbul',
                 year: 'numeric',

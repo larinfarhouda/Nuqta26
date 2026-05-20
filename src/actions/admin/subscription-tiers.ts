@@ -29,7 +29,7 @@ async function requireAdmin() {
 export async function getAdminSubscriptionTiers() {
     try {
         await requireAdmin();
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
         const factory = new ServiceFactory(adminClient);
         const service = factory.getSubscriptionTierService();
         return await service.getAllTiers();
@@ -54,7 +54,7 @@ export async function updateSubscriptionTier(
 ) {
     try {
         const { user } = await requireAdmin();
-        const adminClient = createAdminClient();
+        const adminClient = await createAdminClient();
         const factory = new ServiceFactory(adminClient);
         const service = factory.getSubscriptionTierService();
 

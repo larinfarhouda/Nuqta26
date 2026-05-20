@@ -21,7 +21,7 @@ export default async function ClaimPage({ params }: { params: any }) {
 
     let adminClient;
     try {
-        adminClient = createAdminClient();
+        adminClient = await createAdminClient();
     } catch {
         return notFound();
     }

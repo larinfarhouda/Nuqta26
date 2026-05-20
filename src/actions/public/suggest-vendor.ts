@@ -21,7 +21,7 @@ export async function suggestVendor(data: {
 
         let adminClient;
         try {
-            adminClient = createAdminClient();
+            adminClient = await createAdminClient();
         } catch {
             return { error: 'Service unavailable.' };
         }
