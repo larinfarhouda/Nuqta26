@@ -15,6 +15,7 @@ import {
     bulkCreateProspects,
     updateProspectVendor,
     deleteProspectVendor,
+    scoutInstagramProfile,
 } from '@/actions/admin';
 import type { ProspectVendor, PaginatedResult, EventInterestSummary } from '@/types/admin.types';
 import {
@@ -61,6 +62,7 @@ export default function AdminProspectsClient({
     const [claimUrl, setClaimUrl] = useState<string | null>(null);
     const [contactedProspect, setContactedProspect] = useState<ProspectVendor | null>(null);
     const [loading, setLoading] = useState(false);
+    const [scouting, setScouting] = useState(false);
     const [showBulk, setShowBulk] = useState(false);
     const [bulkResult, setBulkResult] = useState<{ created: number; failed: number } | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
@@ -408,16 +410,26 @@ export default function AdminProspectsClient({
                                     {form.instagram && (
                                         <button
                                             type="button"
-                                            onClick={() => {
+                                            disabled={scouting}
+                                            onClick={async () => {
                                                 const handle = form.instagram.replace(/^@/, '').trim();
                                                 if (!handle) return;
-                                                // Auto-fill fields from Instagram handle
-                                                setForm(prev => ({
-                                                    ...prev,
-                                                    website: prev.website || `https://instagram.com/${handle}`,
-                                                    logo_url: prev.logo_url || `https://unavatar.io/instagram/${handle}`,
-                                                    business_name: prev.business_name || handle,
-                                                }));
+                                                setScouting(true);
+                                                try {
+                                                    const res = await scoutInstagramProfile(handle);
+                                                    if (res) {
+                                                        setForm(prev => ({
+                                                            ...prev,
+                                                            website: prev.website || res.website || '',
+                                                            logo_url: prev.logo_url || res.logoUrl || '',
+                                                            business_name: prev.business_name || res.businessName || '',
+                                                        }));
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Failed to scout Instagram', err);
+                                                } finally {
+                                                    setScouting(false);
+                                                }
                                                 // Open Instagram profile for quick reference
                                                 window.open(`https://instagram.com/${handle}`, '_blank');
                                             }}
@@ -425,11 +437,20 @@ export default function AdminProspectsClient({
                                                 padding: '8px 12px', borderRadius: '8px', border: 'none',
                                                 background: 'linear-gradient(135deg, #E1306C, #F77737)',
                                                 color: '#fff', fontSize: '11px', fontWeight: 700,
-                                                cursor: 'pointer', whiteSpace: 'nowrap',
+                                                cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
                                                 display: 'flex', alignItems: 'center', gap: '4px',
+                                                opacity: scouting ? 0.7 : 1,
                                             }}
                                         >
-                                            <ExternalLink size={12} /> Scout
+                                            {scouting ? (
+                                                <>
+                                                    <Loader2 size={12} className="animate-spin" /> Scouting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ExternalLink size={12} /> Scout
+                                                </>
+                                            )}
                                         </button>
                                     )}
                                 </div>
@@ -485,16 +506,26 @@ export default function AdminProspectsClient({
                                     {editForm.instagram && (
                                         <button
                                             type="button"
-                                            onClick={() => {
+                                            disabled={scouting}
+                                            onClick={async () => {
                                                 const handle = editForm.instagram.replace(/^@/, '').trim();
                                                 if (!handle) return;
-                                                // Auto-fill fields from Instagram handle
-                                                setEditForm(prev => ({
-                                                    ...prev,
-                                                    website: prev.website || `https://instagram.com/${handle}`,
-                                                    logo_url: prev.logo_url || `https://unavatar.io/instagram/${handle}`,
-                                                    business_name: prev.business_name || handle,
-                                                }));
+                                                setScouting(true);
+                                                try {
+                                                    const res = await scoutInstagramProfile(handle);
+                                                    if (res) {
+                                                        setEditForm(prev => ({
+                                                            ...prev,
+                                                            website: prev.website || res.website || '',
+                                                            logo_url: prev.logo_url || res.logoUrl || '',
+                                                            business_name: prev.business_name || res.businessName || '',
+                                                        }));
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Failed to scout Instagram', err);
+                                                } finally {
+                                                    setScouting(false);
+                                                }
                                                 // Open Instagram profile for quick reference
                                                 window.open(`https://instagram.com/${handle}`, '_blank');
                                             }}
@@ -502,11 +533,20 @@ export default function AdminProspectsClient({
                                                 padding: '8px 12px', borderRadius: '8px', border: 'none',
                                                 background: 'linear-gradient(135deg, #E1306C, #F77737)',
                                                 color: '#fff', fontSize: '11px', fontWeight: 700,
-                                                cursor: 'pointer', whiteSpace: 'nowrap',
+                                                cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
                                                 display: 'flex', alignItems: 'center', gap: '4px',
+                                                opacity: scouting ? 0.7 : 1,
                                             }}
                                         >
-                                            <ExternalLink size={12} /> Scout
+                                            {scouting ? (
+                                                <>
+                                                    <Loader2 size={12} className="animate-spin" /> Scouting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ExternalLink size={12} /> Scout
+                                                </>
+                                            )}
                                         </button>
                                     )}
                                 </div>

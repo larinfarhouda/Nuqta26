@@ -550,3 +550,71 @@ export async function getAdminMostActiveUsers(limit = 10) {
         return [];
     }
 }
+
+export async function scoutInstagramProfile(handle: string) {
+    try {
+        await requireAdmin();
+        const username = handle.replace(/^@/, '').trim();
+        if (!username) return { error: 'Invalid handle' };
+
+        const res = await fetch(`https://www.instagram.com/${username}/`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            },
+            next: { revalidate: 3600 }
+        });
+
+        if (!res.ok) {
+            return {
+                logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`,
+                website: `https://instagram.com/${username}`,
+                businessName: username
+            };
+        }
+
+        const html = await res.text();
+        
+        const ogImageMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
+        let logoUrl = ogImageMatch ? ogImageMatch[1].replace(/&amp;/g, '&') : null;
+
+        if (!logoUrl) {
+            const ogImageMatchAlt = html.match(/content="([^"]+)"\s+property="og:image"/);
+            logoUrl = ogImageMatchAlt ? ogImageMatchAlt[1].replace(/&amp;/g, '&') : null;
+        }
+
+        if (!logoUrl) {
+            logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`;
+        }
+
+        const ogTitleMatch = html.match(/property="og:title"\s+content="([^"]+)"/);
+        let businessName = username;
+        if (ogTitleMatch) {
+            const title = ogTitleMatch[1];
+            const nameMatch = title.match(/^([^(]+)\s+\(@/);
+            if (nameMatch) {
+                businessName = nameMatch[1].trim();
+            } else {
+                const nameMatchAlt = title.match(/^([^(]+)/);
+                if (nameMatchAlt) businessName = nameMatchAlt[1].trim();
+            }
+        }
+
+        return {
+            success: true,
+            logoUrl,
+            website: `https://instagram.com/${username}`,
+            businessName
+        };
+    } catch (error) {
+        logger.error('Failed to scout Instagram profile', { error, handle });
+        const cleanHandle = handle.replace(/^@/, '').trim();
+        return {
+            logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanHandle)}&background=8b5cf6&color=fff&size=128`,
+            website: `https://instagram.com/${cleanHandle}`,
+            businessName: cleanHandle
+        };
+    }
+}
+
