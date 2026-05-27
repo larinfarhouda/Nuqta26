@@ -111,20 +111,48 @@ export default function AdminProspectsClient({
             if (res && 'error' in res && !res.logoUrl) {
                 setScoutError(String(res.error));
             } else if (res) {
+                const updates: Record<string, string> = {};
+                if (res.website) updates.website = res.website;
+                if (res.logoUrl) updates.logo_url = res.logoUrl;
+                if (res.businessName) updates.business_name = res.businessName;
+                if ('bio' in res && res.bio) updates.bio = res.bio as string;
+                if ('location' in res && res.location) updates.location = res.location as string;
+                if ('contactEmail' in res && res.contactEmail) updates.contact_email = res.contactEmail as string;
+                if ('contactPhone' in res && res.contactPhone) updates.contact_phone = res.contactPhone as string;
+
                 if (isEdit) {
                     setEditForm(prev => ({
                         ...prev,
-                        website: prev.website || res.website || '',
-                        logo_url: res.logoUrl || prev.logo_url || '',
-                        business_name: prev.business_name || res.businessName || '',
+                        website: prev.website || updates.website || prev.website,
+                        logo_url: updates.logo_url || prev.logo_url,
+                        business_name: prev.business_name || updates.business_name || prev.business_name,
+                        bio: prev.bio || updates.bio || prev.bio,
+                        location: prev.location || updates.location || prev.location,
+                        contact_email: prev.contact_email || updates.contact_email || prev.contact_email,
+                        contact_phone: prev.contact_phone || updates.contact_phone || prev.contact_phone,
                     }));
                 } else {
                     setForm(prev => ({
                         ...prev,
-                        website: prev.website || res.website || '',
-                        logo_url: res.logoUrl || prev.logo_url || '',
-                        business_name: prev.business_name || res.businessName || '',
+                        website: prev.website || updates.website || prev.website,
+                        logo_url: updates.logo_url || prev.logo_url,
+                        business_name: prev.business_name || updates.business_name || prev.business_name,
+                        bio: prev.bio || updates.bio || prev.bio,
+                        location: prev.location || updates.location || prev.location,
+                        contact_email: prev.contact_email || updates.contact_email || prev.contact_email,
+                        contact_phone: prev.contact_phone || updates.contact_phone || prev.contact_phone,
                     }));
+                }
+
+                // Show rich scouting summary if available
+                const parts: string[] = [];
+                if ('followers' in res && res.followers) parts.push(`${(res.followers as number).toLocaleString()} followers`);
+                if ('businessCategory' in res && res.businessCategory) parts.push(res.businessCategory as string);
+                if ('isVerified' in res && res.isVerified) parts.push('✓ Verified');
+                if ('isBusinessAccount' in res && res.isBusinessAccount) parts.push('Business');
+                if (parts.length > 0) {
+                    setScoutingMessage(`✨ ${parts.join(' · ')}`);
+                    setTimeout(() => setScoutingMessage(null), 5000);
                 }
             }
         } catch (err) {
@@ -132,7 +160,6 @@ export default function AdminProspectsClient({
             setScoutError('Failed to fetch profile. Try again.');
         } finally {
             setScouting(false);
-            setScoutingMessage(null);
         }
     };
 

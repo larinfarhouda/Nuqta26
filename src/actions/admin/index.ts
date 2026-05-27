@@ -567,16 +567,22 @@ export async function scoutInstagramProfile(handle: string) {
             businessName: username
         };
 
-        // Strategy 1: Instagram web_profile_info API (returns JSON with HD profile pic)
+        // Strategy 1: Instagram web_profile_info API (same endpoint instaloader uses)
+        // Returns full profile JSON: HD pic, bio, followers, category, external URL, location
         try {
             const apiRes = await fetch(
                 `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
                 {
                     headers: {
-                        'User-Agent': 'Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2400; samsung; SM-G991B; o1s; exynos2100)',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
                         'X-IG-App-ID': '936619743392459',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'Accept': '*/*',
                         'Accept-Language': 'en-US,en;q=0.9',
+                        'Referer': `https://www.instagram.com/${username}/`,
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'same-origin',
                     },
                     cache: 'no-store',
                 }
@@ -586,16 +592,36 @@ export async function scoutInstagramProfile(handle: string) {
                 const data = await apiRes.json();
                 const user = data?.data?.user;
                 if (user) {
+                    // Extract location from business address JSON if available
+                    const bioText = user.biography || '';
+                    const cityEdge = user.business_address_json ? (() => {
+                        try {
+                            const addr = JSON.parse(user.business_address_json);
+                            return [addr.city_name, addr.region_name].filter(Boolean).join(', ');
+                        } catch { return ''; }
+                    })() : '';
+
                     return {
                         success: true,
                         logoUrl: user.profile_pic_url_hd || user.profile_pic_url || fallback.logoUrl,
-                        website: `https://instagram.com/${username}`,
+                        website: user.external_url || `https://instagram.com/${username}`,
                         businessName: user.full_name?.trim() || username,
+                        bio: bioText.trim() || undefined,
+                        location: cityEdge || undefined,
+                        followers: user.edge_followed_by?.count ?? undefined,
+                        following: user.edge_follow?.count ?? undefined,
+                        posts: user.edge_owner_to_timeline_media?.count ?? undefined,
+                        isBusinessAccount: user.is_business_account || false,
+                        businessCategory: user.business_category_name || user.category_name || undefined,
+                        isVerified: user.is_verified || false,
+                        externalUrl: user.external_url || undefined,
+                        contactPhone: user.business_phone_number || undefined,
+                        contactEmail: user.business_email || undefined,
                     };
                 }
             }
         } catch (apiErr) {
-            logger.error('Instagram API failed, trying HTML fallback', { error: apiErr, handle });
+            logger.error('Instagram web API failed, trying embed fallback', { error: apiErr, handle });
         }
 
         // Strategy 2: Instagram embed page (served even to datacenter IPs)
