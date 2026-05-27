@@ -26,7 +26,7 @@ import {
 
 interface ProspectStats {
     total: number;
-    byStatus: { prospect: number; contacted: number; converted: number; rejected: number };
+    byStatus: { lead: number; building: number; pitched: number; free: number; paying: number; churned: number; lost: number };
     conversionRate: number;
     avgConversionDays: number | null;
     totalInterests: number;
@@ -277,8 +277,8 @@ export default function AdminProspectsClient({
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
                     {[
                         { label: 'Total Prospects', value: stats.total, icon: <Target size={18} />, color: '#8b5cf6' },
-                        { label: 'Contacted', value: stats.byStatus.contacted, icon: <MessageCircle size={18} />, color: '#3b82f6' },
-                        { label: 'Converted', value: stats.byStatus.converted, icon: <TrendingUp size={18} />, color: '#10b981' },
+                        { label: 'Pitched', value: stats.byStatus.pitched, icon: <MessageCircle size={18} />, color: '#3b82f6' },
+                        { label: 'Active (Free + Paying)', value: stats.byStatus.free + stats.byStatus.paying, icon: <TrendingUp size={18} />, color: '#10b981' },
                         { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: <Heart size={18} />, color: '#f59e0b' },
                         { label: 'Avg. Days to Convert', value: stats.avgConversionDays ?? '—', icon: <Clock size={18} />, color: '#6366f1' },
                         { label: 'Total Interests', value: stats.totalInterests, icon: <Users size={18} />, color: '#ec4899' },
