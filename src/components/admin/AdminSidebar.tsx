@@ -65,13 +65,10 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
 
     const sidebarContent = (
         <aside
+            className="flex flex-col bg-gradient-to-b from-zinc-950 to-zinc-900 transition-all duration-200 ease-out"
             style={{
                 width: sidebarWidth,
                 minHeight: '100vh',
-                background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'width 0.2s ease, transform 0.2s ease',
                 position: isMobile ? 'fixed' : 'sticky',
                 top: 0,
                 left: 0,
@@ -81,33 +78,15 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
         >
             {/* Logo */}
             <div
-                style={{
-                    padding: (!isMobile && collapsed) ? '20px 12px' : '20px 24px',
-                    borderBottom: '1px solid rgba(255,255,255,0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
+                className="flex items-center justify-between border-b border-white/[0.08]"
+                style={{ padding: (!isMobile && collapsed) ? '20px 12px' : '20px 24px' }}
             >
                 {(isMobile || !collapsed) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div
-                            style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '8px',
-                                background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                                color: '#fff',
-                                fontSize: '14px',
-                            }}
-                        >
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2CA58D] to-[#1e7866] flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-[#2CA58D]/20">
                             N
                         </div>
-                        <span style={{ color: '#fff', fontWeight: 600, fontSize: '16px' }}>
+                        <span className="text-white font-semibold text-base">
                             Nuqta Admin
                         </span>
                     </div>
@@ -115,32 +94,16 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
                 {isMobile ? (
                     <button
                         onClick={() => setMobileOpen(false)}
-                        style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '6px',
-                            padding: '6px',
-                            cursor: 'pointer',
-                            color: '#94a3b8',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
+                        className="flex items-center p-1.5 rounded-md bg-white/[0.06] border border-white/10 text-zinc-400 hover:text-zinc-300 hover:bg-white/10 transition-colors cursor-pointer"
+                        aria-label="Close sidebar"
                     >
                         <X size={16} />
                     </button>
                 ) : (
                     <button
                         onClick={() => setCollapsed(!collapsed)}
-                        style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '6px',
-                            padding: '6px',
-                            cursor: 'pointer',
-                            color: '#94a3b8',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
+                        className="flex items-center p-1.5 rounded-md bg-white/[0.06] border border-white/10 text-zinc-400 hover:text-zinc-300 hover:bg-white/10 transition-colors cursor-pointer"
+                        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
                         {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                     </button>
@@ -148,7 +111,7 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
             </div>
 
             {/* Nav Items */}
-            <nav style={{ flex: 1, padding: '12px 8px' }}>
+            <nav className="flex-1 py-3 px-2">
                 {navItems.map((item) => {
                     const active = isActive(item.href);
                     const Icon = item.icon;
@@ -157,38 +120,18 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
                         <Link
                             key={item.href}
                             href={`/${locale}${item.href}`}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: (!isMobile && collapsed) ? '12px 14px' : '12px 16px',
-                                borderRadius: '10px',
-                                marginBottom: '4px',
-                                textDecoration: 'none',
-                                color: active ? '#fff' : '#94a3b8',
-                                background: active ? 'rgba(139,92,246,0.15)' : 'transparent',
-                                fontWeight: active ? 600 : 400,
-                                fontSize: '14px',
-                                transition: 'all 0.15s ease',
-                                position: 'relative',
-                            }}
+                            className={`flex items-center gap-3 rounded-xl mb-1 no-underline text-sm transition-all duration-150 relative group ${
+                                active
+                                    ? 'text-white font-semibold bg-[#2CA58D]/15'
+                                    : 'text-zinc-400 font-normal hover:text-zinc-200 hover:bg-white/[0.06]'
+                            }`}
+                            style={{ padding: (!isMobile && collapsed) ? '12px 14px' : '12px 16px' }}
                             title={(!isMobile && collapsed) ? item.label : undefined}
                         >
                             {active && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        left: 0,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        width: '3px',
-                                        height: '20px',
-                                        borderRadius: '0 3px 3px 0',
-                                        background: '#8b5cf6',
-                                    }}
-                                />
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-sm bg-[#2CA58D]" />
                             )}
-                            <Icon size={20} style={{ flexShrink: 0 }} />
+                            <Icon size={20} className="shrink-0" />
                             {showLabel && <span>{item.label}</span>}
                         </Link>
                     );
@@ -197,37 +140,17 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
 
             {/* User */}
             <div
-                style={{
-                    padding: (!isMobile && collapsed) ? '16px 8px' : '16px 20px',
-                    borderTop: '1px solid rgba(255,255,255,0.08)',
-                }}
+                className="border-t border-white/[0.08]"
+                style={{ padding: (!isMobile && collapsed) ? '16px 8px' : '16px 20px' }}
             >
                 {(isMobile || !collapsed) && (
-                    <div
-                        style={{
-                            color: '#64748b',
-                            fontSize: '12px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            marginBottom: '8px',
-                        }}
-                    >
+                    <div className="text-zinc-500 text-xs overflow-hidden text-ellipsis whitespace-nowrap mb-2">
                         {userEmail}
                     </div>
                 )}
                 <Link
                     href={`/${locale}`}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        color: '#94a3b8',
-                        fontSize: '13px',
-                        textDecoration: 'none',
-                        padding: '6px 8px',
-                        borderRadius: '6px',
-                    }}
+                    className="flex items-center gap-2 text-zinc-400 text-[13px] no-underline p-1.5 rounded-md hover:text-zinc-300 hover:bg-white/[0.06] transition-colors"
                     title="Back to site"
                 >
                     <LogOut size={16} />
@@ -243,23 +166,8 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
             {isMobile && !mobileOpen && (
                 <button
                     onClick={() => setMobileOpen(true)}
-                    style={{
-                        position: 'fixed',
-                        top: '16px',
-                        left: '16px',
-                        zIndex: 45,
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        background: '#0f172a',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                    }}
+                    className="fixed top-4 left-4 z-[45] w-11 h-11 rounded-xl bg-zinc-950 border-none cursor-pointer flex items-center justify-center text-white shadow-lg shadow-black/20 hover:bg-zinc-800 transition-colors"
+                    aria-label="Open sidebar"
                 >
                     <Menu size={20} />
                 </button>
@@ -269,12 +177,7 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
             {isMobile && mobileOpen && (
                 <div
                     onClick={() => setMobileOpen(false)}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.5)',
-                        zIndex: 45,
-                    }}
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[45]"
                 />
             )}
 
@@ -282,4 +185,3 @@ export default function AdminSidebar({ locale, userEmail }: AdminSidebarProps) {
         </>
     );
 }
-

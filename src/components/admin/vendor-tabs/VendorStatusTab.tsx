@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar } from 'lucide-react';
-import { colors, sectionStyle, font, badgeStyle } from '../admin-tokens';
+import { AdminBadge } from '../ui/AdminBadge';
 import type { AdminVendorDetail } from '@/types/admin.types';
 
 interface Props {
@@ -14,48 +14,36 @@ export default function VendorStatusTab({ vendor }: Props) {
 
     return (
         <div>
-            <div style={sectionStyle}>
-                <h3 style={font.sectionSubtitle}>Account Status</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div style={{
-                        padding: '20px', borderRadius: '14px',
-                        border: `1px solid ${colors.border}`, textAlign: 'center',
-                    }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: colors.text.muted, marginBottom: '8px' }}>STATUS</div>
-                        <span style={badgeStyle(statusVariant)}>
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">Account Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-center">
+                        <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">STATUS</div>
+                        <AdminBadge variant={statusVariant}>
                             {vendor.status || 'pending'}
-                        </span>
+                        </AdminBadge>
                     </div>
-                    <div style={{
-                        padding: '20px', borderRadius: '14px',
-                        border: `1px solid ${colors.border}`, textAlign: 'center',
-                    }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: colors.text.muted, marginBottom: '8px' }}>VERIFIED</div>
-                        <span style={badgeStyle(verifiedVariant)}>
+                    <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-center">
+                        <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">VERIFIED</div>
+                        <AdminBadge variant={verifiedVariant}>
                             {vendor.is_verified ? 'Yes' : 'No'}
-                        </span>
+                        </AdminBadge>
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                    <div style={{
-                        padding: '20px', borderRadius: '14px',
-                        border: `1px solid ${colors.border}`, textAlign: 'center',
-                    }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: colors.text.muted, marginBottom: '8px' }}>EVENTS</div>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: colors.text.primary }}>{vendor.eventCount}</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-center">
+                        <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">EVENTS</div>
+                        <div className="text-2xl font-extrabold text-zinc-900 dark:text-white">{vendor.eventCount}</div>
                     </div>
-                    <div style={{
-                        padding: '20px', borderRadius: '14px',
-                        border: `1px solid ${colors.border}`, textAlign: 'center',
-                    }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: colors.text.muted, marginBottom: '8px' }}>BOOKINGS</div>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: colors.text.primary }}>{vendor.bookingCount}</div>
+                    <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-center">
+                        <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">BOOKINGS</div>
+                        <div className="text-2xl font-extrabold text-zinc-900 dark:text-white">{vendor.bookingCount}</div>
                     </div>
                 </div>
 
-                <div style={font.caption}>
-                    <Calendar size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                    <Calendar size={12} className="inline" />
                     Joined: {vendor.created_at ? new Date(vendor.created_at).toLocaleDateString() : 'Unknown'}
                 </div>
             </div>

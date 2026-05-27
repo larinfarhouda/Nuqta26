@@ -1,13 +1,13 @@
 'use client';
 
-import { Save, Loader2, Zap, Star, Crown, Calendar } from 'lucide-react';
-import { colors, inputStyle, font, sectionStyle, btnPrimary } from '../admin-tokens';
+import { Save, Zap, Star, Crown, Calendar } from 'lucide-react';
+import { AdminButton } from '../ui/AdminButton';
 import { normalizeTier } from '@/lib/constants/subscription';
 
-const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any; canonical: string }> = {
-    free: { label: 'Free', color: '#64748b', bg: '#f1f5f9', icon: Zap, canonical: 'free' },
-    pro: { label: 'Pro', color: '#7c3aed', bg: '#ede9fe', icon: Star, canonical: 'pro' },
-    business: { label: 'Business', color: '#d97706', bg: '#fef3c7', icon: Crown, canonical: 'business' },
+const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; darkBg: string; icon: any; canonical: string }> = {
+    free: { label: 'Free', color: 'text-zinc-500', bg: 'bg-zinc-100', darkBg: 'dark:bg-zinc-800', icon: Zap, canonical: 'free' },
+    pro: { label: 'Pro', color: 'text-[#2CA58D]', bg: 'bg-[#2CA58D]/10', darkBg: 'dark:bg-[#2CA58D]/20', icon: Star, canonical: 'pro' },
+    business: { label: 'Business', color: 'text-amber-600', bg: 'bg-amber-50', darkBg: 'dark:bg-amber-500/10', icon: Crown, canonical: 'business' },
 };
 
 const BILLING_OPTIONS = [
@@ -29,9 +29,9 @@ interface Props {
 export default function VendorSubscriptionTab({ editData, vendor, updateField, onSave, saving }: Props) {
     return (
         <div>
-            <div style={sectionStyle}>
-                <h3 style={font.sectionSubtitle}>Current Plan</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">Current Plan</h3>
+                <div className="grid grid-cols-3 gap-3">
                     {Object.entries(TIER_CONFIG).map(([key, cfg]) => {
                         const Icon = cfg.icon;
                         const isSelected = normalizeTier(editData.subscription_tier) === key;
@@ -39,46 +39,42 @@ export default function VendorSubscriptionTab({ editData, vendor, updateField, o
                             <div
                                 key={key}
                                 onClick={() => updateField('subscription_tier', key)}
-                                style={{
-                                    padding: '16px', borderRadius: '14px',
-                                    border: `2px solid ${isSelected ? cfg.color : colors.border}`,
-                                    background: isSelected ? cfg.bg : colors.card,
-                                    cursor: 'pointer', textAlign: 'center',
-                                    transition: 'all 0.2s',
-                                }}
+                                className={`p-4 rounded-2xl border-2 cursor-pointer text-center transition-all duration-200 ${
+                                    isSelected
+                                        ? `${cfg.bg} ${cfg.darkBg} border-current ${cfg.color}`
+                                        : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
+                                }`}
                             >
-                                <Icon size={24} style={{ color: cfg.color, margin: '0 auto 8px' }} />
-                                <div style={{ fontSize: '14px', fontWeight: 700, color: cfg.color }}>{cfg.label}</div>
+                                <Icon size={24} className={`mx-auto mb-2 ${cfg.color}`} />
+                                <div className={`text-sm font-bold ${cfg.color}`}>{cfg.label}</div>
                             </div>
                         );
                     })}
                 </div>
             </div>
 
-            <div style={sectionStyle}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="space-y-4 mt-6">
+                <div className="flex items-center justify-between">
                     <div>
-                        <h3 style={{ ...font.sectionSubtitle, margin: '0 0 4px' }}>Billing Period</h3>
-                        <p style={{ fontSize: '12px', color: colors.text.muted, margin: 0 }}>Annual saves ~17% (2 months free)</p>
+                        <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">Billing Period</h3>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Annual saves ~17% (2 months free)</p>
                     </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                <div className="grid grid-cols-2 gap-3 mt-3">
                     {BILLING_OPTIONS.map(opt => {
                         const isSelected = (editData.billing_period || 'monthly') === opt.key;
                         return (
                             <div
                                 key={opt.key}
                                 onClick={() => updateField('billing_period', opt.key)}
-                                style={{
-                                    padding: '12px 16px', borderRadius: '12px',
-                                    border: `2px solid ${isSelected ? colors.accent : colors.border}`,
-                                    background: isSelected ? `${colors.accent}10` : colors.card,
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-                                    transition: 'all 0.2s',
-                                }}
+                                className={`px-4 py-3 rounded-xl border-2 cursor-pointer flex items-center gap-2 transition-all duration-200 ${
+                                    isSelected
+                                        ? 'border-[#2CA58D] bg-[#2CA58D]/10 dark:bg-[#2CA58D]/20'
+                                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                                }`}
                             >
-                                <Calendar size={16} style={{ color: isSelected ? colors.accent : colors.text.muted }} />
-                                <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? colors.accent : colors.text.primary }}>
+                                <Calendar size={16} className={isSelected ? 'text-[#2CA58D]' : 'text-zinc-500 dark:text-zinc-400'} />
+                                <span className={`text-sm font-semibold ${isSelected ? 'text-[#2CA58D]' : 'text-zinc-900 dark:text-zinc-100'}`}>
                                     {opt.label}
                                 </span>
                             </div>
@@ -87,33 +83,33 @@ export default function VendorSubscriptionTab({ editData, vendor, updateField, o
                 </div>
             </div>
 
-            <div style={sectionStyle}>
-                <h3 style={{ ...font.sectionSubtitle, margin: '0 0 12px' }}>Subscription Dates</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="space-y-4 mt-6">
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-3">Subscription Dates</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label style={font.label}>Started At</label>
-                        <div style={{ ...inputStyle, background: colors.cardAlt, color: colors.text.muted }}>
+                        <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Started At</label>
+                        <div className="w-full h-11 px-4 text-sm rounded-2xl border-2 flex items-center bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                             {vendor.subscription_starts_at ? new Date(vendor.subscription_starts_at).toLocaleDateString() : 'Not set'}
                         </div>
                     </div>
                     <div>
-                        <label style={font.label}>Expires At</label>
-                        <div style={{ ...inputStyle, background: colors.cardAlt, color: colors.text.muted }}>
+                        <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Expires At</label>
+                        <div className="w-full h-11 px-4 text-sm rounded-2xl border-2 flex items-center bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
                             {vendor.subscription_expires_at ? new Date(vendor.subscription_expires_at).toLocaleDateString() : 'Never (Admin Override)'}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end' }}>
-                <button
+            <div className="px-6 py-4 flex justify-end">
+                <AdminButton
                     onClick={onSave}
                     disabled={saving}
-                    style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}
+                    isLoading={saving}
                 >
-                    {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                    <Save size={14} className="mr-1" />
                     Update Subscription
-                </button>
+                </AdminButton>
             </div>
         </div>
     );

@@ -18,11 +18,10 @@ import {
     scoutInstagramProfile,
 } from '@/actions/admin';
 import type { ProspectVendor, PaginatedResult, EventInterestSummary } from '@/types/admin.types';
-import {
-    colors, cardStyle, cardShell, font, inputStyle,
-    btnPrimary, badgeStyle, paginationBtn,
-    dialogOverlay, dialogPanel,
-} from './admin-tokens';
+import { AdminCard } from './ui/AdminCard';
+import { AdminButton } from './ui/AdminButton';
+import { AdminInput } from './ui/AdminInput';
+import { AdminBadge } from './ui/AdminBadge';
 
 interface ProspectStats {
     total: number;
@@ -44,6 +43,16 @@ function daysSince(dateStr: string | null): number | null {
     if (!dateStr) return null;
     return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
 }
+
+const STATUS_BADGE_VARIANT: Record<string, 'info' | 'warning' | 'accent' | 'success' | 'danger' | 'neutral'> = {
+    lead: 'info',
+    building: 'warning',
+    pitched: 'accent',
+    free: 'success',
+    paying: 'warning',
+    churned: 'danger',
+    lost: 'neutral',
+};
 
 export default function AdminProspectsClient({
     initialData,
@@ -291,143 +300,107 @@ export default function AdminProspectsClient({
         if (t) setEventForm(prev => ({ ...prev, ...t }));
     };
 
-    const labelStyle: React.CSSProperties = font.label;
-
     return (
-        <div style={{ maxWidth: '1400px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="max-w-[1400px] pb-12">
+            <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 style={font.pageTitle}>Prospects</h1>
-                    <p style={font.pageSubtitle}>
+                    <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Prospects</h1>
+                    <p className="text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
                         Phantom Listings — Vendor acquisition engine
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowCreate(true)}
-                    style={{
-                        padding: '10px 20px', borderRadius: '10px',
-                        background: '#8b5cf6', color: '#fff', border: 'none',
-                        cursor: 'pointer', fontWeight: 600, fontSize: '14px',
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                    }}
-                >
-                    <Plus size={16} /> Add Prospect
-                </button>
+                <AdminButton onClick={() => setShowCreate(true)}>
+                    <Plus size={16} className="mr-1.5" /> Add Prospect
+                </AdminButton>
             </div>
 
             {/* Stats Dashboard */}
             {stats && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3 mb-5">
                     {[
-                        { label: 'Total Prospects', value: stats.total, icon: <Target size={18} />, color: '#8b5cf6' },
-                        { label: 'Pitched', value: stats.byStatus.pitched, icon: <MessageCircle size={18} />, color: '#3b82f6' },
-                        { label: 'Active (Free + Paying)', value: stats.byStatus.free + stats.byStatus.paying, icon: <TrendingUp size={18} />, color: '#10b981' },
-                        { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: <Heart size={18} />, color: '#f59e0b' },
-                        { label: 'Avg. Days to Convert', value: stats.avgConversionDays ?? '—', icon: <Clock size={18} />, color: '#6366f1' },
-                        { label: 'Total Interests', value: stats.totalInterests, icon: <Users size={18} />, color: '#ec4899' },
+                        { label: 'Total Prospects', value: stats.total, icon: <Target size={18} />, color: 'text-[#2CA58D]' },
+                        { label: 'Pitched', value: stats.byStatus.pitched, icon: <MessageCircle size={18} />, color: 'text-blue-500' },
+                        { label: 'Active (Free + Paying)', value: stats.byStatus.free + stats.byStatus.paying, icon: <TrendingUp size={18} />, color: 'text-emerald-500' },
+                        { label: 'Conversion Rate', value: `${stats.conversionRate}%`, icon: <Heart size={18} />, color: 'text-amber-500' },
+                        { label: 'Avg. Days to Convert', value: stats.avgConversionDays ?? '—', icon: <Clock size={18} />, color: 'text-indigo-500' },
+                        { label: 'Total Interests', value: stats.totalInterests, icon: <Users size={18} />, color: 'text-pink-500' },
                     ].map(s => (
-                        <div key={s.label} style={{ ...cardStyle, padding: '16px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 600, color: colors.text.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</span>
-                                <span style={{ color: s.color }}>{s.icon}</span>
+                        <AdminCard key={s.label} className="!p-4">
+                            <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{s.label}</span>
+                                <span className={s.color}>{s.icon}</span>
                             </div>
-                            <div style={{ fontSize: '22px', fontWeight: 800, color: colors.text.primary }}>{typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</div>
-                        </div>
+                            <div className="text-[22px] font-extrabold text-zinc-900 dark:text-white">{typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</div>
+                        </AdminCard>
                     ))}
                 </div>
             )}
 
             {/* Action Bar: CSV Import + Filters */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+                <div className="flex gap-2 flex-wrap">
                     {['', 'lead', 'building', 'pitched', 'free', 'paying', 'churned', 'lost'].map(s => (
                         <button
                             key={s}
                             onClick={() => { setStatusFilter(s); setPage(1); reload(1, s); }}
-                            style={{
-                                padding: '8px 16px', borderRadius: '8px', border: `1px solid ${colors.border}`,
-                                background: statusFilter === s ? colors.accent : colors.card,
-                                color: statusFilter === s ? '#fff' : colors.text.secondary,
-                                fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                            }}
+                            className={`px-4 py-2 rounded-xl border text-[13px] font-semibold cursor-pointer transition-all duration-200 ${
+                                statusFilter === s
+                                    ? 'bg-[#2CA58D] text-white border-[#2CA58D] shadow-md shadow-[#2CA58D]/20'
+                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                            }`}
                         >
                             {s || 'All'}
                         </button>
                     ))}
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <input type="file" ref={fileRef} accept=".csv" onChange={handleCsvImport} style={{ display: 'none' }} />
-                    <button
-                        onClick={() => fileRef.current?.click()}
-                        disabled={loading}
-                        style={{
-                            padding: '8px 14px', borderRadius: '8px',
-                            border: `1px solid ${colors.border}`, background: colors.card,
-                            color: colors.text.secondary, fontSize: '12px', fontWeight: 600,
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                        }}
-                    >
-                        <Upload size={14} /> Import CSV
-                    </button>
+                <div className="flex gap-2">
+                    <input type="file" ref={fileRef} accept=".csv" onChange={handleCsvImport} className="hidden" />
+                    <AdminButton variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={loading}>
+                        <Upload size={14} className="mr-1.5" /> Import CSV
+                    </AdminButton>
                 </div>
             </div>
 
             {/* Bulk Import Result */}
             {bulkResult && (
-                <div style={{
-                    padding: '14px 20px', borderRadius: '10px', marginBottom: '16px',
-                    background: bulkResult.failed > 0 ? '#fef9c3' : '#dcfce7',
-                    border: `1px solid ${bulkResult.failed > 0 ? '#fde68a' : '#86efac'}`,
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    fontSize: '13px', fontWeight: 500,
-                }}>
-                    {bulkResult.failed > 0 ? <AlertCircle size={16} style={{ color: '#854d0e' }} /> : <TrendingUp size={16} style={{ color: '#166534' }} />}
-                    <span style={{ color: bulkResult.failed > 0 ? '#854d0e' : '#166534' }}>
+                <div className={`flex items-center gap-2.5 px-5 py-3.5 rounded-xl mb-4 text-[13px] font-medium ${
+                    bulkResult.failed > 0
+                        ? 'bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-300 dark:border-yellow-500/30'
+                        : 'bg-green-50 dark:bg-green-500/10 border border-green-300 dark:border-green-500/30'
+                }`}>
+                    {bulkResult.failed > 0 ? <AlertCircle size={16} className="text-yellow-700 dark:text-yellow-400" /> : <TrendingUp size={16} className="text-green-700 dark:text-green-400" />}
+                    <span className={bulkResult.failed > 0 ? 'text-yellow-700 dark:text-yellow-400' : 'text-green-700 dark:text-green-400'}>
                         Imported {bulkResult.created} prospect{bulkResult.created !== 1 ? 's' : ''}{bulkResult.failed > 0 ? `, ${bulkResult.failed} failed` : ''}.
                     </span>
-                    <button aria-label="Dismiss message" onClick={() => setBulkResult(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px' }}>✕</button>
+                    <button aria-label="Dismiss message" onClick={() => setBulkResult(null)} className="ml-auto bg-transparent border-none cursor-pointer text-zinc-400 text-xs hover:text-zinc-600 dark:hover:text-zinc-300">✕</button>
                 </div>
             )}
 
             {/* Claim URL Banner */}
             {claimUrl && (
-                <div
-                    style={{
-                        background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px',
-                        padding: '20px', marginBottom: '20px',
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <AdminCard className="!bg-green-50 dark:!bg-green-500/10 !border-green-300 dark:!border-green-500/30 mb-5">
+                    <div className="flex items-center justify-between mb-3">
                         <div>
-                            <div style={{ fontWeight: 600, color: '#166534', marginBottom: '4px' }}>Claim Link Generated!</div>
-                            <div style={{ fontSize: '13px', color: '#15803d', wordBreak: 'break-all' }}>{claimUrl}</div>
+                            <div className="font-semibold text-green-800 dark:text-green-400 mb-1">Claim Link Generated!</div>
+                            <div className="text-[13px] text-green-700 dark:text-green-500 break-all">{claimUrl}</div>
                         </div>
                         <button
                             onClick={() => { navigator.clipboard.writeText(claimUrl); }}
-                            style={{
-                                padding: '8px 12px', borderRadius: '8px', border: 'none',
-                                background: '#dcfce7', color: '#166534', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, fontSize: '12px',
-                            }}
+                            className="flex items-center gap-1 px-3 py-2 rounded-lg bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 text-xs font-semibold hover:bg-green-200 dark:hover:bg-green-500/30 transition-colors border-none cursor-pointer"
                         >
                             <Copy size={12} /> Copy
                         </button>
                     </div>
 
                     {/* Outreach Buttons */}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="flex gap-2 flex-wrap">
                         {contactedProspect?.contact_phone && (
                             <a
                                 href={`https://wa.me/${contactedProspect.contact_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
                                     `Hi ${contactedProspect.business_name}! 👋\n\nWe listed your business on Nuqta and ${contactedProspect.totalInterests > 0 ? `${contactedProspect.totalInterests} people have already expressed interest` : 'people are already discovering your events'}!\n\nClaim your free page and start managing bookings:\n${claimUrl}\n\n— The Nuqta Team`
                                 )}`}
                                 target="_blank"
-                                style={{
-                                    padding: '8px 14px', borderRadius: '8px', border: 'none',
-                                    background: '#25D366', color: '#fff', cursor: 'pointer',
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                    fontWeight: 600, fontSize: '12px', textDecoration: 'none',
-                                }}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#25D366] text-white text-xs font-semibold no-underline hover:bg-[#20bd5a] transition-colors"
                             >
                                 <MessageCircle size={14} /> WhatsApp
                             </a>
@@ -439,74 +412,55 @@ export default function AdminProspectsClient({
                                 )}&body=${encodeURIComponent(
                                     `Hi ${contactedProspect.business_name},\n\nWe've created a page for you on Nuqta — the event booking platform.${contactedProspect.totalInterests > 0 ? ` ${contactedProspect.totalInterests} people have already expressed interest in your events!` : ''}\n\nClaim your free page to start managing bookings and reaching your audience:\n${claimUrl}\n\nWhat you get:\n• Full vendor profile & event management\n• Booking & payment processing\n• Real-time analytics dashboard\n• Free starter plan\n\nBest regards,\nThe Nuqta Team`
                                 )}`}
-                                style={{
-                                    padding: '8px 14px', borderRadius: '8px', border: 'none',
-                                    background: '#3b82f6', color: '#fff', cursor: 'pointer',
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                    fontWeight: 600, fontSize: '12px', textDecoration: 'none',
-                                }}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-500 text-white text-xs font-semibold no-underline hover:bg-blue-600 transition-colors"
                             >
                                 <Mail size={14} /> Email
                             </a>
                         )}
-                        <button
-                            onClick={() => { setClaimUrl(null); setContactedProspect(null); }}
-                            style={{
-                                padding: '8px 14px', borderRadius: '8px',
-                                border: '1px solid #e2e8f0', background: '#fff',
-                                color: '#64748b', cursor: 'pointer',
-                                fontSize: '12px', fontWeight: 500,
-                            }}
-                        >
+                        <AdminButton variant="outline" size="sm" onClick={() => { setClaimUrl(null); setContactedProspect(null); }}>
                             Dismiss
-                        </button>
+                        </AdminButton>
                     </div>
-                </div>
+                </AdminCard>
             )}
 
             {/* Create Prospect Modal */}
             {showCreate && (
-                <div style={dialogOverlay} onClick={() => setShowCreate(false)}>
-                    <div onClick={(e) => e.stopPropagation()}
-                        style={{ ...dialogPanel, maxWidth: '520px', textAlign: 'left', direction: 'ltr' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: '#0f172a' }}>New Prospect Vendor</h3>
-                        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Add a new prospect to your sales pipeline</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm" onClick={() => setShowCreate(false)}>
+                    <AdminCard onClick={(e) => e.stopPropagation()} className="w-full max-w-[520px] relative z-10 animate-in fade-in zoom-in-95 duration-200 text-left" style={{ direction: 'ltr' }}>
+                        <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">New Prospect Vendor</h3>
+                        <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-5">Add a new prospect to your sales pipeline</p>
 
                         {/* Logo preview */}
                         {form.logo_url && form.logo_url.startsWith('https://') && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '12px' }}>
-                                <img src={form.logo_url} referrerPolicy="no-referrer" alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                            <div className="flex items-center gap-3 mb-4 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                                <img src={form.logo_url} referrerPolicy="no-referrer" alt="" className="w-12 h-12 rounded-full object-cover border-2 border-zinc-200 dark:border-zinc-700" />
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{form.business_name || 'Business Name'}</div>
+                                    <div className="font-semibold text-sm text-zinc-900 dark:text-white">{form.business_name || 'Business Name'}</div>
                                     {scoutingMessage && (
-                                        <div style={{ fontSize: '12px', color: '#6366f1', marginTop: '2px' }}>{scoutingMessage}</div>
+                                        <div className="text-xs text-[#2CA58D] mt-0.5">{scoutingMessage}</div>
                                     )}
                                 </div>
                             </div>
                         )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div className="flex flex-col gap-3.5">
                             <div>
-                                <label style={labelStyle}>Business Name *</label>
-                                <input placeholder="e.g. Café Istanbul" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Business Name *</label>
+                                <AdminInput placeholder="e.g. Café Istanbul" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Instagram</label>
-                                <div style={{ display: 'flex', gap: '6px' }}>
-                                    <input placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={{ ...inputStyle, flex: 1, textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Instagram</label>
+                                <div className="flex gap-1.5">
+                                    <AdminInput placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} className="flex-1 text-left" style={{ direction: 'ltr' }} />
                                     {form.instagram && (
                                         <button
                                             type="button"
                                             disabled={scouting}
                                             onClick={() => handleScoutInstagram(form.instagram, false)}
-                                            style={{
-                                                padding: '8px 14px', borderRadius: '8px', border: 'none',
-                                                background: scouting ? '#cbd5e1' : 'linear-gradient(135deg, #E1306C, #F77737)',
-                                                color: '#fff', fontSize: '12px', fontWeight: 700,
-                                                cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
-                                                display: 'flex', alignItems: 'center', gap: '4px',
-                                                opacity: scouting ? 0.7 : 1,
-                                            }}
+                                            className={`flex items-center gap-1 px-3.5 py-2 rounded-xl border-none text-white text-xs font-bold whitespace-nowrap transition-all ${
+                                                scouting ? 'bg-zinc-300 dark:bg-zinc-600 cursor-not-allowed opacity-70' : 'bg-gradient-to-br from-[#E1306C] to-[#F77737] cursor-pointer hover:opacity-90'
+                                            }`}
                                         >
                                             {scouting ? (
                                                 <><Loader2 size={12} className="animate-spin" /> Scouting...</>
@@ -517,108 +471,110 @@ export default function AdminProspectsClient({
                                     )}
                                 </div>
                                 {scoutError && (
-                                    <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: 500 }}>
+                                    <div className="text-[11px] text-red-500 mt-1.5 font-medium">
                                         ⚠️ {scoutError}
                                     </div>
                                 )}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <div>
-                                    <label style={labelStyle}>Email</label>
-                                    <input placeholder="vendor@example.com" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Email</label>
+                                    <AdminInput placeholder="vendor@example.com" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Phone</label>
-                                    <input placeholder="+90 5XX XXX XX XX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Phone</label>
+                                    <AdminInput placeholder="+90 5XX XXX XX XX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                                 </div>
                             </div>
                             <div>
-                                <label style={labelStyle}>Website</label>
-                                <input placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Website</label>
+                                <AdminInput placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Bio</label>
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Bio</label>
                                 <textarea
                                     value={form.bio}
                                     onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                                     placeholder="Vendor bio/description"
                                     rows={3}
-                                    style={{ ...inputStyle, minHeight: '72px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }}
+                                    className="w-full px-4 py-3 text-sm rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#2CA58D] focus:ring-4 focus:ring-[#2CA58D]/10 outline-none transition-all duration-200 min-h-[72px] resize-y text-left"
+                                    style={{ direction: 'ltr' }}
                                 />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <div>
-                                    <label style={labelStyle}>Location</label>
-                                    <input
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Location</label>
+                                    <AdminInput
                                         value={form.location}
                                         onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
                                         placeholder="City / Area"
-                                        style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }}
+                                        className="text-left"
+                                        style={{ direction: 'ltr' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Logo URL</label>
-                                    <input placeholder="Auto-filled by Scout" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Logo URL</label>
+                                    <AdminInput placeholder="Auto-filled by Scout" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                                 </div>
                             </div>
                             <div>
-                                <label style={labelStyle}>Notes</label>
-                                <textarea placeholder="Any additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ ...inputStyle, minHeight: '60px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Notes</label>
+                                <textarea
+                                    placeholder="Any additional notes..."
+                                    value={form.notes}
+                                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                                    className="w-full px-4 py-3 text-sm rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#2CA58D] focus:ring-4 focus:ring-[#2CA58D]/10 outline-none transition-all duration-200 min-h-[60px] resize-y text-left"
+                                    style={{ direction: 'ltr' }}
+                                />
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={handleCreate} disabled={loading || !form.business_name} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create Prospect'}
-                            </button>
-                            <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
+                        <div className="flex gap-2 mt-5">
+                            <AdminButton onClick={handleCreate} disabled={loading || !form.business_name} isLoading={loading} className="flex-1">
+                                Create Prospect
+                            </AdminButton>
+                            <AdminButton variant="outline" onClick={() => setShowCreate(false)} className="flex-1">Cancel</AdminButton>
                         </div>
-                    </div>
+                    </AdminCard>
                 </div>
             )}
 
             {/* Edit Prospect Modal */}
             {editingProspect && (
-                <div style={dialogOverlay} onClick={() => setEditingProspect(null)}>
-                    <div onClick={(e) => e.stopPropagation()}
-                        style={{ ...dialogPanel, maxWidth: '520px', textAlign: 'left', direction: 'ltr' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: '#0f172a' }}>Edit Prospect Vendor</h3>
-                        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Update prospect information</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm" onClick={() => setEditingProspect(null)}>
+                    <AdminCard onClick={(e) => e.stopPropagation()} className="w-full max-w-[520px] relative z-10 animate-in fade-in zoom-in-95 duration-200 text-left" style={{ direction: 'ltr' }}>
+                        <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">Edit Prospect Vendor</h3>
+                        <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-5">Update prospect information</p>
 
                         {/* Logo preview */}
                         {editForm.logo_url && editForm.logo_url.startsWith('https://') && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '12px' }}>
-                                <img src={editForm.logo_url} referrerPolicy="no-referrer" alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                            <div className="flex items-center gap-3 mb-4 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                                <img src={editForm.logo_url} referrerPolicy="no-referrer" alt="" className="w-12 h-12 rounded-full object-cover border-2 border-zinc-200 dark:border-zinc-700" />
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{editForm.business_name || 'Business Name'}</div>
+                                    <div className="font-semibold text-sm text-zinc-900 dark:text-white">{editForm.business_name || 'Business Name'}</div>
                                     {scoutingMessage && (
-                                        <div style={{ fontSize: '12px', color: '#6366f1', marginTop: '2px' }}>{scoutingMessage}</div>
+                                        <div className="text-xs text-[#2CA58D] mt-0.5">{scoutingMessage}</div>
                                     )}
                                 </div>
                             </div>
                         )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div className="flex flex-col gap-3.5">
                             <div>
-                                <label style={labelStyle}>Business Name *</label>
-                                <input placeholder="e.g. Café Istanbul" value={editForm.business_name} onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Business Name *</label>
+                                <AdminInput placeholder="e.g. Café Istanbul" value={editForm.business_name} onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Instagram</label>
-                                <div style={{ display: 'flex', gap: '6px' }}>
-                                    <input placeholder="@handle" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} style={{ ...inputStyle, flex: 1, textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Instagram</label>
+                                <div className="flex gap-1.5">
+                                    <AdminInput placeholder="@handle" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} className="flex-1 text-left" style={{ direction: 'ltr' }} />
                                     {editForm.instagram && (
                                         <button
                                             type="button"
                                             disabled={scouting}
                                             onClick={() => handleScoutInstagram(editForm.instagram, true)}
-                                            style={{
-                                                padding: '8px 14px', borderRadius: '8px', border: 'none',
-                                                background: scouting ? '#cbd5e1' : 'linear-gradient(135deg, #E1306C, #F77737)',
-                                                color: '#fff', fontSize: '12px', fontWeight: 700,
-                                                cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
-                                                display: 'flex', alignItems: 'center', gap: '4px',
-                                                opacity: scouting ? 0.7 : 1,
-                                            }}
+                                            className={`flex items-center gap-1 px-3.5 py-2 rounded-xl border-none text-white text-xs font-bold whitespace-nowrap transition-all ${
+                                                scouting ? 'bg-zinc-300 dark:bg-zinc-600 cursor-not-allowed opacity-70' : 'bg-gradient-to-br from-[#E1306C] to-[#F77737] cursor-pointer hover:opacity-90'
+                                            }`}
                                         >
                                             {scouting ? (
                                                 <><Loader2 size={12} className="animate-spin" /> Scouting...</>
@@ -629,339 +585,318 @@ export default function AdminProspectsClient({
                                     )}
                                 </div>
                                 {scoutError && (
-                                    <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: 500 }}>
+                                    <div className="text-[11px] text-red-500 mt-1.5 font-medium">
                                         ⚠️ {scoutError}
                                     </div>
                                 )}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <div>
-                                    <label style={labelStyle}>Email</label>
-                                    <input placeholder="vendor@example.com" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Email</label>
+                                    <AdminInput placeholder="vendor@example.com" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Phone</label>
-                                    <input placeholder="+90 5XX XXX XX XX" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Phone</label>
+                                    <AdminInput placeholder="+90 5XX XXX XX XX" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                                 </div>
                             </div>
                             <div>
-                                <label style={labelStyle}>Website</label>
-                                <input placeholder="https://..." value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Website</label>
+                                <AdminInput placeholder="https://..." value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Bio</label>
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Bio</label>
                                 <textarea
                                     value={editForm.bio}
                                     onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
                                     placeholder="Vendor bio/description"
                                     rows={3}
-                                    style={{ ...inputStyle, minHeight: '72px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }}
+                                    className="w-full px-4 py-3 text-sm rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#2CA58D] focus:ring-4 focus:ring-[#2CA58D]/10 outline-none transition-all duration-200 min-h-[72px] resize-y text-left"
+                                    style={{ direction: 'ltr' }}
                                 />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                            <div className="grid grid-cols-2 gap-3.5">
                                 <div>
-                                    <label style={labelStyle}>Location</label>
-                                    <input
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Location</label>
+                                    <AdminInput
                                         value={editForm.location}
                                         onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))}
                                         placeholder="City / Area"
-                                        style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }}
+                                        className="text-left"
+                                        style={{ direction: 'ltr' }}
                                     />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Logo URL</label>
-                                    <input placeholder="Auto-filled by Scout" value={editForm.logo_url} onChange={(e) => setEditForm({ ...editForm, logo_url: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Logo URL</label>
+                                    <AdminInput placeholder="Auto-filled by Scout" value={editForm.logo_url} onChange={(e) => setEditForm({ ...editForm, logo_url: e.target.value })} className="text-left" style={{ direction: 'ltr' }} />
                                 </div>
                             </div>
                             <div>
-                                <label style={labelStyle}>Notes</label>
-                                <textarea placeholder="Any additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} style={{ ...inputStyle, minHeight: '60px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Notes</label>
+                                <textarea
+                                    placeholder="Any additional notes..."
+                                    value={editForm.notes}
+                                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                                    className="w-full px-4 py-3 text-sm rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#2CA58D] focus:ring-4 focus:ring-[#2CA58D]/10 outline-none transition-all duration-200 min-h-[60px] resize-y text-left"
+                                    style={{ direction: 'ltr' }}
+                                />
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={handleEdit} disabled={loading || !editForm.business_name} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
-                            </button>
-                            <button onClick={() => setEditingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
+                        <div className="flex gap-2 mt-5">
+                            <AdminButton onClick={handleEdit} disabled={loading || !editForm.business_name} isLoading={loading} className="flex-1">
+                                Save Changes
+                            </AdminButton>
+                            <AdminButton variant="outline" onClick={() => setEditingProspect(null)} className="flex-1">Cancel</AdminButton>
                         </div>
-                    </div>
+                    </AdminCard>
                 </div>
             )}
 
             {/* Delete Prospect Modal */}
             {deletingProspect && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm"
                     onClick={() => setDeletingProspect(null)}
                 >
-                    <div onClick={(e) => e.stopPropagation()}
-                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '440px', width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#dc2626' }}>
+                    <AdminCard onClick={(e) => e.stopPropagation()} className="w-full max-w-[440px] relative z-10 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-3 mb-4 text-red-600 dark:text-red-400">
                             <AlertCircle size={24} />
-                            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Delete Prospect Vendor?</h3>
+                            <h3 className="text-lg font-bold m-0">Delete Prospect Vendor?</h3>
                         </div>
-                        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5' }}>
-                            Are you sure you want to permanently delete <strong>{deletingProspect.business_name}</strong>?
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-5 leading-relaxed">
+                            Are you sure you want to permanently delete <strong className="text-zinc-900 dark:text-white">{deletingProspect.business_name}</strong>?
                             <br /><br />
-                            <span style={{ color: '#b45309', fontWeight: 500 }}>
+                            <span className="text-amber-600 dark:text-amber-400 font-medium">
                                 Note: Any associated phantom events will be safely disconnected (not deleted), but this prospect listing and all its logs will be permanently removed.
                             </span>
                         </p>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => setDeletingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
-                            <button onClick={handleDelete} disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Delete Prospect'}
-                            </button>
+                        <div className="flex gap-2">
+                            <AdminButton variant="outline" onClick={() => setDeletingProspect(null)} className="flex-1">Cancel</AdminButton>
+                            <AdminButton variant="danger" onClick={handleDelete} disabled={loading} isLoading={loading} className="flex-1">
+                                Delete Prospect
+                            </AdminButton>
                         </div>
-                    </div>
+                    </AdminCard>
                 </div>
             )}
 
             {/* Create Event Modal */}
             {showEvent && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm"
                     onClick={() => setShowEvent(null)}
                 >
-                    <div onClick={(e) => e.stopPropagation()}
-                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '520px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>Create Phantom Event</h3>
+                    <AdminCard onClick={(e) => e.stopPropagation()} className="w-full max-w-[520px] relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-auto">
+                        <h3 className="text-lg font-bold mb-5 text-zinc-900 dark:text-white">Create Phantom Event</h3>
                         {/* Event Templates */}
-                        <div style={{ marginBottom: '16px' }}>
-                            <div style={{ fontSize: '11px', fontWeight: 600, color: colors.text.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Quick Templates</div>
-                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <div className="mb-4">
+                            <div className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Quick Templates</div>
+                            <div className="flex gap-1.5 flex-wrap">
                                 {Object.keys(EVENT_TEMPLATES).map(k => (
                                     <button
                                         key={k}
                                         onClick={() => applyTemplate(k)}
-                                        style={{ padding: '5px 12px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: eventForm.event_type === k ? '#ede9fe' : '#f8fafc', color: eventForm.event_type === k ? '#7c3aed' : '#64748b', fontSize: '11px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}
+                                        className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold cursor-pointer capitalize transition-all ${
+                                            eventForm.event_type === k
+                                                ? 'bg-[#2CA58D]/10 text-[#2CA58D] border-[#2CA58D]/30 dark:bg-[#2CA58D]/20'
+                                                : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                                        }`}
                                     >
                                         {k}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <div className="flex flex-col gap-3.5">
                             <div>
-                                <label style={labelStyle}>Event Title *</label>
-                                <input placeholder="e.g. Art Night" value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Description</label>
-                                <textarea placeholder="Describe the event..." value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={labelStyle}>Start Date *</label>
-                                    <input type="datetime-local" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} style={inputStyle} />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={labelStyle}>End Date</label>
-                                    <input type="datetime-local" value={eventForm.end_date} onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })} style={inputStyle} />
-                                </div>
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Event Title *</label>
+                                <AdminInput placeholder="e.g. Art Night" value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Location Name</label>
-                                <input placeholder="e.g. Grand Hall" value={eventForm.location_name} onChange={(e) => setEventForm({ ...eventForm, location_name: e.target.value })} style={inputStyle} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Description</label>
+                                <textarea
+                                    placeholder="Describe the event..."
+                                    value={eventForm.description}
+                                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                                    className="w-full px-4 py-3 text-sm rounded-2xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#2CA58D] focus:ring-4 focus:ring-[#2CA58D]/10 outline-none transition-all duration-200 min-h-[80px] resize-y"
+                                />
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={labelStyle}>City</label>
-                                    <input placeholder="Istanbul" value={eventForm.city} onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })} style={inputStyle} />
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Start Date *</label>
+                                    <AdminInput type="datetime-local" value={eventForm.date} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} />
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={labelStyle}>Country</label>
-                                    <input placeholder="Turkey" value={eventForm.country} onChange={(e) => setEventForm({ ...eventForm, country: e.target.value })} style={inputStyle} />
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={labelStyle}>Event Type</label>
-                                    <input placeholder="e.g. Workshop" value={eventForm.event_type} onChange={(e) => setEventForm({ ...eventForm, event_type: e.target.value })} style={inputStyle} />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={labelStyle}>Capacity</label>
-                                    <input type="number" placeholder="50" value={eventForm.capacity} onChange={(e) => setEventForm({ ...eventForm, capacity: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                                <div className="flex-1">
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">End Date</label>
+                                    <AdminInput type="datetime-local" value={eventForm.end_date} onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })} />
                                 </div>
                             </div>
                             <div>
-                                <label style={labelStyle}>Image URL</label>
-                                <input placeholder="https://..." value={eventForm.image_url} onChange={(e) => setEventForm({ ...eventForm, image_url: e.target.value })} style={inputStyle} />
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Location Name</label>
+                                <AdminInput placeholder="e.g. Grand Hall" value={eventForm.location_name} onChange={(e) => setEventForm({ ...eventForm, location_name: e.target.value })} />
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">City</label>
+                                    <AdminInput placeholder="Istanbul" value={eventForm.city} onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })} />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Country</label>
+                                    <AdminInput placeholder="Turkey" value={eventForm.country} onChange={(e) => setEventForm({ ...eventForm, country: e.target.value })} />
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Event Type</label>
+                                    <AdminInput placeholder="e.g. Workshop" value={eventForm.event_type} onChange={(e) => setEventForm({ ...eventForm, event_type: e.target.value })} />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Capacity</label>
+                                    <AdminInput type="number" placeholder="50" value={eventForm.capacity} onChange={(e) => setEventForm({ ...eventForm, capacity: parseInt(e.target.value) || 0 })} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-1.5">Image URL</label>
+                                <AdminInput placeholder="https://..." value={eventForm.image_url} onChange={(e) => setEventForm({ ...eventForm, image_url: e.target.value })} />
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={() => setShowEvent(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
-                            <button onClick={handleCreateEvent} disabled={loading || !eventForm.title || !eventForm.date} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create Event'}
-                            </button>
+                        <div className="flex gap-2 mt-5">
+                            <AdminButton variant="outline" onClick={() => setShowEvent(null)} className="flex-1">Cancel</AdminButton>
+                            <AdminButton onClick={handleCreateEvent} disabled={loading || !eventForm.title || !eventForm.date} isLoading={loading} className="flex-1">
+                                Create Event
+                            </AdminButton>
                         </div>
-                    </div>
+                    </AdminCard>
                 </div>
             )}
 
             {/* Interests Modal */}
             {showInterests && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm"
                     onClick={() => setShowInterests(null)}>
-                    <div onClick={(e) => e.stopPropagation()}
-                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '520px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>Interested Users</h3>
+                    <AdminCard onClick={(e) => e.stopPropagation()} className="w-full max-w-[520px] relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-auto">
+                        <h3 className="text-lg font-bold mb-4 text-zinc-900 dark:text-white">Interested Users</h3>
                         {showInterests.map(ei => (
-                            <div key={ei.eventId} style={{ marginBottom: '16px' }}>
-                                <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '8px', color: '#0f172a' }}>
+                            <div key={ei.eventId} className="mb-4">
+                                <div className="font-semibold text-sm mb-2 text-zinc-900 dark:text-white">
                                     {ei.eventTitle} ({ei.interestCount} interested)
                                 </div>
                                 {ei.interestedUsers.length === 0 ? (
-                                    <div style={{ color: '#94a3b8', fontSize: '13px' }}>No interests yet.</div>
+                                    <div className="text-zinc-400 text-[13px]">No interests yet.</div>
                                 ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <div className="flex flex-col gap-1">
                                         {ei.interestedUsers.map((u, i) => (
-                                            <div key={i} style={{ padding: '8px 12px', borderRadius: '8px', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                                <span style={{ fontWeight: 500, color: '#0f172a' }}>{u.fullName || '—'}</span>
-                                                <span style={{ color: '#94a3b8' }}>{u.email}</span>
+                                            <div key={i} className="flex justify-between items-center px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 text-[13px]">
+                                                <span className="font-medium text-zinc-900 dark:text-white">{u.fullName || '—'}</span>
+                                                <span className="text-zinc-400">{u.email}</span>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                             </div>
                         ))}
-                        <button onClick={() => setShowInterests(null)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#f1f5f9', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px', marginTop: '12px' }}>Close</button>
-                    </div>
+                        <AdminButton variant="ghost" onClick={() => setShowInterests(null)} className="w-full mt-3">Close</AdminButton>
+                    </AdminCard>
                 </div>
             )}
 
             {/* Prospects Table */}
-            <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <AdminCard noPadding>
+                <table className="w-full border-collapse">
                     <thead>
-                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <tr className="border-b border-zinc-200 dark:border-zinc-800">
                             {['Business', 'Status', 'Events', 'Interests', 'Contact', 'Follow-up', 'Actions'].map(h => (
-                                <th key={h} style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                                <th key={h} className="px-4 py-3.5 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {(data?.data || []).length === 0 && (
-                            <tr><td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No prospects yet. Create your first one!</td></tr>
+                            <tr><td colSpan={7} className="px-10 py-10 text-center text-zinc-400">No prospects yet. Create your first one!</td></tr>
                         )}
                         {(data?.data || []).map(p => {
                             const days = daysSince(p.status === 'pitched' ? (p.last_contacted_at || p.updated_at || p.created_at) : null);
                             const stale = days !== null && days >= 7;
                             return (
-                            <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: stale ? '#fffbeb' : undefined }}>
-                                <td style={{ padding: '14px 16px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <tr key={p.id} className={`border-b border-zinc-100 dark:border-zinc-800/50 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/30 ${stale ? 'bg-amber-50/50 dark:bg-amber-500/5' : ''}`}>
+                                <td className="px-4 py-3.5">
+                                    <div className="flex items-center gap-3">
                                         {p.logo_url ? (
                                             <img
                                                 src={p.logo_url}
                                                 alt={`${p.business_name} logo`}
-                                                style={{
-                                                    width: '36px',
-                                                    height: '36px',
-                                                    borderRadius: '50%',
-                                                    objectFit: 'cover',
-                                                    border: '1px solid #e2e8f0',
-                                                    flexShrink: 0,
-                                                }}
+                                                className="w-9 h-9 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
                                                 onError={(e) => {
                                                     // Fallback if image fails to load
                                                     (e.target as HTMLElement).style.display = 'none';
                                                     const parent = (e.target as HTMLElement).parentElement;
                                                     if (parent) {
                                                         const fallback = parent.querySelector('.logo-fallback');
-                                                        if (fallback) fallback.setAttribute('style', 'display: flex; width: 36px; height: 36px; border-radius: 50%; background: #ede9fe; color: #7c3aed; align-items: center; justify-content: center; flex-shrink: 0;');
+                                                        if (fallback) fallback.setAttribute('style', 'display: flex; width: 36px; height: 36px; border-radius: 50%; background: #d1fae5; color: #059669; align-items: center; justify-content: center; flex-shrink: 0;');
                                                     }
                                                 }}
                                             />
                                         ) : null}
                                         {(!p.logo_url) ? (
-                                            <div
-                                                style={{
-                                                    width: '36px',
-                                                    height: '36px',
-                                                    borderRadius: '50%',
-                                                    background: '#ede9fe',
-                                                    color: '#7c3aed',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    flexShrink: 0,
-                                                }}
-                                            >
+                                            <div className="w-9 h-9 rounded-full bg-[#2CA58D]/10 text-[#2CA58D] flex items-center justify-center shrink-0">
                                                 <Store size={18} />
                                             </div>
                                         ) : (
                                             <div
-                                                className="logo-fallback"
-                                                style={{
-                                                    display: 'none',
-                                                    width: '36px',
-                                                    height: '36px',
-                                                    borderRadius: '50%',
-                                                    background: '#ede9fe',
-                                                    color: '#7c3aed',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    flexShrink: 0,
-                                                }}
+                                                className="logo-fallback hidden w-9 h-9 rounded-full bg-[#2CA58D]/10 text-[#2CA58D] items-center justify-center shrink-0"
                                             >
                                                 <Store size={18} />
                                             </div>
                                         )}
                                         {p.instagram && (
-                                            <a href={`https://instagram.com/${p.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Open Instagram" style={{ color: '#E1306C', fontSize: '16px', textDecoration: 'none' }}>IG</a>
+                                            <a href={`https://instagram.com/${p.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Open Instagram" className="text-[#E1306C] text-xs font-bold no-underline hover:opacity-80">IG</a>
                                         )}
                                         <div>
-                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{p.business_name}</div>
-                                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.instagram || p.contact_email || '—'}</div>
+                                            <div className="font-semibold text-sm text-zinc-900 dark:text-white">{p.business_name}</div>
+                                            <div className="text-xs text-zinc-400">{p.instagram || p.contact_email || '—'}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td style={{ padding: '14px 16px' }}>
-                                    <span style={{
-                                        padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                                        background: p.status === 'lead' ? '#dbeafe' : p.status === 'building' ? '#fef3c7' : p.status === 'pitched' ? '#ede9fe' : p.status === 'free' ? '#d1fae5' : p.status === 'paying' ? '#fef9c3' : p.status === 'churned' ? '#fed7aa' : p.status === 'lost' ? '#f3f4f6' : '#fef9c3',
-                                        color: p.status === 'lead' ? '#1e40af' : p.status === 'building' ? '#92400e' : p.status === 'pitched' ? '#5b21b6' : p.status === 'free' ? '#065f46' : p.status === 'paying' ? '#854d0e' : p.status === 'churned' ? '#9a3412' : p.status === 'lost' ? '#6b7280' : '#854d0e',
-                                        ...(p.status === 'paying' ? { border: '1px solid #eab308' } : {}),
-                                    }}>
+                                <td className="px-4 py-3.5">
+                                    <AdminBadge variant={STATUS_BADGE_VARIANT[p.status ?? ''] || 'neutral'}>
                                         {p.status}
-                                    </span>
+                                    </AdminBadge>
                                 </td>
-                                <td style={{ padding: '14px 16px', fontSize: '14px', color: '#475569' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <td className="px-4 py-3.5 text-sm text-zinc-600 dark:text-zinc-300">
+                                    <span className="flex items-center gap-1">
                                         <Calendar size={14} /> {p.eventCount}
                                     </span>
                                 </td>
-                                <td style={{ padding: '14px 16px', fontSize: '14px' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: p.totalInterests > 0 ? '#8b5cf6' : '#94a3b8', fontWeight: p.totalInterests > 0 ? 600 : 400 }}>
+                                <td className="px-4 py-3.5 text-sm">
+                                    <span className={`flex items-center gap-1 ${p.totalInterests > 0 ? 'text-[#2CA58D] font-semibold' : 'text-zinc-400 font-normal'}`}>
                                         <Users size={14} /> {p.totalInterests}
                                     </span>
                                 </td>
-                                <td style={{ padding: '14px 16px', fontSize: '12px', color: '#94a3b8' }}>
+                                <td className="px-4 py-3.5 text-xs text-zinc-400">
                                     {p.contact_phone || p.contact_email || '—'}
                                 </td>
-                                <td style={{ padding: '14px 16px', fontSize: '12px' }}>
+                                <td className="px-4 py-3.5 text-xs">
                                     {p.status === 'pitched' && days !== null ? (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: stale ? '#dc2626' : '#64748b', fontWeight: stale ? 600 : 400 }}>
+                                        <span className={`flex items-center gap-1 ${stale ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                             <Clock size={12} /> {days}d ago{stale ? ' ⚠️' : ''}
                                         </span>
                                     ) : (p.status === 'free' || p.status === 'paying') ? (
-                                        <span style={{ color: '#10b981', fontWeight: 500 }}>✓ Active</span>
+                                        <span className="text-emerald-500 font-medium">✓ Active</span>
                                     ) : p.status === 'lost' ? (
-                                        <span style={{ color: '#94a3b8', fontWeight: 500 }}>✗ Lost</span>
+                                        <span className="text-zinc-400 font-medium">✗ Lost</span>
                                     ) : (
-                                        <span style={{ color: '#cbd5e1' }}>—</span>
+                                        <span className="text-zinc-300 dark:text-zinc-600">—</span>
                                     )}
                                 </td>
-                                <td style={{ padding: '14px 16px' }}>
-                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                <td className="px-4 py-3.5">
+                                    <div className="flex gap-1.5 flex-wrap items-center">
                                         <button
                                             onClick={() => setShowEvent(p.id)}
-                                            style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#ede9fe', color: '#6d28d9', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                            className="px-2.5 py-1.5 rounded-lg bg-[#2CA58D]/10 text-[#2CA58D] text-[11px] font-semibold cursor-pointer border-none hover:bg-[#2CA58D]/20 transition-colors"
                                         >
                                             + Event
                                         </button>
                                         <button
                                             onClick={() => viewInterests(p.id)}
-                                            style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#f1f5f9', color: '#475569', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                            className="px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold cursor-pointer border-none hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                         >
                                             View
                                         </button>
@@ -969,7 +904,7 @@ export default function AdminProspectsClient({
                                             <button
                                                 onClick={() => handleContact(p)}
                                                 disabled={loading}
-                                                style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#dbeafe', color: '#1e40af', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                                className="px-2.5 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-blue-200 dark:hover:bg-blue-500/20 transition-colors"
                                             >
                                                 Pitch
                                             </button>
@@ -978,7 +913,7 @@ export default function AdminProspectsClient({
                                             <a
                                                 href={`https://wa.me/${p.contact_phone.replace(/[^0-9]/g, '')}`}
                                                 target="_blank"
-                                                style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#25D366', color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#25D366] text-white text-[11px] font-semibold no-underline hover:bg-[#20bd5a] transition-colors"
                                             >
                                                 <MessageCircle size={10} /> WA
                                             </a>
@@ -998,13 +933,13 @@ export default function AdminProspectsClient({
                                                     location: p.location || '',
                                                 });
                                             }}
-                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '5px 8px', borderRadius: '6px', border: 'none', background: '#f1f5f9', color: '#475569', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold cursor-pointer border-none hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                         >
                                             <Edit2 size={11} /> Edit
                                         </button>
                                         <button
                                             onClick={() => setDeletingProspect(p)}
-                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '5px 8px', borderRadius: '6px', border: 'none', background: '#fee2e2', color: '#dc2626', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+                                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                                         >
                                             <Trash2 size={11} /> Delete
                                         </button>
@@ -1015,16 +950,20 @@ export default function AdminProspectsClient({
 
                     </tbody>
                 </table>
-            </div>
+            </AdminCard>
 
             {/* Pagination */}
             {data && data.totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
+                <div className="flex justify-center gap-2 mt-5">
                     {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((p) => (
                         <button
                             key={p}
                             onClick={() => { setPage(p); reload(p, statusFilter); }}
-                            style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', background: p === page ? '#8b5cf6' : '#fff', color: p === page ? '#fff' : '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                            className={`px-3.5 py-2 rounded-xl border text-[13px] font-semibold cursor-pointer transition-all duration-200 ${
+                                p === page
+                                    ? 'bg-[#2CA58D] text-white border-[#2CA58D] shadow-md shadow-[#2CA58D]/20'
+                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                            }`}
                         >
                             {p}
                         </button>
