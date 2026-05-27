@@ -797,6 +797,7 @@ export type Database = {
       }
       prospect_vendors: {
         Row: {
+          bio: string | null
           business_name: string
           claim_token: string | null
           contact_email: string | null
@@ -806,13 +807,17 @@ export type Database = {
           created_by: string | null
           id: string
           instagram: string | null
+          last_contacted_at: string | null
+          location: string | null
           logo_url: string | null
+          lost_reason: string | null
           notes: string | null
           status: string | null
           updated_at: string | null
           website: string | null
         }
         Insert: {
+          bio?: string | null
           business_name: string
           claim_token?: string | null
           contact_email?: string | null
@@ -822,13 +827,17 @@ export type Database = {
           created_by?: string | null
           id?: string
           instagram?: string | null
+          last_contacted_at?: string | null
+          location?: string | null
           logo_url?: string | null
+          lost_reason?: string | null
           notes?: string | null
           status?: string | null
           updated_at?: string | null
           website?: string | null
         }
         Update: {
+          bio?: string | null
           business_name?: string
           claim_token?: string | null
           contact_email?: string | null
@@ -838,7 +847,10 @@ export type Database = {
           created_by?: string | null
           id?: string
           instagram?: string | null
+          last_contacted_at?: string | null
+          location?: string | null
           logo_url?: string | null
+          lost_reason?: string | null
           notes?: string | null
           status?: string | null
           updated_at?: string | null

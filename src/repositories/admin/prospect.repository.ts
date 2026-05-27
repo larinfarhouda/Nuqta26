@@ -105,7 +105,7 @@ export class AdminProspectRepository extends BaseRepository {
             .from('prospect_vendors')
             .select('*')
             .eq('claim_token', token)
-            .eq('status', 'contacted')
+            .eq('status', 'pitched')
             .single();
         if (error) return null;
         return data;
@@ -191,7 +191,7 @@ export class AdminProspectRepository extends BaseRepository {
         const { error: updateError } = await this.client
             .from('prospect_vendors')
             .update({
-                status: 'converted',
+                status: 'free',
                 converted_vendor_id: vendorId,
                 updated_at: new Date().toISOString(),
             })

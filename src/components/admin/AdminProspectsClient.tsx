@@ -78,10 +78,12 @@ export default function AdminProspectsClient({
     const [form, setForm] = useState({
         business_name: '', logo_url: '', contact_email: '',
         contact_phone: '', instagram: '', website: '', notes: '',
+        bio: '', location: '',
     });
     const [editForm, setEditForm] = useState({
         business_name: '', logo_url: '', contact_email: '',
         contact_phone: '', instagram: '', website: '', notes: '',
+        bio: '', location: '',
     });
     const [eventForm, setEventForm] = useState({
         title: '', description: '', date: '', end_date: '',
@@ -138,7 +140,7 @@ export default function AdminProspectsClient({
         if (!form.business_name) return;
         setLoading(true);
         await createProspectVendor(form);
-        setForm({ business_name: '', logo_url: '', contact_email: '', contact_phone: '', instagram: '', website: '', notes: '' });
+        setForm({ business_name: '', logo_url: '', contact_email: '', contact_phone: '', instagram: '', website: '', notes: '', bio: '', location: '' });
         setShowCreate(false);
         setLoading(false);
         reload();
@@ -294,8 +296,8 @@ export default function AdminProspectsClient({
 
             {/* Action Bar: CSV Import + Filters */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    {['', 'prospect', 'contacted', 'converted'].map(s => (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {['', 'lead', 'building', 'pitched', 'free', 'paying', 'churned', 'lost'].map(s => (
                         <button
                             key={s}
                             onClick={() => { setStatusFilter(s); setPage(1); reload(1, s); }}
@@ -494,6 +496,23 @@ export default function AdminProspectsClient({
                                 <label style={labelStyle}>Notes</label>
                                 <textarea placeholder="Any additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
                             </div>
+                            {/* BIO */}
+                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Bio</label>
+                            <textarea
+                                value={form.bio}
+                                onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+                                placeholder="Vendor bio/description"
+                                rows={3}
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', resize: 'vertical' as const }}
+                            />
+                            {/* LOCATION */}
+                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Location</label>
+                            <input
+                                value={form.location}
+                                onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                                placeholder="City / Area"
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                            />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
                             <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
@@ -580,6 +599,23 @@ export default function AdminProspectsClient({
                                 <label style={labelStyle}>Notes</label>
                                 <textarea placeholder="Any additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
                             </div>
+                            {/* BIO */}
+                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Bio</label>
+                            <textarea
+                                value={editForm.bio}
+                                onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
+                                placeholder="Vendor bio/description"
+                                rows={3}
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', resize: 'vertical' as const }}
+                            />
+                            {/* LOCATION */}
+                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Location</label>
+                            <input
+                                value={editForm.location}
+                                onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))}
+                                placeholder="City / Area"
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                            />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
                             <button onClick={() => setEditingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
@@ -746,7 +782,7 @@ export default function AdminProspectsClient({
                             <tr><td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No prospects yet. Create your first one!</td></tr>
                         )}
                         {(data?.data || []).map(p => {
-                            const days = daysSince(p.status === 'contacted' ? (p.updated_at || p.created_at) : null);
+                            const days = daysSince(p.status === 'pitched' ? (p.last_contacted_at || p.updated_at || p.created_at) : null);
                             const stale = days !== null && days >= 7;
                             return (
                             <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: stale ? '#fffbeb' : undefined }}>
@@ -809,6 +845,9 @@ export default function AdminProspectsClient({
                                                 <Store size={18} />
                                             </div>
                                         )}
+                                        {p.instagram && (
+                                            <a href={`https://instagram.com/${p.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Open Instagram" style={{ color: '#E1306C', fontSize: '16px', textDecoration: 'none' }}>IG</a>
+                                        )}
                                         <div>
                                             <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{p.business_name}</div>
                                             <div style={{ fontSize: '12px', color: '#94a3b8' }}>{p.instagram || p.contact_email || '—'}</div>
@@ -818,8 +857,9 @@ export default function AdminProspectsClient({
                                 <td style={{ padding: '14px 16px' }}>
                                     <span style={{
                                         padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-                                        background: p.status === 'converted' ? '#dcfce7' : p.status === 'contacted' ? '#dbeafe' : '#fef9c3',
-                                        color: p.status === 'converted' ? '#166534' : p.status === 'contacted' ? '#1e40af' : '#854d0e',
+                                        background: p.status === 'lead' ? '#dbeafe' : p.status === 'building' ? '#fef3c7' : p.status === 'pitched' ? '#ede9fe' : p.status === 'free' ? '#d1fae5' : p.status === 'paying' ? '#fef9c3' : p.status === 'churned' ? '#fed7aa' : p.status === 'lost' ? '#f3f4f6' : '#fef9c3',
+                                        color: p.status === 'lead' ? '#1e40af' : p.status === 'building' ? '#92400e' : p.status === 'pitched' ? '#5b21b6' : p.status === 'free' ? '#065f46' : p.status === 'paying' ? '#854d0e' : p.status === 'churned' ? '#9a3412' : p.status === 'lost' ? '#6b7280' : '#854d0e',
+                                        ...(p.status === 'paying' ? { border: '1px solid #eab308' } : {}),
                                     }}>
                                         {p.status}
                                     </span>
@@ -838,12 +878,14 @@ export default function AdminProspectsClient({
                                     {p.contact_phone || p.contact_email || '—'}
                                 </td>
                                 <td style={{ padding: '14px 16px', fontSize: '12px' }}>
-                                    {p.status === 'contacted' && days !== null ? (
+                                    {p.status === 'pitched' && days !== null ? (
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: stale ? '#dc2626' : '#64748b', fontWeight: stale ? 600 : 400 }}>
                                             <Clock size={12} /> {days}d ago{stale ? ' ⚠️' : ''}
                                         </span>
-                                    ) : p.status === 'converted' ? (
-                                        <span style={{ color: '#10b981', fontWeight: 500 }}>✓ Done</span>
+                                    ) : (p.status === 'free' || p.status === 'paying') ? (
+                                        <span style={{ color: '#10b981', fontWeight: 500 }}>✓ Active</span>
+                                    ) : p.status === 'lost' ? (
+                                        <span style={{ color: '#94a3b8', fontWeight: 500 }}>✗ Lost</span>
                                     ) : (
                                         <span style={{ color: '#cbd5e1' }}>—</span>
                                     )}
@@ -862,16 +904,16 @@ export default function AdminProspectsClient({
                                         >
                                             View
                                         </button>
-                                        {p.status !== 'converted' && !p.claim_token && (
+                                        {p.status !== 'free' && p.status !== 'paying' && !p.claim_token && (
                                             <button
                                                 onClick={() => handleContact(p)}
                                                 disabled={loading}
                                                 style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#dbeafe', color: '#1e40af', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
                                             >
-                                                Contact
+                                                Pitch
                                             </button>
                                         )}
-                                        {p.status === 'contacted' && p.contact_phone && (
+                                        {p.status === 'pitched' && p.contact_phone && (
                                             <a
                                                 href={`https://wa.me/${p.contact_phone.replace(/[^0-9]/g, '')}`}
                                                 target="_blank"
@@ -891,6 +933,8 @@ export default function AdminProspectsClient({
                                                     instagram: p.instagram || '',
                                                     website: p.website || '',
                                                     notes: p.notes || '',
+                                                    bio: p.bio || '',
+                                                    location: p.location || '',
                                                 });
                                             }}
                                             style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '5px 8px', borderRadius: '6px', border: 'none', background: '#f1f5f9', color: '#475569', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}

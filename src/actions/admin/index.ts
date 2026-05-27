@@ -272,6 +272,8 @@ export async function createProspectVendor(data: {
     instagram?: string;
     website?: string;
     notes?: string;
+    bio?: string;
+    location?: string;
 }) {
     try {
         const { user } = await requireAdmin();
@@ -305,7 +307,7 @@ export async function getProspectStats() {
         const prospects = all || [];
 
         const total = prospects.length;
-        const byStatus = { prospect: 0, contacted: 0, converted: 0, rejected: 0 };
+        const byStatus = { lead: 0, building: 0, pitched: 0, free: 0, paying: 0, churned: 0, lost: 0 };
         let totalConversionDays = 0;
         let convertedCount = 0;
 
@@ -313,7 +315,7 @@ export async function getProspectStats() {
             if (p.status && p.status in byStatus) {
                 byStatus[p.status as keyof typeof byStatus]++;
             }
-            if (p.status === 'converted' && p.created_at && p.updated_at) {
+            if ((p.status === 'free' || p.status === 'paying') && p.created_at && p.updated_at) {
                 const days = (new Date(p.updated_at).getTime() - new Date(p.created_at).getTime()) / 86400000;
                 totalConversionDays += days;
                 convertedCount++;
@@ -453,6 +455,8 @@ export async function updateProspectVendor(prospectId: string, data: {
     instagram?: string;
     website?: string;
     notes?: string;
+    bio?: string;
+    location?: string;
 }) {
     try {
         const { user } = await requireAdmin();
@@ -627,6 +631,7 @@ export async function scoutInstagramProfile(handle: string) {
 
                 const logoUrl = extractEmbedValue(html, 'profile_pic_url');
                 const businessName = extractEmbedValue(html, 'full_name');
+                const bio = extractEmbedValue(html, 'biography');
 
                 if (logoUrl && logoUrl.startsWith('https://')) {
                     return {
@@ -634,6 +639,7 @@ export async function scoutInstagramProfile(handle: string) {
                         logoUrl,
                         website: `https://instagram.com/${username}`,
                         businessName: businessName?.trim() || username,
+                        ...(bio ? { bio: bio.trim() } : {}),
                     };
                 }
             }

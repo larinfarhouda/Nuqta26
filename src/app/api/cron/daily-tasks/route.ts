@@ -333,11 +333,11 @@ async function sendProspectFollowups(supabase: any) {
     let skippedCount = 0;
 
     try {
-        // Get all prospects in 'contacted' status with email
+        // Get all prospects in 'pitched' status with email
         const { data: prospects } = await supabase
             .from('prospect_vendors')
             .select('id, business_name, contact_email, claim_token, updated_at, notes')
-            .eq('status', 'contacted')
+            .eq('status', 'pitched')
             .not('contact_email', 'is', null)
             .not('claim_token', 'is', null);
 

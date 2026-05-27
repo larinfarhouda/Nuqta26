@@ -8,10 +8,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     const isArabic = locale === 'ar';
 
     return {
-        title: isArabic ? 'استلام صفحتك | نقطة' : 'Claim Your Page | Nuqta',
+        title: isArabic ? 'صفحتك جاهزة | نقطة' : 'Your Page is Ready | Nuqta',
         description: isArabic
-            ? 'استلم صفحة منظم الفعاليات الخاصة بك على نقطة وابدأ بإدارة فعالياتك.'
-            : 'Claim your event organizer page on Nuqta and start managing your events.',
+            ? 'صفحتك كمنظم فعاليات جاهزة على نقطة. سجل مجاناً وابدأ بإدارة فعالياتك.'
+            : 'Your event organizer page is already live on Nuqta. Sign up free to manage your events.',
         robots: { index: false, follow: false },
     };
 }
@@ -35,9 +35,9 @@ export default async function ClaimPage({ params }: { params: any }) {
 
     if (!prospect) return notFound();
 
-    if (prospect.status === 'converted') {
-        // Already converted — redirect to login
-        redirect(`/${locale}/login`);
+    if (prospect.status === 'free' || prospect.status === 'paying') {
+        // Already signed up — redirect to dashboard
+        redirect(`/${locale}/dashboard/vendor`);
     }
 
     // Get user session

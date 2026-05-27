@@ -48,7 +48,7 @@ export async function suggestVendor(data: {
                 instagram: data.instagram?.trim() || null,
                 website: data.website?.trim() || null,
                 notes: `[User Suggestion] ${data.reason?.trim() || 'No reason provided'}${user ? ` — by ${user.email}` : ' — anonymous'}`,
-                status: 'prospect',
+                status: 'lead',
                 created_by: user?.id || null,
             });
 

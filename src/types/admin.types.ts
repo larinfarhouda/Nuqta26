@@ -147,6 +147,8 @@ export interface FlaggedReview {
 
 // ─── Prospect Vendors (Phantom Listings) ────────────────────────────────────
 
+export type ProspectStatus = 'lead' | 'building' | 'pitched' | 'free' | 'paying' | 'churned' | 'lost';
+
 export interface ProspectVendor {
     id: string;
     business_name: string;
@@ -156,7 +158,11 @@ export interface ProspectVendor {
     instagram: string | null;
     website: string | null;
     notes: string | null;
-    status: string | null;
+    bio: string | null;
+    location: string | null;
+    status: ProspectStatus | null;
+    lost_reason: string | null;
+    last_contacted_at: string | null;
     claim_token: string | null;
     converted_vendor_id: string | null;
     created_at: string | null;
@@ -173,6 +179,8 @@ export interface CreateProspectVendorInput {
     instagram?: string;
     website?: string;
     notes?: string;
+    bio?: string;
+    location?: string;
 }
 
 export interface CreateProspectEventInput {
@@ -223,6 +231,7 @@ export type ActivityAction =
     | 'vendor_suspended'
     | 'prospect_created'
     | 'prospect_contacted'
+    | 'prospect_pitched'
     | 'prospect_converted'
     | 'prospect_updated'
     | 'prospect_deleted'

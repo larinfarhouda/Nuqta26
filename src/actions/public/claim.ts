@@ -41,7 +41,7 @@ export async function claimProspectBusiness(claimToken: string) {
             return { error: 'Invalid or expired claim link.' };
         }
 
-        if (prospect.status === 'converted') {
+        if (prospect.status === 'free' || prospect.status === 'paying') {
             return { error: 'This business has already been claimed.' };
         }
 

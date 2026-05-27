@@ -180,12 +180,14 @@ export class AdminService {
     }
 
     async contactProspect(prospectId: string, adminId: string) {
-        logger.info('AdminService: Marking prospect as contacted', { prospectId });
-        await this.prospectRepo.updateProspectStatus(prospectId, 'contacted');
+        logger.info('AdminService: Marking prospect as pitched', { prospectId });
+        await this.prospectRepo.updateProspectStatus(prospectId, 'pitched');
+        // Update last_contacted_at timestamp
+        await this.prospectRepo.updateProspectVendor(prospectId, { last_contacted_at: new Date().toISOString() } as any);
         const token = await this.prospectRepo.generateClaimToken(prospectId);
         await this.activityRepo.logActivity({
             user_id: adminId,
-            action: 'prospect_contacted',
+            action: 'prospect_pitched',
             entity_type: 'prospect_vendor',
             entity_id: prospectId,
         });

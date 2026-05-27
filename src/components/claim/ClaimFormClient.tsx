@@ -156,7 +156,7 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
                         )}
                     </div>
                     <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
-                        Claim Your Business
+                        Your Page is Ready! ✨
                     </h1>
                     <p style={{ fontSize: '15px', opacity: 0.9 }}>
                         {prospect.business_name}
@@ -221,10 +221,10 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {[
-                                'Full control of your vendor profile & events',
-                                'See users who expressed interest in your events',
-                                'Accept bookings & payments through Nuqta',
-                                'Analytics dashboard with real-time insights',
+                            'Your own vendor page — already live on Nuqta',
+                            'Manage your events, bookings & schedule',
+                            'See who\'s interested and accept payments',
+                            'Analytics dashboard — free to start',
                             ].map((benefit, i) => (
                                 <div
                                     key={i}
@@ -280,12 +280,12 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
                             <Loader2 size={18} className="animate-spin" />
                         ) : user ? (
                             <>
-                                Claim Business
+                                Get Started — It&apos;s Free
                                 <ArrowRight size={18} />
                             </>
                         ) : (
                             <>
-                                Sign Up to Claim
+                                Sign Up Free
                                 <ArrowRight size={18} />
                             </>
                         )}
@@ -295,8 +295,8 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
                         fontSize: '12px', color: '#94a3b8', textAlign: 'center',
                         marginTop: '16px', lineHeight: 1.5,
                     }}>
-                        By claiming this business, you agree to Nuqta&apos;s vendor terms.
-                        Free starter plan included.
+                        By signing up, you agree to Nuqta&apos;s vendor terms.
+                        Free starter plan — no credit card needed.
                     </p>
                 </div>
             </div>
