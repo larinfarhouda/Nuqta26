@@ -594,37 +594,47 @@ export async function scoutInstagramProfile(handle: string) {
             logger.error('Instagram API failed, trying HTML fallback', { error: apiErr, handle });
         }
 
-        // Strategy 2: Fetch the public profile page and parse meta tags
+        // Strategy 2: Instagram embed page (served even to datacenter IPs)
+        // The embed HTML contains escaped JSON with profile_pic_url and full_name
         try {
-            const htmlRes = await fetch(`https://www.instagram.com/${username}/`, {
+            const embedRes = await fetch(`https://www.instagram.com/${username}/embed/`, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
                     'Accept': 'text/html',
                 },
                 cache: 'no-store',
             });
 
-            if (htmlRes.ok) {
-                const html = await htmlRes.text();
-                const ogImageMatch = html.match(/<meta\s+(?:property|name)="og:image"\s+content="([^"]+)"/i)
-                    || html.match(/content="([^"]+)"\s+(?:property|name)="og:image"/i);
-                const ogTitleMatch = html.match(/<meta\s+(?:property|name)="og:title"\s+content="([^"]+)"/i)
-                    || html.match(/content="([^"]+)"\s+(?:property|name)="og:title"/i);
+            if (embedRes.ok) {
+                const html = await embedRes.text();
 
-                const logoUrl = ogImageMatch?.[1] || fallback.logoUrl;
-                let businessName = username;
-                if (ogTitleMatch?.[1]) {
-                    const raw = ogTitleMatch[1];
-                    const nameMatch = raw.match(/^(.+?)\s*\(@/);
-                    businessName = nameMatch?.[1]?.trim() || raw.split('•')[0]?.trim() || username;
+                // Extract profile_pic_url from escaped JSON in the embed HTML
+                // Format: profile_pic_url\":\"https:\/\/instagram.f...fbcdn.net\/...\"
+                const picMatch = html.match(/profile_pic_url\\?":\\?"(https?:[^"\\]*(?:\\.[^"\\]*)*)\\?"/);
+                let logoUrl = fallback.logoUrl;
+                if (picMatch?.[1]) {
+                    // Unescape the URL: \\/ → /
+                    logoUrl = picMatch[1].replace(/\\\//g, '/');
                 }
 
-                if (ogImageMatch?.[1]) {
-                    return { success: true, logoUrl, website: `https://instagram.com/${username}`, businessName };
+                // Extract full_name from escaped JSON
+                const nameMatch = html.match(/full_name\\?":\\?"([^"\\]*(?:\\.[^"\\]*)*)\\?"/);
+                let businessName = username;
+                if (nameMatch?.[1]) {
+                    businessName = nameMatch[1].replace(/\\\//g, '/').trim();
+                }
+
+                if (logoUrl !== fallback.logoUrl) {
+                    return {
+                        success: true,
+                        logoUrl,
+                        website: `https://instagram.com/${username}`,
+                        businessName,
+                    };
                 }
             }
-        } catch (htmlErr) {
-            logger.error('Instagram HTML fallback also failed', { error: htmlErr, handle });
+        } catch (embedErr) {
+            logger.error('Instagram embed fallback failed', { error: embedErr, handle });
         }
 
         // All strategies failed — return fallback with initials avatar
