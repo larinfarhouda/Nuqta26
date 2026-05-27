@@ -72,11 +72,12 @@ export class AdminProspectRepository extends BaseRepository {
             }
         });
 
-        const prospects: ProspectVendor[] = (data || []).map(p => ({
+        const prospects = (data || []).map(p => ({
             ...p,
+            status: p.status as ProspectVendor['status'],
             eventCount: eventCountMap[p.id] || 0,
             totalInterests: interestCountMap[p.id] || 0,
-        }));
+        })) satisfies ProspectVendor[];
 
         const total = count || 0;
         return { data: prospects, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
