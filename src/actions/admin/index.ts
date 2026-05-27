@@ -619,6 +619,12 @@ export async function scoutInstagramProfile(handle: string) {
                         contactEmail: user.business_email || undefined,
                     };
                 }
+            } else {
+                logger.warn('Instagram web API returned non-200', {
+                    status: apiRes.status,
+                    statusText: apiRes.statusText,
+                    handle,
+                });
             }
         } catch (apiErr) {
             logger.error('Instagram web API failed, trying embed fallback', { error: apiErr, handle });
