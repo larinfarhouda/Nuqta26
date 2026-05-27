@@ -567,67 +567,51 @@ export async function scoutInstagramProfile(handle: string) {
             businessName: username
         };
 
-        // Strategy 1: Instagram web_profile_info API (same endpoint instaloader uses)
-        // Returns full profile JSON: HD pic, bio, followers, category, external URL, location
+        // Strategy 1: Supabase Edge Function (runs on Deno Deploy IPs, not Vercel)
+        // This avoids Instagram blocking Vercel's datacenter IPs
         try {
-            const apiRes = await fetch(
-                `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
-                {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-                        'X-IG-App-ID': '936619743392459',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': '*/*',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Referer': `https://www.instagram.com/${username}/`,
-                        'Sec-Fetch-Dest': 'empty',
-                        'Sec-Fetch-Mode': 'cors',
-                        'Sec-Fetch-Site': 'same-origin',
-                    },
-                    cache: 'no-store',
-                }
-            );
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            if (supabaseUrl && serviceKey) {
+                const edgeRes = await fetch(
+                    `${supabaseUrl}/functions/v1/scout-instagram`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${serviceKey}`,
+                        },
+                        body: JSON.stringify({ username }),
+                    }
+                );
 
-            if (apiRes.ok) {
-                const data = await apiRes.json();
-                const user = data?.data?.user;
-                if (user) {
-                    // Extract location from business address JSON if available
-                    const bioText = user.biography || '';
-                    const cityEdge = user.business_address_json ? (() => {
-                        try {
-                            const addr = JSON.parse(user.business_address_json);
-                            return [addr.city_name, addr.region_name].filter(Boolean).join(', ');
-                        } catch { return ''; }
-                    })() : '';
-
-                    return {
-                        success: true,
-                        logoUrl: user.profile_pic_url_hd || user.profile_pic_url || fallback.logoUrl,
-                        website: user.external_url || `https://instagram.com/${username}`,
-                        businessName: user.full_name?.trim() || username,
-                        bio: bioText.trim() || undefined,
-                        location: cityEdge || undefined,
-                        followers: user.edge_followed_by?.count ?? undefined,
-                        following: user.edge_follow?.count ?? undefined,
-                        posts: user.edge_owner_to_timeline_media?.count ?? undefined,
-                        isBusinessAccount: user.is_business_account || false,
-                        businessCategory: user.business_category_name || user.category_name || undefined,
-                        isVerified: user.is_verified || false,
-                        externalUrl: user.external_url || undefined,
-                        contactPhone: user.business_phone_number || undefined,
-                        contactEmail: user.business_email || undefined,
-                    };
+                if (edgeRes.ok) {
+                    const data = await edgeRes.json();
+                    if (data?.success && data.logoUrl) {
+                        return {
+                            success: true,
+                            logoUrl: data.logoUrl || fallback.logoUrl,
+                            website: data.website || fallback.website,
+                            businessName: data.businessName || username,
+                            bio: data.bio || undefined,
+                            location: data.location || undefined,
+                            followers: data.followers ?? undefined,
+                            following: data.following ?? undefined,
+                            posts: data.posts ?? undefined,
+                            isBusinessAccount: data.isBusinessAccount || false,
+                            businessCategory: data.businessCategory || undefined,
+                            isVerified: data.isVerified || false,
+                            externalUrl: data.externalUrl || undefined,
+                            contactPhone: data.contactPhone || undefined,
+                            contactEmail: data.contactEmail || undefined,
+                        };
+                    }
+                } else {
+                    logger.warn('Edge function returned non-200', { status: edgeRes.status, handle });
                 }
-            } else {
-                logger.warn('Instagram web API returned non-200', {
-                    status: apiRes.status,
-                    statusText: apiRes.statusText,
-                    handle,
-                });
             }
-        } catch (apiErr) {
-            logger.error('Instagram web API failed, trying embed fallback', { error: apiErr, handle });
+        } catch (edgeErr) {
+            logger.error('Edge function scout failed', { error: edgeErr, handle });
         }
 
         // Strategy 2: Instagram embed page (served even to datacenter IPs)
