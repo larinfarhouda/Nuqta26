@@ -13,9 +13,9 @@ import { AdminButton } from './ui/AdminButton';
 import { AdminInput } from './ui/AdminInput';
 import { AdminBadge } from './ui/AdminBadge';
 
-const TIER_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'accent'; icon: React.ElementType }> = {
-    free: { label: 'Free', variant: 'default', icon: Zap },
-    starter: { label: 'Free', variant: 'default', icon: Zap },
+const TIER_CONFIG: Record<string, { label: string; variant: 'neutral' | 'success' | 'warning' | 'danger' | 'accent'; icon: React.ElementType }> = {
+    free: { label: 'Free', variant: 'neutral', icon: Zap },
+    starter: { label: 'Free', variant: 'neutral', icon: Zap },
     pro: { label: 'Pro', variant: 'accent', icon: Star },
     growth: { label: 'Pro', variant: 'accent', icon: Star },
     business: { label: 'Business', variant: 'warning', icon: Crown },

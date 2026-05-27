@@ -74,9 +74,9 @@ const ACTION_LABELS: Record<string, string> = {
     vendor_viewed: '🏪 Vendor Viewed',
 };
 
-const ROLE_BADGE: Record<string, 'info' | 'default' | 'danger'> = {
+const ROLE_BADGE: Record<string, 'info' | 'neutral' | 'danger'> = {
     vendor: 'info',
-    customer: 'default',
+    customer: 'neutral',
     admin: 'danger',
 };
 
@@ -220,7 +220,7 @@ export default function AdminUsersClient({ initialActivity, engagement, activeUs
                                         <span className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">
                                             {log.user_name || log.user_email || log.user_id?.substring(0, 8)}
                                         </span>
-                                        <AdminBadge variant={ROLE_BADGE[log.user_role] || 'default'}>
+                                        <AdminBadge variant={ROLE_BADGE[log.user_role] || 'neutral'}>
                                             {log.user_role}
                                         </AdminBadge>
                                     </div>
@@ -369,7 +369,7 @@ export default function AdminUsersClient({ initialActivity, engagement, activeUs
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <AdminBadge variant={ROLE_BADGE[user.role] || 'default'}>
+                                                    <AdminBadge variant={ROLE_BADGE[user.role] || 'neutral'}>
                                                         {user.role}
                                                     </AdminBadge>
                                                 </td>
