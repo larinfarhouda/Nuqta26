@@ -44,16 +44,25 @@ export class AdminProspectRepository extends BaseRepository {
 
         // Get event counts + interest counts for each prospect
         const prospectIds = (data || []).map(p => p.id);
-        const { data: prospectEvents } = await this.client
-            .from('events')
-            .select('prospect_vendor_id, id')
-            .in('prospect_vendor_id', prospectIds.length > 0 ? prospectIds : ['__none__']);
 
-        const eventIds = (prospectEvents || []).map(e => e.id);
-        const { data: interests } = await this.client
-            .from('event_interests')
-            .select('event_id')
-            .in('event_id', eventIds.length > 0 ? eventIds : ['__none__']);
+        let prospectEvents: { prospect_vendor_id: string | null; id: string }[] = [];
+        if (prospectIds.length > 0) {
+            const { data: evData } = await this.client
+                .from('events')
+                .select('prospect_vendor_id, id')
+                .in('prospect_vendor_id', prospectIds);
+            prospectEvents = evData || [];
+        }
+
+        const eventIds = prospectEvents.map(e => e.id);
+        let interests: { event_id: string }[] = [];
+        if (eventIds.length > 0) {
+            const { data: intData } = await this.client
+                .from('event_interests')
+                .select('event_id')
+                .in('event_id', eventIds);
+            interests = intData || [];
+        }
 
         const eventCountMap: Record<string, number> = {};
         const eventToProspect: Record<string, string> = {};
