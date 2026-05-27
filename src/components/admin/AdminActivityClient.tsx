@@ -1,21 +1,24 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Activity, User, Calendar, Store, ShoppingCart, Flag, UserPlus, Star } from 'lucide-react';
+import { Activity, User, Calendar, Store, ShoppingCart, Flag, UserPlus, Star, Loader2 } from 'lucide-react';
 import { getAdminActivity } from '@/actions/admin';
 import type { ActivityLog, PaginatedResult } from '@/types/admin.types';
-import { colors, cardShell, font } from './admin-tokens';
 
-const ACTION_MAP: Record<string, { label: string; icon: any; color: string }> = {
-    vendor_approved: { label: 'Vendor Approved', icon: Store, color: '#10b981' },
-    vendor_suspended: { label: 'Vendor Suspended', icon: Store, color: '#ef4444' },
-    payment_confirmed: { label: 'Payment Confirmed', icon: ShoppingCart, color: '#10b981' },
-    payment_rejected: { label: 'Payment Rejected', icon: ShoppingCart, color: '#ef4444' },
-    review_deleted: { label: 'Review Deleted', icon: Flag, color: '#f59e0b' },
-    prospect_created: { label: 'Prospect Created', icon: UserPlus, color: '#8b5cf6' },
-    prospect_contacted: { label: 'Prospect Contacted', icon: UserPlus, color: '#06b6d4' },
-    prospect_converted: { label: 'Prospect Converted', icon: UserPlus, color: '#10b981' },
-    event_featured: { label: 'Event Featured', icon: Star, color: '#f59e0b' },
+// UI Components
+import { AdminCard } from './ui/AdminCard';
+import { AdminButton } from './ui/AdminButton';
+
+const ACTION_MAP: Record<string, { label: string; icon: React.ElementType; colorClass: string; bgClass: string }> = {
+    vendor_approved: { label: 'Vendor Approved', icon: Store, colorClass: 'text-emerald-500', bgClass: 'bg-emerald-50 dark:bg-emerald-500/10' },
+    vendor_suspended: { label: 'Vendor Suspended', icon: Store, colorClass: 'text-red-500', bgClass: 'bg-red-50 dark:bg-red-500/10' },
+    payment_confirmed: { label: 'Payment Confirmed', icon: ShoppingCart, colorClass: 'text-emerald-500', bgClass: 'bg-emerald-50 dark:bg-emerald-500/10' },
+    payment_rejected: { label: 'Payment Rejected', icon: ShoppingCart, colorClass: 'text-red-500', bgClass: 'bg-red-50 dark:bg-red-500/10' },
+    review_deleted: { label: 'Review Deleted', icon: Flag, colorClass: 'text-amber-500', bgClass: 'bg-amber-50 dark:bg-amber-500/10' },
+    prospect_created: { label: 'Prospect Created', icon: UserPlus, colorClass: 'text-purple-500', bgClass: 'bg-purple-50 dark:bg-purple-500/10' },
+    prospect_contacted: { label: 'Prospect Contacted', icon: UserPlus, colorClass: 'text-cyan-500', bgClass: 'bg-cyan-50 dark:bg-cyan-500/10' },
+    prospect_converted: { label: 'Prospect Converted', icon: UserPlus, colorClass: 'text-emerald-500', bgClass: 'bg-emerald-50 dark:bg-emerald-500/10' },
+    event_featured: { label: 'Event Featured', icon: Star, colorClass: 'text-amber-500', bgClass: 'bg-amber-50 dark:bg-amber-500/10' },
 };
 
 function formatTime(dateStr: string) {
@@ -49,60 +52,58 @@ export default function AdminActivityClient({
     const logs = data?.data || [];
 
     return (
-        <div style={{ maxWidth: '1000px' }}>
-            <div style={{ marginBottom: '24px' }}>
-                <h1 style={font.pageTitle}>Activity Log</h1>
-                <p style={font.pageSubtitle}>
+        <div className="max-w-[1000px] pb-12">
+            <div className="mb-8">
+                <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
+                    <div className="p-2 bg-[#2CA58D]/10 text-[#2CA58D] rounded-xl">
+                        <Activity size={28} />
+                    </div>
+                    Activity Log
+                </h1>
+                <p className="text-zinc-500 dark:text-zinc-400 mt-2 font-medium">
                     Real-time audit trail of admin actions
                 </p>
             </div>
 
-            <div style={cardShell}>
+            <AdminCard noPadding className="overflow-hidden">
                 {logs.length === 0 ? (
-                    <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                        <Activity size={40} style={{ color: '#e2e8f0', margin: '0 auto 12px' }} />
-                        <div style={{ color: '#94a3b8', fontSize: '14px' }}>No activity logged yet.</div>
+                    <div className="py-16 text-center flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500">
+                        <Activity size={48} className="mb-4 opacity-20" />
+                        <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-1">No activity logged yet.</p>
+                        <p className="text-sm text-zinc-500">Actions will appear here as they occur.</p>
                     </div>
                 ) : (
-                    <div style={{ padding: '8px 0' }}>
-                        {logs.map((log, i) => {
-                            const info = ACTION_MAP[log.action] || { label: log.action, icon: Activity, color: '#94a3b8' };
+                    <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                        {logs.map((log) => {
+                            const info = ACTION_MAP[log.action] || { label: log.action, icon: Activity, colorClass: 'text-zinc-400', bgClass: 'bg-zinc-100 dark:bg-zinc-800' };
                             const Icon = info.icon;
 
                             return (
                                 <div
                                     key={log.id}
-                                    style={{
-                                        display: 'flex', alignItems: 'flex-start', gap: '14px',
-                                        padding: '14px 24px',
-                                        borderBottom: i < logs.length - 1 ? '1px solid #f8fafc' : 'none',
-                                    }}
+                                    className="p-5 flex items-start gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group"
                                 >
-                                    <div
-                                        style={{
-                                            width: '36px', height: '36px', borderRadius: '10px',
-                                            background: `${info.color}12`, display: 'flex',
-                                            alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                        }}
-                                    >
-                                        <Icon size={16} style={{ color: info.color }} />
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${info.bgClass} ${info.colorClass} shadow-sm group-hover:scale-105 transition-transform`}>
+                                        <Icon size={18} />
                                     </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3 flex-wrap mb-1">
+                                            <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
                                                 {info.label}
                                             </span>
-                                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider shrink-0">
                                                 {formatTime(log.created_at || new Date().toISOString())}
                                             </span>
                                         </div>
-                                        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
-                                            by {log.user_name || log.user_email || 'System'}
+                                        <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                            by <span className="font-bold text-zinc-700 dark:text-zinc-300">{log.user_name || log.user_email || 'System'}</span>
                                             {log.entity_type && (
-                                                <span style={{ color: '#94a3b8' }}>
-                                                    {' '} • {log.entity_type}
+                                                <span className="ml-2 pl-2 border-l border-zinc-200 dark:border-zinc-700 text-zinc-400">
+                                                    {log.entity_type}
                                                     {log.metadata && Object.keys(log.metadata).length > 0 && (
-                                                        <span> • {JSON.stringify(log.metadata)}</span>
+                                                        <span className="ml-1 text-zinc-300 dark:text-zinc-600 font-mono text-[10px]">
+                                                            {JSON.stringify(log.metadata)}
+                                                        </span>
                                                     )}
                                                 </span>
                                             )}
@@ -113,23 +114,20 @@ export default function AdminActivityClient({
                         })}
                     </div>
                 )}
-            </div>
+            </AdminCard>
 
             {/* Load More */}
             {data && data.totalPages > page && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                    <button
+                <div className="flex justify-center mt-8">
+                    <AdminButton
+                        variant="outline"
                         onClick={() => { const np = page + 1; setPage(np); reload(np); }}
                         disabled={isPending}
-                        style={{
-                            padding: '10px 24px', borderRadius: '10px',
-                            background: '#f1f5f9', border: '1px solid #e2e8f0',
-                            color: '#475569', fontSize: '14px', fontWeight: 600,
-                            cursor: 'pointer',
-                        }}
+                        isLoading={isPending}
+                        className="min-w-[120px]"
                     >
-                        {isPending ? 'Loading…' : 'Load More'}
-                    </button>
+                        Load More
+                    </AdminButton>
                 </div>
             )}
         </div>

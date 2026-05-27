@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import {
     Crown, Check, Loader2, Hash, DollarSign, Star,
-    Sparkles, TrendingUp, Infinity as InfinityIcon,
-    Plus, Trash2, GripVertical,
+    TrendingUp, Infinity as InfinityIcon,
+    Plus, Trash2,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { updateSubscriptionTier } from '@/actions/admin/subscription-tiers';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// UI Components
+import { AdminCard } from './ui/AdminCard';
+import { AdminButton } from './ui/AdminButton';
+import { AdminInput } from './ui/AdminInput';
+import { AdminBadge } from './ui/AdminBadge';
 
 interface TierData {
     id: string;
@@ -22,61 +26,36 @@ interface TierData {
     is_active: boolean;
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────────
-
-const card = {
-    background: '#fff',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-    overflow: 'hidden' as const,
-};
-
-const inputStyle = {
-    padding: '10px 14px',
-    borderRadius: '10px',
-    border: '1px solid #e2e8f0',
-    fontSize: '14px',
-    outline: 'none',
-    width: '100%',
-};
-
-const tierColors: Record<string, { gradient: string; accent: string; text: string; bg: string }> = {
+const tierColors: Record<string, { gradient: string; accent: string; bg: string }> = {
     free: {
-        gradient: 'linear-gradient(135deg, #94a3b8, #64748b)',
-        accent: '#64748b',
-        text: '#475569',
-        bg: '#f1f5f9',
+        gradient: 'from-zinc-500 to-zinc-600',
+        accent: 'text-zinc-600 dark:text-zinc-400',
+        bg: 'bg-zinc-100 dark:bg-zinc-800/50',
     },
     starter: {
-        gradient: 'linear-gradient(135deg, #94a3b8, #64748b)',
-        accent: '#64748b',
-        text: '#475569',
-        bg: '#f1f5f9',
+        gradient: 'from-zinc-500 to-zinc-600',
+        accent: 'text-zinc-600 dark:text-zinc-400',
+        bg: 'bg-zinc-100 dark:bg-zinc-800/50',
     },
     pro: {
-        gradient: 'linear-gradient(135deg, #2CA58D, #0d9373)',
-        accent: '#2CA58D',
-        text: '#065f46',
-        bg: '#ecfdf5',
+        gradient: 'from-[#2CA58D] to-[#1e7866]',
+        accent: 'text-[#2CA58D]',
+        bg: 'bg-[#2CA58D]/10',
     },
     growth: {
-        gradient: 'linear-gradient(135deg, #2CA58D, #0d9373)',
-        accent: '#2CA58D',
-        text: '#065f46',
-        bg: '#ecfdf5',
+        gradient: 'from-[#2CA58D] to-[#1e7866]',
+        accent: 'text-[#2CA58D]',
+        bg: 'bg-[#2CA58D]/10',
     },
     business: {
-        gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
-        accent: '#8b5cf6',
-        text: '#5b21b6',
-        bg: '#f5f3ff',
+        gradient: 'from-amber-500 to-amber-600',
+        accent: 'text-amber-500',
+        bg: 'bg-amber-500/10',
     },
     professional: {
-        gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
-        accent: '#8b5cf6',
-        text: '#5b21b6',
-        bg: '#f5f3ff',
+        gradient: 'from-amber-500 to-amber-600',
+        accent: 'text-amber-500',
+        bg: 'bg-amber-500/10',
     },
 };
 
@@ -89,8 +68,6 @@ const tierIcons: Record<string, React.ElementType> = {
     professional: Crown,
 };
 
-// ─── Main Component ─────────────────────────────────────────────────────────
-
 export default function AdminSubscriptionTiersClient({
     initialTiers,
 }: {
@@ -99,25 +76,19 @@ export default function AdminSubscriptionTiersClient({
     const [tiers, setTiers] = useState<TierData[]>(initialTiers);
 
     return (
-        <div style={{ maxWidth: '1200px' }}>
+        <div className="max-w-[1200px] pb-12">
             {/* Header */}
-            <div style={{ marginBottom: '28px' }}>
-                <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0f172a' }}>
+            <div className="mb-8">
+                <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                     Subscription Tiers
                 </h1>
-                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                <p className="text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
                     Control event limits, pricing, and features for each subscription tier
                 </p>
             </div>
 
             {/* Tier Cards Grid */}
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-                    gap: '20px',
-                }}
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tiers.map((tier) => (
                     <TierCard
                         key={tier.id}
@@ -133,8 +104,6 @@ export default function AdminSubscriptionTiersClient({
         </div>
     );
 }
-
-// ─── Tier Card ──────────────────────────────────────────────────────────────
 
 function TierCard({
     tier,
@@ -198,128 +167,58 @@ function TierCard({
     };
 
     return (
-        <div style={card}>
+        <AdminCard noPadding className="flex flex-col h-full border-0">
             {/* Tier Header */}
-            <div
-                style={{
-                    background: colors.gradient,
-                    padding: '20px 24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                }}
-            >
-                <div
-                    style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <Icon size={22} style={{ color: '#fff' }} />
+            <div className={`bg-gradient-to-br ${colors.gradient} p-6 flex items-center gap-4 relative overflow-hidden`}>
+                <div className="absolute top-0 right-0 p-6 opacity-10">
+                    <Icon size={120} className="translate-x-4 -translate-y-4" />
                 </div>
-                <div style={{ flex: 1 }}>
-                    <div
-                        style={{
-                            color: '#fff',
-                            fontSize: '18px',
-                            fontWeight: 700,
-                            letterSpacing: '-0.01em',
-                        }}
-                    >
+                
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 z-10 border border-white/10 shadow-inner">
+                    <Icon size={24} className="text-white" />
+                </div>
+                <div className="flex-1 z-10">
+                    <div className="text-xl font-bold text-white tracking-tight">
                         {tier.name}
                     </div>
-                    <div
-                        style={{
-                            color: 'rgba(255,255,255,0.7)',
-                            fontSize: '12px',
-                            fontWeight: 500,
-                        }}
-                    >
+                    <div className="text-white/70 text-xs font-medium uppercase tracking-wider mt-0.5">
                         ID: {tier.id}
                     </div>
                 </div>
                 {hasChanges && (
-                    <div
-                        style={{
-                            background: 'rgba(255,255,255,0.25)',
-                            color: '#fff',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            padding: '4px 10px',
-                            borderRadius: '6px',
-                        }}
-                    >
+                    <div className="z-10 bg-white/20 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-white/10 shadow-sm animate-in fade-in zoom-in-95">
                         Unsaved
                     </div>
                 )}
             </div>
 
             {/* Form Body */}
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="p-6 flex flex-col gap-6 flex-1 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl">
                 {/* Name */}
                 <div>
-                    <label
-                        style={{
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: '#64748b',
-                            marginBottom: '6px',
-                            display: 'block',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                        }}
-                    >
+                    <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
                         Display Name
                     </label>
-                    <input
-                        style={inputStyle}
+                    <AdminInput
                         value={form.name}
                         onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     />
                 </div>
 
                 {/* Events & Pricing Row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <div className="grid grid-cols-2 gap-4">
                     {/* Max Events */}
                     <div>
-                        <label
-                            style={{
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                color: '#64748b',
-                                marginBottom: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                            }}
-                        >
-                            <Hash size={12} /> Events/Month
+                        <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                            <Hash size={14} /> Events/Month
                         </label>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <div className="flex gap-2 items-center">
                             {isUnlimited ? (
-                                <div
-                                    style={{
-                                        ...inputStyle,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        color: colors.accent,
-                                        fontWeight: 700,
-                                        background: colors.bg,
-                                    }}
-                                >
-                                    <InfinityIcon size={16} /> Unlimited
+                                <div className={`h-11 px-4 flex items-center gap-2 rounded-2xl border-2 border-transparent ${colors.bg} ${colors.accent} font-bold text-sm w-full`}>
+                                    <InfinityIcon size={18} /> Unlimited
                                 </div>
                             ) : (
-                                <input
-                                    style={{ ...inputStyle, fontWeight: 700, fontSize: '16px' }}
+                                <AdminInput
                                     type="number"
                                     min={1}
                                     value={form.max_active_events}
@@ -329,6 +228,7 @@ function TierCard({
                                             max_active_events: parseInt(e.target.value) || 1,
                                         }))
                                     }
+                                    className="font-bold"
                                 />
                             )}
                         </div>
@@ -339,16 +239,7 @@ function TierCard({
                                     max_active_events: p.max_active_events === -1 ? 1 : -1,
                                 }))
                             }
-                            style={{
-                                marginTop: '6px',
-                                fontSize: '11px',
-                                color: colors.accent,
-                                fontWeight: 600,
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: 0,
-                            }}
+                            className={`mt-2 text-xs font-bold ${colors.accent} hover:underline focus:outline-none`}
                         >
                             {isUnlimited ? 'Set limit' : 'Set unlimited'}
                         </button>
@@ -356,204 +247,116 @@ function TierCard({
 
                     {/* Regular Price */}
                     <div>
-                        <label
-                            style={{
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                color: '#64748b',
-                                marginBottom: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                            }}
-                        >
-                            <DollarSign size={12} /> Price
+                        <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                            <DollarSign size={14} /> Price
                         </label>
-                        <input
-                            style={{ ...inputStyle, fontWeight: 700, fontSize: '16px' }}
-                            type="number"
-                            min={0}
-                            value={form.regular_price}
-                            onChange={(e) =>
-                                setForm((p) => ({
-                                    ...p,
-                                    regular_price: parseFloat(e.target.value) || 0,
-                                }))
-                            }
-                        />
-                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                            SAR / month
+                        <div className="relative">
+                            <AdminInput
+                                type="number"
+                                min={0}
+                                value={form.regular_price}
+                                onChange={(e) =>
+                                    setForm((p) => ({
+                                        ...p,
+                                        regular_price: parseFloat(e.target.value) || 0,
+                                    }))
+                                }
+                                className="font-bold pr-12"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">
+                                SAR
+                            </div>
+                        </div>
+                        <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-2">
+                            per month
                         </div>
                     </div>
-
-
                 </div>
 
                 {/* Badge Selector */}
                 <div>
-                    <label
-                        style={{
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: '#64748b',
-                            marginBottom: '6px',
-                            display: 'block',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                        }}
-                    >
+                    <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
                         Badge Type
                     </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="flex flex-wrap gap-2">
                         {[
-                            { value: '', label: 'None', color: '#94a3b8' },
-                            { value: 'verified', label: '✓ Verified', color: '#2CA58D' },
-                            { value: 'premium', label: '⭐ Premium', color: '#8b5cf6' },
-                        ].map((opt) => (
-                            <button
-                                key={opt.value}
-                                onClick={() => setForm((p) => ({ ...p, badge: opt.value }))}
-                                style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${form.badge === opt.value ? opt.color : '#e2e8f0'}`,
-                                    background: form.badge === opt.value ? `${opt.color}10` : '#fff',
-                                    color: form.badge === opt.value ? opt.color : '#64748b',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s',
-                                }}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
+                            { value: '', label: 'None', colorClass: 'text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300', activeClass: 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800' },
+                            { value: 'verified', label: '✓ Verified', colorClass: 'text-emerald-600 border-zinc-200 dark:border-zinc-700 hover:border-emerald-200', activeClass: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' },
+                            { value: 'premium', label: '⭐ Premium', colorClass: 'text-amber-500 border-zinc-200 dark:border-zinc-700 hover:border-amber-200', activeClass: 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-600' },
+                        ].map((opt) => {
+                            const isActive = form.badge === opt.value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => setForm((p) => ({ ...p, badge: opt.value }))}
+                                    className={`px-3 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${
+                                        isActive ? opt.activeClass : opt.colorClass
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Features List */}
-                <div>
-                    <label
-                        style={{
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: '#64748b',
-                            marginBottom: '8px',
-                            display: 'block',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                        }}
-                    >
+                <div className="flex-1 flex flex-col">
+                    <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-3 uppercase tracking-wider">
                         Features ({form.features.length})
                     </label>
 
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px',
-                            maxHeight: '200px',
-                            overflowY: 'auto',
-                            marginBottom: '8px',
-                        }}
-                    >
+                    <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto mb-4 pr-2 no-scrollbar">
                         {form.features.map((feature, idx) => (
                             <div
                                 key={idx}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '8px 12px',
-                                    background: '#f8fafc',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
-                                    color: '#334155',
-                                }}
+                                className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-100 dark:border-zinc-800 group"
                             >
-                                <GripVertical
-                                    size={14}
-                                    style={{ color: '#cbd5e1', flexShrink: 0 }}
-                                />
-                                <span style={{ flex: 1 }}>{feature}</span>
+                                <div className={`w-1.5 h-1.5 rounded-full ${colors.bg.replace('bg-', 'bg-').replace('/10', '').replace('/50', '')}`} />
+                                <span className="flex-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">{feature}</span>
                                 <button
                                     onClick={() => removeFeature(idx)}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        color: '#ef4444',
-                                        padding: '2px',
-                                        flexShrink: 0,
-                                    }}
+                                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                                    aria-label="Remove feature"
                                 >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                 </button>
                             </div>
                         ))}
                     </div>
 
                     {/* Add feature */}
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <input
-                            style={{ ...inputStyle, flex: 1, fontSize: '13px' }}
-                            placeholder="Add a feature..."
+                    <div className="flex gap-2 mt-auto">
+                        <AdminInput
+                            placeholder="Add a new feature..."
                             value={newFeature}
                             onChange={(e) => setNewFeature(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
                         />
-                        <button
+                        <AdminButton
+                            variant="outline"
                             onClick={addFeature}
-                            style={{
-                                padding: '8px 14px',
-                                borderRadius: '10px',
-                                border: 'none',
-                                background: colors.bg,
-                                color: colors.accent,
-                                fontWeight: 600,
-                                fontSize: '13px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                            }}
+                            disabled={!newFeature.trim()}
                         >
-                            <Plus size={14} /> Add
-                        </button>
+                            <Plus size={18} />
+                        </AdminButton>
                     </div>
                 </div>
 
                 {/* Save Button */}
-                <button
+                <AdminButton
                     onClick={handleSave}
                     disabled={saving || !hasChanges}
-                    style={{
-                        padding: '12px 24px',
-                        borderRadius: '12px',
-                        border: 'none',
-                        background: hasChanges ? colors.gradient : '#e2e8f0',
-                        color: hasChanges ? '#fff' : '#94a3b8',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        cursor: hasChanges ? 'pointer' : 'default',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        transition: 'all 0.2s',
-                        opacity: saving ? 0.7 : 1,
-                    }}
+                    isLoading={saving}
+                    className={`w-full mt-2 shadow-lg transition-all ${
+                        hasChanges 
+                            ? `bg-gradient-to-r ${colors.gradient} hover:shadow-xl text-white border-0` 
+                            : 'opacity-50 grayscale'
+                    }`}
                 >
-                    {saving ? (
-                        <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                        <Check size={16} />
-                    )}
                     {saving ? 'Saving...' : 'Save Changes'}
-                </button>
+                </AdminButton>
             </div>
-        </div>
+        </AdminCard>
     );
 }

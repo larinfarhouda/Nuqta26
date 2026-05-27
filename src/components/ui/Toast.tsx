@@ -55,6 +55,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {children}
             {/* Toast Container */}
             <div
+                role="region"
+                aria-live="assertive"
+                aria-label="Notifications"
                 style={{
                     position: 'fixed',
                     top: '20px',
@@ -72,6 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     return (
                         <div
                             key={t.id}
+                            role="alert"
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -87,18 +91,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                                 maxWidth: '420px',
                             }}
                         >
-                            <Icon size={18} style={{ color: c.icon, flexShrink: 0 }} />
+                            <Icon size={18} style={{ color: c.icon, flexShrink: 0 }} aria-hidden="true" />
                             <span style={{ fontSize: '14px', fontWeight: 500, color: c.text, flex: 1 }}>
                                 {t.message}
                             </span>
                             <button
                                 onClick={() => removeToast(t.id)}
+                                aria-label="Close notification"
                                 style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
                                     padding: '2px', flexShrink: 0, color: c.text, opacity: 0.6,
                                 }}
                             >
-                                <X size={14} />
+                                <X size={14} aria-hidden="true" />
                             </button>
                         </div>
                     );

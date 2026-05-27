@@ -56,6 +56,14 @@ export default function AdminVendorDetailModal({
         loadVendor();
     }, [vendorId]);
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+
     const loadVendor = async () => {
         setLoading(true);
         const data = await getVendorFullDetails(vendorId);
@@ -142,7 +150,13 @@ export default function AdminVendorDetailModal({
 
     return (
         <div style={overlayStyle}>
-            <div style={panelStyle} onClick={e => e.stopPropagation()}>
+            <div 
+                style={panelStyle} 
+                onClick={e => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="vendor-modal-title"
+            >
                 {/* Header */}
                 <div style={{
                     padding: '20px 24px', borderBottom: `1px solid ${colors.border}`,
@@ -164,7 +178,7 @@ export default function AdminVendorDetailModal({
                             )}
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '18px', fontWeight: 700, color: colors.text.primary, margin: 0 }}>
+                            <h2 id="vendor-modal-title" style={{ fontSize: '18px', fontWeight: 700, color: colors.text.primary, margin: 0 }}>
                                 {vendor.business_name}
                             </h2>
                             <div style={{ fontSize: '13px', color: colors.text.muted, display: 'flex', gap: '12px', marginTop: '4px' }}>

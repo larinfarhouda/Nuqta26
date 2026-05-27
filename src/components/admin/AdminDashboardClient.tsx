@@ -8,7 +8,6 @@ import {
     TrendingUp,
     TrendingDown,
     CreditCard,
-    Star,
     ArrowUpRight,
 } from 'lucide-react';
 import {
@@ -22,10 +21,8 @@ import {
     BarChart,
     Bar,
     Cell,
-    PieChart,
-    Pie,
 } from 'recharts';
-import { colors, cardStyle, font, iconBox } from './admin-tokens';
+import { AdminCard } from './ui/AdminCard';
 
 import type {
     PlatformStats,
@@ -43,7 +40,7 @@ interface DashboardData {
     eventStatus: EventStatusCounts;
 }
 
-const COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'];
+const COLORS = ['#2CA58D', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'];
 
 function StatCard({
     title,
@@ -62,128 +59,98 @@ function StatCard({
 }) {
     const isPositive = (growth ?? 0) >= 0;
     return (
-        <div style={cardStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <AdminCard hoverLift noPadding={false}>
+            <div className="flex justify-between items-start">
                 <div>
-                    <div style={{ color: colors.text.muted, fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>
+                    <div className="text-zinc-500 dark:text-zinc-400 text-sm font-medium mb-2">
                         {title}
                     </div>
-                    <div style={{ fontSize: '28px', fontWeight: 700, color: colors.text.primary, letterSpacing: '-0.02em' }}>
+                    <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                         {prefix}{typeof value === 'number' ? value.toLocaleString() : value}
                     </div>
                 </div>
-                <div style={iconBox(color)}>
-                    <Icon size={22} style={{ color }} />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${color}15`, color }}>
+                    <Icon size={24} />
                 </div>
             </div>
             {growth !== undefined && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px', fontSize: '13px' }}>
+                <div className="flex items-center gap-1.5 mt-4 text-sm">
                     {isPositive ? (
-                        <TrendingUp size={14} style={{ color: colors.success.accent }} />
+                        <TrendingUp size={16} className="text-emerald-500" />
                     ) : (
-                        <TrendingDown size={14} style={{ color: colors.danger.accent }} />
+                        <TrendingDown size={16} className="text-red-500" />
                     )}
-                    <span style={{ color: isPositive ? colors.success.accent : colors.danger.accent, fontWeight: 600 }}>
+                    <span className={`font-semibold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
                         {isPositive ? '+' : ''}{growth}%
                     </span>
-                    <span style={{ color: colors.text.faint }}>vs last 30 days</span>
+                    <span className="text-zinc-400 dark:text-zinc-500">vs last 30 days</span>
                 </div>
             )}
-        </div>
+        </AdminCard>
     );
 }
 
 function SubscriptionCard({ sub }: { sub: SubscriptionRevenue }) {
     const tiers = [
-        { name: 'Free', count: sub.starterCount, color: '#94a3b8' },
-        { name: 'Pro', count: sub.growthCount, color: '#8b5cf6' },
+        { name: 'Free', count: sub.starterCount, color: '#9ca3af' }, // text-zinc-400
+        { name: 'Pro', count: sub.growthCount, color: '#2CA58D' }, // Teal
         { name: 'Business', count: sub.professionalCount, color: '#f59e0b' },
     ];
     const total = sub.totalVendors || 1;
 
     return (
-        <div
-            style={{
-                background: '#fff',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: '1px solid #e2e8f0',
-            }}
-        >
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
+        <AdminCard>
+            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-5">
                 Subscription Distribution
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="flex flex-col gap-4">
                 {tiers.map((tier) => (
                     <div key={tier.name}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '13px', color: '#475569' }}>{tier.name}</span>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>{tier.count}</span>
+                        <div className="flex justify-between mb-1.5">
+                            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">{tier.name}</span>
+                            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{tier.count}</span>
                         </div>
-                        <div
-                            style={{
-                                height: '6px',
-                                borderRadius: '3px',
-                                background: '#f1f5f9',
-                                overflow: 'hidden',
-                            }}
-                        >
+                        <div className="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                             <div
+                                className="h-full rounded-full transition-all duration-500 ease-out"
                                 style={{
-                                    height: '100%',
                                     width: `${(tier.count / total) * 100}%`,
-                                    background: tier.color,
-                                    borderRadius: '3px',
-                                    transition: 'width 0.3s',
+                                    backgroundColor: tier.color,
                                 }}
                             />
                         </div>
                     </div>
                 ))}
             </div>
-        </div>
+        </AdminCard>
     );
 }
 
 function EventStatusCard({ eventStatus }: { eventStatus: EventStatusCounts }) {
     const items = [
-        { label: 'Published', value: eventStatus.published, color: '#10b981' },
-        { label: 'Draft', value: eventStatus.draft, color: '#f59e0b' },
-        { label: 'Cancelled', value: eventStatus.cancelled, color: '#ef4444' },
-        { label: 'Featured', value: eventStatus.featured, color: '#8b5cf6' },
+        { label: 'Published', value: eventStatus.published, colorClass: 'text-emerald-500', bgClass: 'bg-emerald-500/10 border-emerald-500/20' },
+        { label: 'Draft', value: eventStatus.draft, colorClass: 'text-amber-500', bgClass: 'bg-amber-500/10 border-amber-500/20' },
+        { label: 'Cancelled', value: eventStatus.cancelled, colorClass: 'text-red-500', bgClass: 'bg-red-500/10 border-red-500/20' },
+        { label: 'Featured', value: eventStatus.featured, colorClass: 'text-[#2CA58D]', bgClass: 'bg-[#2CA58D]/10 border-[#2CA58D]/20' },
     ];
 
     return (
-        <div
-            style={{
-                background: '#fff',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: '1px solid #e2e8f0',
-            }}
-        >
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
+        <AdminCard>
+            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-5">
                 Event Status
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="grid grid-cols-2 gap-3">
                 {items.map((item) => (
                     <div
                         key={item.label}
-                        style={{
-                            padding: '12px',
-                            borderRadius: '10px',
-                            background: `${item.color}08`,
-                            border: `1px solid ${item.color}20`,
-                        }}
+                        className={`p-3 rounded-xl border ${item.bgClass}`}
                     >
-                        <div style={{ fontSize: '22px', fontWeight: 700, color: item.color }}>{item.value}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>{item.label}</div>
+                        <div className={`text-2xl font-bold ${item.colorClass}`}>{item.value}</div>
+                        <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-1">{item.label}</div>
                     </div>
                 ))}
             </div>
-        </div>
+        </AdminCard>
     );
 }
 
@@ -191,25 +158,18 @@ export default function AdminDashboardClient({ data }: { data: DashboardData }) 
     const { stats, subscription, trend, categories, eventStatus } = data;
 
     return (
-        <div style={{ maxWidth: '1400px' }}>
+        <div className="max-w-[1400px] w-full pb-12">
             {/* Header */}
-            <div style={{ marginBottom: '28px' }}>
-                <h1 style={font.pageTitle}>Dashboard</h1>
-                <p style={font.pageSubtitle}>
+            <div className="mb-8">
+                <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Dashboard</h1>
+                <p className="text-zinc-500 dark:text-zinc-400 mt-1">
                     Platform overview and key metrics
                 </p>
             </div>
 
             {/* Stat Cards */}
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                    gap: '16px',
-                    marginBottom: '24px',
-                }}
-            >
-                <StatCard title="Total Users" value={stats.totalUsers} growth={stats.userGrowth} icon={Users} color="#8b5cf6" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+                <StatCard title="Total Users" value={stats.totalUsers} growth={stats.userGrowth} icon={Users} color="#2CA58D" />
                 <StatCard title="Vendors" value={stats.totalVendors} growth={stats.vendorGrowth} icon={Store} color="#06b6d4" />
                 <StatCard title="Bookings" value={stats.totalBookings} growth={stats.bookingGrowth} icon={ShoppingCart} color="#10b981" />
                 <StatCard title="Total Events" value={stats.totalEvents} icon={Calendar} color="#f59e0b" />
@@ -218,100 +178,110 @@ export default function AdminDashboardClient({ data }: { data: DashboardData }) 
             </div>
 
             {/* Charts Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
                 {/* 30-day trend */}
-                <div
-                    style={{
-                        background: '#fff',
-                        borderRadius: '16px',
-                        padding: '24px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                        border: '1px solid #e2e8f0',
-                    }}
-                >
-                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '20px' }}>
+                <AdminCard className="lg:col-span-2 flex flex-col">
+                    <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
                         Bookings — Last 30 Days
                     </h3>
-                    <ResponsiveContainer width="100%" height={260}>
-                        <AreaChart data={trend} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                            <defs>
-                                <linearGradient id="bookingGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.2} />
-                                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis
-                                dataKey="date"
-                                tick={{ fontSize: 11, fill: '#94a3b8' }}
-                                tickFormatter={(d) => new Date(d).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
-                                interval="preserveStartEnd"
-                            />
-                            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <Tooltip
-                                contentStyle={{
-                                    borderRadius: '10px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                    fontSize: '13px',
-                                }}
-                                labelFormatter={(d) => new Date(d).toLocaleDateString('en', { month: 'long', day: 'numeric' })}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="bookings"
-                                stroke="#8b5cf6"
-                                strokeWidth={2}
-                                fill="url(#bookingGradient)"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
+                    <div className="flex-1 min-h-[260px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={trend} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                <defs>
+                                    <linearGradient id="bookingGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#2CA58D" stopOpacity={0.3} />
+                                        <stop offset="100%" stopColor="#2CA58D" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    tick={{ fontSize: 12, fill: '#a1a1aa' }}
+                                    tickFormatter={(d) => new Date(d).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                                    interval="preserveStartEnd"
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis 
+                                    tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        borderRadius: '12px',
+                                        border: '1px solid #e4e4e7',
+                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                        fontSize: '13px',
+                                        fontWeight: 500
+                                    }}
+                                    labelFormatter={(d) => new Date(d).toLocaleDateString('en', { month: 'long', day: 'numeric' })}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="bookings"
+                                    stroke="#2CA58D"
+                                    strokeWidth={3}
+                                    fill="url(#bookingGradient)"
+                                    animationDuration={1500}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </AdminCard>
 
                 {/* Subscription card */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="flex flex-col gap-5">
                     <SubscriptionCard sub={subscription} />
                     <EventStatusCard eventStatus={eventStatus} />
                 </div>
             </div>
 
             {/* Top Categories */}
-            <div
-                style={{
-                    background: '#fff',
-                    borderRadius: '16px',
-                    padding: '24px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                    border: '1px solid #e2e8f0',
-                }}
-            >
-                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', marginBottom: '20px' }}>
+            <AdminCard>
+                <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
                     Top Event Categories
                 </h3>
                 {categories.length === 0 ? (
-                    <p style={{ color: '#94a3b8', fontSize: '14px' }}>No event data yet.</p>
+                    <div className="flex flex-col items-center justify-center py-10 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 border-dashed">
+                        <p className="text-zinc-500 dark:text-zinc-400 font-medium">No event data yet.</p>
+                    </div>
                 ) : (
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={categories} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
-                            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <Tooltip
-                                contentStyle={{
-                                    borderRadius: '10px',
-                                    border: '1px solid #e2e8f0',
-                                    fontSize: '13px',
-                                }}
-                            />
-                            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                                {categories.map((_, index) => (
-                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div className="h-[240px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={categories} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
+                                <XAxis 
+                                    dataKey="name" 
+                                    tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis 
+                                    tick={{ fontSize: 12, fill: '#a1a1aa' }} 
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                                    contentStyle={{
+                                        borderRadius: '12px',
+                                        border: '1px solid #e4e4e7',
+                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                        fontSize: '13px',
+                                        fontWeight: 500
+                                    }}
+                                />
+                                <Bar dataKey="value" radius={[8, 8, 0, 0]} animationDuration={1500}>
+                                    {categories.map((_, index) => (
+                                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 )}
-            </div>
+            </AdminCard>
         </div>
     );
 }

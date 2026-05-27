@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
     MessageCircle, Mail, Upload, TrendingUp, Clock, Target, Heart, AlertCircle,
@@ -97,6 +97,22 @@ export default function AdminProspectsClient({
             setData(result);
         });
     };
+
+    // Global escape handler for modals
+    useEffect(() => {
+        if (!showCreate && !editingProspect && !deletingProspect && !showEvent && !showInterests) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowCreate(false);
+                setEditingProspect(null);
+                setDeletingProspect(null);
+                setShowEvent(null);
+                setShowInterests(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showCreate, editingProspect, deletingProspect, showEvent, showInterests]);
 
     const handleScoutInstagram = async (instagramHandle: string, isEdit: boolean) => {
         const handle = instagramHandle.replace(/^@/, '').trim();
@@ -369,7 +385,7 @@ export default function AdminProspectsClient({
                     <span style={{ color: bulkResult.failed > 0 ? '#854d0e' : '#166534' }}>
                         Imported {bulkResult.created} prospect{bulkResult.created !== 1 ? 's' : ''}{bulkResult.failed > 0 ? `, ${bulkResult.failed} failed` : ''}.
                     </span>
-                    <button onClick={() => setBulkResult(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px' }}>✕</button>
+                    <button aria-label="Dismiss message" onClick={() => setBulkResult(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px' }}>✕</button>
                 </div>
             )}
 
