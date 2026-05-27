@@ -37,9 +37,9 @@ export default async function AdminLayout({
 
     return (
         <ToastProvider>
-            <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
+            <div className="flex min-h-screen bg-zinc-50" style={{ colorScheme: 'light' }}>
                 <AdminSidebar locale={locale} userEmail={user.email || ''} />
-                <main style={{ flex: 1, padding: '24px', overflow: 'auto', minWidth: 0 }}>
+                <main className="flex-1 p-6 overflow-auto min-w-0">
                     {children}
                 </main>
             </div>
