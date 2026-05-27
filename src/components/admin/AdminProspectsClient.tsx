@@ -4,7 +4,7 @@ import { useState, useTransition, useRef } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
     MessageCircle, Mail, Upload, TrendingUp, Clock, Target, Heart, AlertCircle,
-    Edit2, Trash2,
+    Store, Edit2, Trash2,
 } from 'lucide-react';
 import {
     getAdminProspects,
