@@ -557,48 +557,53 @@ export async function scoutInstagramProfile(handle: string) {
         const username = handle.replace(/^@/, '').trim();
         if (!username) return { error: 'Invalid handle' };
 
-        const res = await fetch(`https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`, {
+        const fallback = {
+            logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`,
+            website: `https://instagram.com/${username}`,
+            businessName: username
+        };
+
+        // Fetch the public Instagram profile page HTML (server-side, no CORS)
+        const res = await fetch(`https://www.instagram.com/${username}/`, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
-                'x-ig-app-id': '936619743392459',
-                'Accept': '*/*',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
-                'Origin': 'https://www.instagram.com',
-                'Referer': 'https://www.instagram.com/',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'same-site',
             },
-            next: { revalidate: 3600 }
+            next: { revalidate: 0 } // No caching — always fresh
         });
 
-        if (!res.ok) {
-            return {
-                logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`,
-                website: `https://instagram.com/${username}`,
-                businessName: username
-            };
+        if (!res.ok) return { success: true, ...fallback };
+
+        const html = await res.text();
+
+        // Parse og:image (profile picture)
+        const ogImageMatch = html.match(/<meta\s+(?:property|name)="og:image"\s+content="([^"]+)"/i)
+            || html.match(/content="([^"]+)"\s+(?:property|name)="og:image"/i);
+        const logoUrl = ogImageMatch?.[1] || fallback.logoUrl;
+
+        // Parse og:title or title tag (full name / business name)
+        const ogTitleMatch = html.match(/<meta\s+(?:property|name)="og:title"\s+content="([^"]+)"/i)
+            || html.match(/content="([^"]+)"\s+(?:property|name)="og:title"/i);
+        let businessName = username;
+        if (ogTitleMatch?.[1]) {
+            // og:title is usually "Full Name (@handle) • Instagram photos and videos"
+            const raw = ogTitleMatch[1];
+            const nameMatch = raw.match(/^(.+?)\s*\(@/);
+            businessName = nameMatch?.[1]?.trim() || raw.split('•')[0]?.trim() || username;
         }
 
-        const data = await res.json();
-        const user = data?.data?.user;
-
-        if (!user) {
-            return {
-                logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`,
-                website: `https://instagram.com/${username}`,
-                businessName: username
-            };
-        }
-
-        const logoUrl = user.profile_pic_url_hd || user.profile_pic_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=128`;
-        const businessName = user.full_name ? user.full_name.trim() : username;
+        // Parse og:description for extra info (bio, follower count)
+        const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]+)"/i)
+            || html.match(/content="([^"]+)"\s+(?:property|name)="og:description"/i);
+        const description = ogDescMatch?.[1] || '';
 
         return {
             success: true,
             logoUrl,
             website: `https://instagram.com/${username}`,
-            businessName
+            businessName,
+            description,
         };
     } catch (error) {
         logger.error('Failed to scout Instagram profile', { error, handle });
