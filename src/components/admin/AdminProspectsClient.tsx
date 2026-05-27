@@ -450,102 +450,111 @@ export default function AdminProspectsClient({
 
             {/* Create Prospect Modal */}
             {showCreate && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-                    onClick={() => setShowCreate(false)}
-                >
+                <div style={dialogOverlay} onClick={() => setShowCreate(false)}>
                     <div onClick={(e) => e.stopPropagation()}
-                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '480px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>New Prospect Vendor</h3>
+                        style={{ ...dialogPanel, maxWidth: '520px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: '#0f172a' }}>New Prospect Vendor</h3>
+                        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Add a new prospect to your sales pipeline</p>
+
+                        {/* Logo preview */}
+                        {form.logo_url && form.logo_url.startsWith('https://') && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '12px' }}>
+                                <img src={form.logo_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{form.business_name || 'Business Name'}</div>
+                                    {scoutingMessage && (
+                                        <div style={{ fontSize: '12px', color: '#6366f1', marginTop: '2px' }}>{scoutingMessage}</div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
                                 <label style={labelStyle}>Business Name *</label>
-                                <input placeholder="e.g. Café Istanbul" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Logo URL</label>
-                                <input placeholder="https://..." value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Email</label>
-                                <input placeholder="vendor@example.com" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Phone</label>
-                                <input placeholder="+90 5XX XXX XX XX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} style={inputStyle} />
+                                <input placeholder="e.g. Café Istanbul" value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
                             </div>
                             <div>
                                 <label style={labelStyle}>Instagram</label>
                                 <div style={{ display: 'flex', gap: '6px' }}>
-                                    <input placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                                    <input placeholder="@handle" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} style={{ ...inputStyle, flex: 1, textAlign: 'left', direction: 'ltr' }} />
                                     {form.instagram && (
                                         <button
                                             type="button"
                                             disabled={scouting}
                                             onClick={() => handleScoutInstagram(form.instagram, false)}
                                             style={{
-                                                padding: '8px 12px', borderRadius: '8px', border: 'none',
+                                                padding: '8px 14px', borderRadius: '8px', border: 'none',
                                                 background: scouting ? '#cbd5e1' : 'linear-gradient(135deg, #E1306C, #F77737)',
-                                                color: '#fff', fontSize: '11px', fontWeight: 700,
+                                                color: '#fff', fontSize: '12px', fontWeight: 700,
                                                 cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
                                                 display: 'flex', alignItems: 'center', gap: '4px',
                                                 opacity: scouting ? 0.7 : 1,
                                             }}
                                         >
                                             {scouting ? (
-                                                <>
-                                                    <Loader2 size={12} className="animate-spin" /> Scouting...
-                                                </>
+                                                <><Loader2 size={12} className="animate-spin" /> Scouting...</>
                                             ) : (
-                                                <>
-                                                    <ExternalLink size={12} /> Scout
-                                                </>
+                                                <><ExternalLink size={12} /> Scout</>
                                             )}
                                         </button>
                                     )}
                                 </div>
-
-                                {scoutingMessage && (
-                                    <div style={{ fontSize: '11px', color: '#6366f1', marginTop: '6px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Loader2 size={12} className="animate-spin" /> {scoutingMessage}
-                                    </div>
-                                )}
                                 {scoutError && (
                                     <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: 500 }}>
                                         ⚠️ {scoutError}
                                     </div>
                                 )}
                             </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                <div>
+                                    <label style={labelStyle}>Email</label>
+                                    <input placeholder="vendor@example.com" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Phone</label>
+                                    <input placeholder="+90 5XX XXX XX XX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                </div>
+                            </div>
                             <div>
                                 <label style={labelStyle}>Website</label>
-                                <input placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} style={inputStyle} />
+                                <input placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Bio</label>
+                                <textarea
+                                    value={form.bio}
+                                    onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+                                    placeholder="Vendor bio/description"
+                                    rows={3}
+                                    style={{ ...inputStyle, minHeight: '72px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }}
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                <div>
+                                    <label style={labelStyle}>Location</label>
+                                    <input
+                                        value={form.location}
+                                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
+                                        placeholder="City / Area"
+                                        style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Logo URL</label>
+                                    <input placeholder="Auto-filled by Scout" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                </div>
                             </div>
                             <div>
                                 <label style={labelStyle}>Notes</label>
-                                <textarea placeholder="Any additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+                                <textarea placeholder="Any additional notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} style={{ ...inputStyle, minHeight: '60px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }} />
                             </div>
-                            {/* BIO */}
-                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Bio</label>
-                            <textarea
-                                value={form.bio}
-                                onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-                                placeholder="Vendor bio/description"
-                                rows={3}
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', resize: 'vertical' as const }}
-                            />
-                            {/* LOCATION */}
-                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Location</label>
-                            <input
-                                value={form.location}
-                                onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                                placeholder="City / Area"
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px' }}
-                            />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
                             <button onClick={handleCreate} disabled={loading || !form.business_name} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
-                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create'}
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : 'Create Prospect'}
                             </button>
+                            <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -553,102 +562,111 @@ export default function AdminProspectsClient({
 
             {/* Edit Prospect Modal */}
             {editingProspect && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-                    onClick={() => setEditingProspect(null)}
-                >
+                <div style={dialogOverlay} onClick={() => setEditingProspect(null)}>
                     <div onClick={(e) => e.stopPropagation()}
-                        style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '480px', width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', color: '#0f172a' }}>Edit Prospect Vendor</h3>
+                        style={{ ...dialogPanel, maxWidth: '520px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: '#0f172a' }}>Edit Prospect Vendor</h3>
+                        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Update prospect information</p>
+
+                        {/* Logo preview */}
+                        {editForm.logo_url && editForm.logo_url.startsWith('https://') && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '12px' }}>
+                                <img src={editForm.logo_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{editForm.business_name || 'Business Name'}</div>
+                                    {scoutingMessage && (
+                                        <div style={{ fontSize: '12px', color: '#6366f1', marginTop: '2px' }}>{scoutingMessage}</div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
                                 <label style={labelStyle}>Business Name *</label>
-                                <input placeholder="e.g. Café Istanbul" value={editForm.business_name} onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Logo URL</label>
-                                <input placeholder="https://..." value={editForm.logo_url} onChange={(e) => setEditForm({ ...editForm, logo_url: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Email</label>
-                                <input placeholder="vendor@example.com" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} style={inputStyle} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>Phone</label>
-                                <input placeholder="+90 5XX XXX XX XX" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} style={inputStyle} />
+                                <input placeholder="e.g. Café Istanbul" value={editForm.business_name} onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
                             </div>
                             <div>
                                 <label style={labelStyle}>Instagram</label>
                                 <div style={{ display: 'flex', gap: '6px' }}>
-                                    <input placeholder="@handle" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                                    <input placeholder="@handle" value={editForm.instagram} onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })} style={{ ...inputStyle, flex: 1, textAlign: 'left', direction: 'ltr' }} />
                                     {editForm.instagram && (
                                         <button
                                             type="button"
                                             disabled={scouting}
                                             onClick={() => handleScoutInstagram(editForm.instagram, true)}
                                             style={{
-                                                padding: '8px 12px', borderRadius: '8px', border: 'none',
+                                                padding: '8px 14px', borderRadius: '8px', border: 'none',
                                                 background: scouting ? '#cbd5e1' : 'linear-gradient(135deg, #E1306C, #F77737)',
-                                                color: '#fff', fontSize: '11px', fontWeight: 700,
+                                                color: '#fff', fontSize: '12px', fontWeight: 700,
                                                 cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
                                                 display: 'flex', alignItems: 'center', gap: '4px',
                                                 opacity: scouting ? 0.7 : 1,
                                             }}
                                         >
                                             {scouting ? (
-                                                <>
-                                                    <Loader2 size={12} className="animate-spin" /> Scouting...
-                                                </>
+                                                <><Loader2 size={12} className="animate-spin" /> Scouting...</>
                                             ) : (
-                                                <>
-                                                    <ExternalLink size={12} /> Scout
-                                                </>
+                                                <><ExternalLink size={12} /> Scout</>
                                             )}
                                         </button>
                                     )}
                                 </div>
-
-                                {scoutingMessage && (
-                                    <div style={{ fontSize: '11px', color: '#6366f1', marginTop: '6px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Loader2 size={12} className="animate-spin" /> {scoutingMessage}
-                                    </div>
-                                )}
                                 {scoutError && (
                                     <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: 500 }}>
                                         ⚠️ {scoutError}
                                     </div>
                                 )}
                             </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                <div>
+                                    <label style={labelStyle}>Email</label>
+                                    <input placeholder="vendor@example.com" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Phone</label>
+                                    <input placeholder="+90 5XX XXX XX XX" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                </div>
+                            </div>
                             <div>
                                 <label style={labelStyle}>Website</label>
-                                <input placeholder="https://..." value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} style={inputStyle} />
+                                <input placeholder="https://..." value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Bio</label>
+                                <textarea
+                                    value={editForm.bio}
+                                    onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
+                                    placeholder="Vendor bio/description"
+                                    rows={3}
+                                    style={{ ...inputStyle, minHeight: '72px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }}
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                <div>
+                                    <label style={labelStyle}>Location</label>
+                                    <input
+                                        value={editForm.location}
+                                        onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))}
+                                        placeholder="City / Area"
+                                        style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Logo URL</label>
+                                    <input placeholder="Auto-filled by Scout" value={editForm.logo_url} onChange={(e) => setEditForm({ ...editForm, logo_url: e.target.value })} style={{ ...inputStyle, textAlign: 'left', direction: 'ltr' }} />
+                                </div>
                             </div>
                             <div>
                                 <label style={labelStyle}>Notes</label>
-                                <textarea placeholder="Any additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} />
+                                <textarea placeholder="Any additional notes..." value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} style={{ ...inputStyle, minHeight: '60px', resize: 'vertical', textAlign: 'left', direction: 'ltr' }} />
                             </div>
-                            {/* BIO */}
-                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Bio</label>
-                            <textarea
-                                value={editForm.bio}
-                                onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
-                                placeholder="Vendor bio/description"
-                                rows={3}
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', resize: 'vertical' as const }}
-                            />
-                            {/* LOCATION */}
-                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#f97316', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Location</label>
-                            <input
-                                value={editForm.location}
-                                onChange={e => setEditForm(f => ({ ...f, location: e.target.value }))}
-                                placeholder="City / Area"
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px' }}
-                            />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={() => setEditingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
                             <button onClick={handleEdit} disabled={loading || !editForm.business_name} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
                             </button>
+                            <button onClick={() => setEditingProspect(null)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>Cancel</button>
                         </div>
                     </div>
                 </div>
