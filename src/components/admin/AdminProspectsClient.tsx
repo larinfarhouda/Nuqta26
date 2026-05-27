@@ -823,7 +823,8 @@ export default function AdminProspectsClient({
                                             <img
                                                 src={p.logo_url}
                                                 alt={`${p.business_name} logo`}
-                                                className="w-9 h-9 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
+                                                referrerPolicy="no-referrer"
+                                                className="w-9 h-9 rounded-full object-cover border border-zinc-200 shrink-0"
                                                 onError={(e) => {
                                                     // Fallback if image fails to load
                                                     (e.target as HTMLElement).style.display = 'none';
