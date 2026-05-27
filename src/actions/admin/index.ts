@@ -563,48 +563,72 @@ export async function scoutInstagramProfile(handle: string) {
             businessName: username
         };
 
-        // Fetch the public Instagram profile page HTML (server-side, no CORS)
-        const res = await fetch(`https://www.instagram.com/${username}/`, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-            },
-            next: { revalidate: 0 } // No caching — always fresh
-        });
+        // Strategy 1: Instagram web_profile_info API (returns JSON with HD profile pic)
+        try {
+            const apiRes = await fetch(
+                `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`,
+                {
+                    headers: {
+                        'User-Agent': 'Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2400; samsung; SM-G991B; o1s; exynos2100)',
+                        'X-IG-App-ID': '936619743392459',
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                    },
+                    cache: 'no-store',
+                }
+            );
 
-        if (!res.ok) return { success: true, ...fallback };
-
-        const html = await res.text();
-
-        // Parse og:image (profile picture)
-        const ogImageMatch = html.match(/<meta\s+(?:property|name)="og:image"\s+content="([^"]+)"/i)
-            || html.match(/content="([^"]+)"\s+(?:property|name)="og:image"/i);
-        const logoUrl = ogImageMatch?.[1] || fallback.logoUrl;
-
-        // Parse og:title or title tag (full name / business name)
-        const ogTitleMatch = html.match(/<meta\s+(?:property|name)="og:title"\s+content="([^"]+)"/i)
-            || html.match(/content="([^"]+)"\s+(?:property|name)="og:title"/i);
-        let businessName = username;
-        if (ogTitleMatch?.[1]) {
-            // og:title is usually "Full Name (@handle) • Instagram photos and videos"
-            const raw = ogTitleMatch[1];
-            const nameMatch = raw.match(/^(.+?)\s*\(@/);
-            businessName = nameMatch?.[1]?.trim() || raw.split('•')[0]?.trim() || username;
+            if (apiRes.ok) {
+                const data = await apiRes.json();
+                const user = data?.data?.user;
+                if (user) {
+                    return {
+                        success: true,
+                        logoUrl: user.profile_pic_url_hd || user.profile_pic_url || fallback.logoUrl,
+                        website: `https://instagram.com/${username}`,
+                        businessName: user.full_name?.trim() || username,
+                    };
+                }
+            }
+        } catch (apiErr) {
+            logger.error('Instagram API failed, trying HTML fallback', { error: apiErr, handle });
         }
 
-        // Parse og:description for extra info (bio, follower count)
-        const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]+)"/i)
-            || html.match(/content="([^"]+)"\s+(?:property|name)="og:description"/i);
-        const description = ogDescMatch?.[1] || '';
+        // Strategy 2: Fetch the public profile page and parse meta tags
+        try {
+            const htmlRes = await fetch(`https://www.instagram.com/${username}/`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                    'Accept': 'text/html',
+                },
+                cache: 'no-store',
+            });
 
-        return {
-            success: true,
-            logoUrl,
-            website: `https://instagram.com/${username}`,
-            businessName,
-            description,
-        };
+            if (htmlRes.ok) {
+                const html = await htmlRes.text();
+                const ogImageMatch = html.match(/<meta\s+(?:property|name)="og:image"\s+content="([^"]+)"/i)
+                    || html.match(/content="([^"]+)"\s+(?:property|name)="og:image"/i);
+                const ogTitleMatch = html.match(/<meta\s+(?:property|name)="og:title"\s+content="([^"]+)"/i)
+                    || html.match(/content="([^"]+)"\s+(?:property|name)="og:title"/i);
+
+                const logoUrl = ogImageMatch?.[1] || fallback.logoUrl;
+                let businessName = username;
+                if (ogTitleMatch?.[1]) {
+                    const raw = ogTitleMatch[1];
+                    const nameMatch = raw.match(/^(.+?)\s*\(@/);
+                    businessName = nameMatch?.[1]?.trim() || raw.split('•')[0]?.trim() || username;
+                }
+
+                if (ogImageMatch?.[1]) {
+                    return { success: true, logoUrl, website: `https://instagram.com/${username}`, businessName };
+                }
+            }
+        } catch (htmlErr) {
+            logger.error('Instagram HTML fallback also failed', { error: htmlErr, handle });
+        }
+
+        // All strategies failed — return fallback with initials avatar
+        return { success: true, ...fallback };
     } catch (error) {
         logger.error('Failed to scout Instagram profile', { error, handle });
         const cleanHandle = handle.replace(/^@/, '').trim();
