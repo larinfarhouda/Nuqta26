@@ -452,14 +452,14 @@ export default function AdminProspectsClient({
             {showCreate && (
                 <div style={dialogOverlay} onClick={() => setShowCreate(false)}>
                     <div onClick={(e) => e.stopPropagation()}
-                        style={{ ...dialogPanel, maxWidth: '520px' }}>
+                        style={{ ...dialogPanel, maxWidth: '520px', textAlign: 'left', direction: 'ltr' }}>
                         <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: '#0f172a' }}>New Prospect Vendor</h3>
                         <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Add a new prospect to your sales pipeline</p>
 
                         {/* Logo preview */}
                         {form.logo_url && form.logo_url.startsWith('https://') && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '12px' }}>
-                                <img src={form.logo_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                                <img src={form.logo_url} referrerPolicy="no-referrer" alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{form.business_name || 'Business Name'}</div>
                                     {scoutingMessage && (
@@ -564,14 +564,14 @@ export default function AdminProspectsClient({
             {editingProspect && (
                 <div style={dialogOverlay} onClick={() => setEditingProspect(null)}>
                     <div onClick={(e) => e.stopPropagation()}
-                        style={{ ...dialogPanel, maxWidth: '520px' }}>
+                        style={{ ...dialogPanel, maxWidth: '520px', textAlign: 'left', direction: 'ltr' }}>
                         <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px', color: '#0f172a' }}>Edit Prospect Vendor</h3>
                         <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Update prospect information</p>
 
                         {/* Logo preview */}
                         {editForm.logo_url && editForm.logo_url.startsWith('https://') && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '12px' }}>
-                                <img src={editForm.logo_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                                <img src={editForm.logo_url} referrerPolicy="no-referrer" alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{editForm.business_name || 'Business Name'}</div>
                                     {scoutingMessage && (
