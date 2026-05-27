@@ -595,7 +595,7 @@ export async function scoutInstagramProfile(handle: string) {
         }
 
         // Strategy 2: Instagram embed page (served even to datacenter IPs)
-        // The embed HTML contains escaped JSON with profile_pic_url and full_name
+        // The embed HTML contains deeply-escaped JSON with profile_pic_url and full_name
         try {
             const embedRes = await fetch(`https://www.instagram.com/${username}/embed/`, {
                 headers: {
@@ -608,28 +608,32 @@ export async function scoutInstagramProfile(handle: string) {
             if (embedRes.ok) {
                 const html = await embedRes.text();
 
-                // Extract profile_pic_url from escaped JSON in the embed HTML
-                // Format: profile_pic_url\":\"https:\/\/instagram.f...fbcdn.net\/...\"
-                const picMatch = html.match(/profile_pic_url\\?":\\?"(https?:[^"\\]*(?:\\.[^"\\]*)*)\\?"/);
-                let logoUrl = fallback.logoUrl;
-                if (picMatch?.[1]) {
-                    // Unescape the URL: \\/ → /
-                    logoUrl = picMatch[1].replace(/\\\//g, '/');
-                }
+                // Use string operations (not regex) because the JSON is triple-escaped
+                // Format in raw HTML: profile_pic_url\":\"https:\\/\\/...\"
+                const extractEmbedValue = (text: string, key: string): string | null => {
+                    const marker = key + '\\":\\"';
+                    const start = text.indexOf(marker);
+                    if (start === -1) return null;
+                    const valueStart = start + marker.length;
+                    const valueEnd = text.indexOf('\\"', valueStart);
+                    if (valueEnd === -1) return null;
+                    let value = text.substring(valueStart, valueEnd);
+                    // Unescape: \\/ sequences to /
+                    while (value.includes('\\/')) {
+                        value = value.split('\\/').join('/');
+                    }
+                    return value;
+                };
 
-                // Extract full_name from escaped JSON
-                const nameMatch = html.match(/full_name\\?":\\?"([^"\\]*(?:\\.[^"\\]*)*)\\?"/);
-                let businessName = username;
-                if (nameMatch?.[1]) {
-                    businessName = nameMatch[1].replace(/\\\//g, '/').trim();
-                }
+                const logoUrl = extractEmbedValue(html, 'profile_pic_url');
+                const businessName = extractEmbedValue(html, 'full_name');
 
-                if (logoUrl !== fallback.logoUrl) {
+                if (logoUrl && logoUrl.startsWith('https://')) {
                     return {
                         success: true,
                         logoUrl,
                         website: `https://instagram.com/${username}`,
-                        businessName,
+                        businessName: businessName?.trim() || username,
                     };
                 }
             }
