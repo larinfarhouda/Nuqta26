@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
     MessageCircle, Mail, Upload, TrendingUp, Clock, Target, Heart, AlertCircle,
@@ -63,6 +63,9 @@ export default function AdminProspectsClient({
     const [contactedProspect, setContactedProspect] = useState<ProspectVendor | null>(null);
     const [loading, setLoading] = useState(false);
     const [scouting, setScouting] = useState(false);
+    const [extensionActive, setExtensionActive] = useState(false);
+    const [scoutingMessage, setScoutingMessage] = useState<string | null>(null);
+    const [scoutError, setScoutError] = useState<string | null>(null);
     const [showBulk, setShowBulk] = useState(false);
     const [bulkResult, setBulkResult] = useState<{ created: number; failed: number } | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
@@ -91,6 +94,154 @@ export default function AdminProspectsClient({
             const result = await getAdminProspects(p, 20, s || undefined);
             setData(result);
         });
+    };
+
+    useEffect(() => {
+        let pingInterval: NodeJS.Timeout;
+
+        const checkExtension = () => {
+            if (typeof document !== 'undefined') {
+                // Primary: check DOM attribute set by the content script (CSP-safe, no isolated world issues)
+                const attr = document.documentElement.getAttribute('data-nuqta-scout');
+                if (attr === 'active') {
+                    setExtensionActive(true);
+                    return;
+                }
+            }
+            // Backup: ping content script bridge via postMessage
+            if (typeof window !== 'undefined') {
+                window.postMessage({ type: 'NUQTA_SCOUT_PING' }, '*');
+            }
+        };
+
+        // Run detection checks immediately and periodically
+        checkExtension();
+        pingInterval = setInterval(checkExtension, 800);
+
+        const handleExtensionMessage = (event: MessageEvent) => {
+            if (event.source !== window) return;
+            const message = event.data;
+
+            // Handle ping response from extension
+            if (message && message.type === 'NUQTA_SCOUT_PONG') {
+                setExtensionActive(true);
+            }
+
+            if (message && message.type === 'NUQTA_SCOUT_RESULT') {
+                const res = message.data;
+                setScouting(false);
+                setScoutingMessage(null);
+                if (res.success) {
+                    if (showCreate) {
+                        setForm(prev => ({
+                            ...prev,
+                            website: prev.website || res.website || '',
+                            logo_url: res.logoUrl || prev.logo_url || '',
+                            business_name: res.businessName || prev.business_name || '',
+                        }));
+                    } else if (editingProspect) {
+                        setEditForm(prev => ({
+                            ...prev,
+                            website: prev.website || res.website || '',
+                            logo_url: res.logoUrl || prev.logo_url || '',
+                            business_name: res.businessName || prev.business_name || '',
+                        }));
+                    }
+                } else {
+                    setScoutError(res.error || 'Scouting failed');
+                }
+            }
+        };
+
+        window.addEventListener('message', handleExtensionMessage);
+
+        const handleWindowFocus = async () => {
+            // Also ping on window focus
+            checkExtension();
+
+            // Only use clipboard fallback if the automated Chrome extension is not active
+            if (extensionActive) return;
+
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text && (
+                    text.includes('cdninstagram.com') || 
+                    text.includes('instagram.com') || 
+                    text.includes('fbcdn.net')
+                ) && text.startsWith('http')) {
+                    if (showCreate) {
+                        setForm(prev => {
+                            if (prev.logo_url === text) return prev;
+                            return { ...prev, logo_url: text };
+                        });
+                    } else if (editingProspect) {
+                        setEditForm(prev => {
+                            if (prev.logo_url === text) return prev;
+                            return { ...prev, logo_url: text };
+                        });
+                    }
+                }
+            } catch (e) {
+                // Silent catch: Clipboard permission not granted or text doesn't match
+            }
+        };
+
+        window.addEventListener('focus', handleWindowFocus);
+
+        return () => {
+            clearInterval(pingInterval);
+            window.removeEventListener('message', handleExtensionMessage);
+            window.removeEventListener('focus', handleWindowFocus);
+        };
+    }, [showCreate, editingProspect, extensionActive]);
+
+    const handleScoutInstagram = async (instagramHandle: string, isEdit: boolean) => {
+        const handle = instagramHandle.replace(/^@/, '').trim();
+        if (!handle) return;
+
+        setScouting(true);
+        setScoutError(null);
+
+        // Check if extension is installed via PING/PONG detection
+        const isExtensionPresent = extensionActive;
+        if (isExtensionPresent) {
+            setExtensionActive(true);
+            setScoutingMessage('Automated browser scouting in progress...');
+            window.postMessage({
+                type: 'NUQTA_SCOUT_START',
+                handle: handle
+            }, '*');
+        } else {
+            setExtensionActive(false);
+            setScoutingMessage('Standard fallback active. Opening profile...');
+            
+            // 1. Run the background server scouting to pull the cleaned username / profile link
+            try {
+                const res = await scoutInstagramProfile(handle);
+                if (res) {
+                    if (isEdit) {
+                        setEditForm(prev => ({
+                            ...prev,
+                            website: prev.website || res.website || '',
+                            business_name: prev.business_name || res.businessName || '',
+                        }));
+                    } else {
+                        setForm(prev => ({
+                            ...prev,
+                            website: prev.website || res.website || '',
+                            business_name: prev.business_name || res.businessName || '',
+                        }));
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to run fallback server scout:', err);
+            } finally {
+                setScouting(false);
+            }
+
+            // 2. Open the Instagram page in a new tab so the admin can copy the image link
+            window.open(`https://instagram.com/${handle}`, '_blank');
+        }
     };
 
     const handleCreate = async () => {
@@ -411,31 +562,10 @@ export default function AdminProspectsClient({
                                         <button
                                             type="button"
                                             disabled={scouting}
-                                            onClick={async () => {
-                                                const handle = form.instagram.replace(/^@/, '').trim();
-                                                if (!handle) return;
-                                                setScouting(true);
-                                                try {
-                                                    const res = await scoutInstagramProfile(handle);
-                                                    if (res) {
-                                                        setForm(prev => ({
-                                                            ...prev,
-                                                            website: prev.website || res.website || '',
-                                                            logo_url: prev.logo_url || res.logoUrl || '',
-                                                            business_name: prev.business_name || res.businessName || '',
-                                                        }));
-                                                    }
-                                                } catch (err) {
-                                                    console.error('Failed to scout Instagram', err);
-                                                } finally {
-                                                    setScouting(false);
-                                                }
-                                                // Open Instagram profile for quick reference
-                                                window.open(`https://instagram.com/${handle}`, '_blank');
-                                            }}
+                                            onClick={() => handleScoutInstagram(form.instagram, false)}
                                             style={{
                                                 padding: '8px 12px', borderRadius: '8px', border: 'none',
-                                                background: 'linear-gradient(135deg, #E1306C, #F77737)',
+                                                background: scouting ? '#cbd5e1' : 'linear-gradient(135deg, #E1306C, #F77737)',
                                                 color: '#fff', fontSize: '11px', fontWeight: 700,
                                                 cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
                                                 display: 'flex', alignItems: 'center', gap: '4px',
@@ -454,6 +584,56 @@ export default function AdminProspectsClient({
                                         </button>
                                     )}
                                 </div>
+
+                                {scoutingMessage && (
+                                    <div style={{ fontSize: '11px', color: '#6366f1', marginTop: '6px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Loader2 size={12} className="animate-spin" /> {scoutingMessage}
+                                    </div>
+                                )}
+                                {scoutError && (
+                                    <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: 500 }}>
+                                        ⚠️ {scoutError}
+                                    </div>
+                                )}
+
+                                {extensionActive ? (
+                                    <div style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        background: 'rgba(16, 185, 129, 0.1)',
+                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                        color: '#10b981',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        marginTop: '6px'
+                                    }}>
+                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                        1-Click Auto Scout Active
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px',
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        background: 'rgba(139, 92, 246, 0.05)',
+                                        border: '1px solid rgba(139, 92, 246, 0.2)',
+                                        color: '#7c3aed',
+                                        fontSize: '11px',
+                                        marginTop: '6px'
+                                    }}>
+                                        <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Store size={12} /> Standard Fallback Active
+                                        </div>
+                                        <div style={{ color: '#64748b', fontSize: '10px', lineHeight: '1.4' }}>
+                                            To enable 1-Click scouting, load the unpacked extension in chrome://extensions. Otherwise, click Scout, copy the profile pic address, and come back.
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label style={labelStyle}>Website</label>
@@ -507,31 +687,10 @@ export default function AdminProspectsClient({
                                         <button
                                             type="button"
                                             disabled={scouting}
-                                            onClick={async () => {
-                                                const handle = editForm.instagram.replace(/^@/, '').trim();
-                                                if (!handle) return;
-                                                setScouting(true);
-                                                try {
-                                                    const res = await scoutInstagramProfile(handle);
-                                                    if (res) {
-                                                        setEditForm(prev => ({
-                                                            ...prev,
-                                                            website: prev.website || res.website || '',
-                                                            logo_url: prev.logo_url || res.logoUrl || '',
-                                                            business_name: prev.business_name || res.businessName || '',
-                                                        }));
-                                                    }
-                                                } catch (err) {
-                                                    console.error('Failed to scout Instagram', err);
-                                                } finally {
-                                                    setScouting(false);
-                                                }
-                                                // Open Instagram profile for quick reference
-                                                window.open(`https://instagram.com/${handle}`, '_blank');
-                                            }}
+                                            onClick={() => handleScoutInstagram(editForm.instagram, true)}
                                             style={{
                                                 padding: '8px 12px', borderRadius: '8px', border: 'none',
-                                                background: 'linear-gradient(135deg, #E1306C, #F77737)',
+                                                background: scouting ? '#cbd5e1' : 'linear-gradient(135deg, #E1306C, #F77737)',
                                                 color: '#fff', fontSize: '11px', fontWeight: 700,
                                                 cursor: scouting ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
                                                 display: 'flex', alignItems: 'center', gap: '4px',
@@ -550,6 +709,56 @@ export default function AdminProspectsClient({
                                         </button>
                                     )}
                                 </div>
+
+                                {scoutingMessage && (
+                                    <div style={{ fontSize: '11px', color: '#6366f1', marginTop: '6px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Loader2 size={12} className="animate-spin" /> {scoutingMessage}
+                                    </div>
+                                )}
+                                {scoutError && (
+                                    <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: 500 }}>
+                                        ⚠️ {scoutError}
+                                    </div>
+                                )}
+
+                                {extensionActive ? (
+                                    <div style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        background: 'rgba(16, 185, 129, 0.1)',
+                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                        color: '#10b981',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        marginTop: '6px'
+                                    }}>
+                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                        1-Click Auto Scout Active
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px',
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        background: 'rgba(139, 92, 246, 0.05)',
+                                        border: '1px solid rgba(139, 92, 246, 0.2)',
+                                        color: '#7c3aed',
+                                        fontSize: '11px',
+                                        marginTop: '6px'
+                                    }}>
+                                        <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Store size={12} /> Standard Fallback Active
+                                        </div>
+                                        <div style={{ color: '#64748b', fontSize: '10px', lineHeight: '1.4' }}>
+                                            To enable 1-Click scouting, load the unpacked extension in chrome://extensions. Otherwise, click Scout, copy the profile pic address, and come back.
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label style={labelStyle}>Website</label>
