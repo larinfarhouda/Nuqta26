@@ -342,7 +342,7 @@ export async function getProspectStats() {
         return {
             total,
             byStatus,
-            conversionRate: total > 0 ? Math.round((byStatus.converted / total) * 100) : 0,
+            conversionRate: total > 0 ? Math.round(((byStatus.free + byStatus.paying) / total) * 100) : 0,
             avgConversionDays: convertedCount > 0 ? Math.round(totalConversionDays / convertedCount) : null,
             totalInterests,
         };
