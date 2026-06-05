@@ -69,6 +69,12 @@ function isRateLimited(ip: string): boolean {
 export default function middleware(request: NextRequest) {
     const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
 
+    // Vercel's internal favicon bot — redirect straight to the static file
+    // instead of rendering the entire homepage just to find the favicon
+    if (userAgent.includes('vercel-favicon')) {
+        return NextResponse.redirect(new URL('/favicon.ico', request.url));
+    }
+
     // Block obvious scripts and scrapers early to save CPU time
     if (BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot))) {
         return new NextResponse('Forbidden: Access Denied', { status: 403 });
