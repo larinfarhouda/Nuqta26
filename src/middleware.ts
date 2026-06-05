@@ -15,7 +15,28 @@ const COUNTRY_MAP: Record<string, string> = {
     EG: 'eg',
 };
 
+// Common scraper/script user agents that consume CPU without being real visitors
+const BLOCKED_USER_AGENTS = [
+    'python-requests',
+    'curl/',
+    'wget/',
+    'go-http-client',
+    'java/',
+    'urllib',
+    'scrapy',
+    'postmanruntime',
+    'axios',
+    'node-fetch'
+];
+
 export default function middleware(request: NextRequest) {
+    const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+
+    // Block obvious scripts and scrapers early to save CPU time
+    if (BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot))) {
+        return new NextResponse('Forbidden: Access Denied', { status: 403 });
+    }
+
     const response = intlMiddleware(request);
 
     // --- Request Tracing ---
