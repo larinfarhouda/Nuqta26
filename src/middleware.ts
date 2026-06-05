@@ -75,10 +75,10 @@ export default function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/favicon.ico', request.url));
     }
 
-    // Sentry Uptime Monitor — return a quick 200 OK so it knows the site is alive
-    // without triggering a full SSR render + database queries
+    // Sentry Uptime Monitor — redirect to lightweight /api/health endpoint
+    // so it tests real app health without triggering a full homepage SSR render
     if (userAgent.includes('sentryuptimebot')) {
-        return new NextResponse('OK', { status: 200 });
+        return NextResponse.rewrite(new URL('/api/health', request.url));
     }
 
     // Block obvious scripts and scrapers early to save CPU time
