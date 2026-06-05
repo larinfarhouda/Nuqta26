@@ -29,12 +29,61 @@ const BLOCKED_USER_AGENTS = [
     'node-fetch'
 ];
 
+// --- In-Memory IP Rate Limiter ---
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 60 seconds
+const RATE_LIMIT_MAX_REQUESTS = 50;      // max requests per window per IP
+
+const ipRequestMap = new Map<string, { count: number; firstRequest: number }>();
+
+// Clean up expired entries every 2 minutes to prevent memory leaks
+let lastCleanup = Date.now();
+function cleanupExpiredEntries() {
+    const now = Date.now();
+    if (now - lastCleanup < 120_000) return; // Only clean every 2 min
+    lastCleanup = now;
+    for (const [ip, data] of ipRequestMap) {
+        if (now - data.firstRequest > RATE_LIMIT_WINDOW_MS) {
+            ipRequestMap.delete(ip);
+        }
+    }
+}
+
+function isRateLimited(ip: string): boolean {
+    cleanupExpiredEntries();
+    const now = Date.now();
+    const entry = ipRequestMap.get(ip);
+
+    if (!entry || now - entry.firstRequest > RATE_LIMIT_WINDOW_MS) {
+        // New window
+        ipRequestMap.set(ip, { count: 1, firstRequest: now });
+        return false;
+    }
+
+    entry.count++;
+    if (entry.count > RATE_LIMIT_MAX_REQUESTS) {
+        return true;
+    }
+    return false;
+}
+
 export default function middleware(request: NextRequest) {
     const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
 
     // Block obvious scripts and scrapers early to save CPU time
     if (BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot))) {
         return new NextResponse('Forbidden: Access Denied', { status: 403 });
+    }
+
+    // --- IP Rate Limiting ---
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip')
+        || 'unknown';
+
+    if (ip !== 'unknown' && isRateLimited(ip)) {
+        return new NextResponse('Too Many Requests', {
+            status: 429,
+            headers: { 'Retry-After': '60' },
+        });
     }
 
     const response = intlMiddleware(request);
@@ -91,6 +140,20 @@ export default function middleware(request: NextRequest) {
                 httpOnly: false, // Needs to be readable by client JS
             });
         }
+    }
+
+    // --- Edge Caching for Public Pages ---
+    // If the visitor is NOT logged in, cache public pages at Vercel's edge
+    // to avoid re-running the serverless function for every bot request.
+    const pathname = request.nextUrl.pathname;
+    const isPublicPage = !pathname.includes('/dashboard') && !pathname.includes('/admin');
+    const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('sb-') && c.name.includes('auth-token'));
+
+    if (isPublicPage && !hasAuthCookie) {
+        response.headers.set(
+            'Cache-Control',
+            's-maxage=60, stale-while-revalidate=300'
+        );
     }
 
     return response;
