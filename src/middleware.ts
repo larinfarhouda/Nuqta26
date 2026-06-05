@@ -75,6 +75,12 @@ export default function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/favicon.ico', request.url));
     }
 
+    // Sentry Uptime Monitor — return a quick 200 OK so it knows the site is alive
+    // without triggering a full SSR render + database queries
+    if (userAgent.includes('sentryuptimebot')) {
+        return new NextResponse('OK', { status: 200 });
+    }
+
     // Block obvious scripts and scrapers early to save CPU time
     if (BLOCKED_USER_AGENTS.some(bot => userAgent.includes(bot))) {
         return new NextResponse('Forbidden: Access Denied', { status: 403 });
