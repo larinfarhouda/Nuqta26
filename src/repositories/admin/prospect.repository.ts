@@ -25,7 +25,7 @@ export class AdminProspectRepository extends BaseRepository {
         return { ...data, eventCount: 0, totalInterests: 0 } as ProspectVendor;
     }
 
-    async getProspects(page: number, pageSize: number, status?: string): Promise<PaginatedResult<ProspectVendor>> {
+    async getProspects(page: number, pageSize: number, status?: string, search?: string): Promise<PaginatedResult<ProspectVendor>> {
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
 
@@ -37,6 +37,10 @@ export class AdminProspectRepository extends BaseRepository {
 
         if (status) {
             query = query.eq('status', status);
+        }
+
+        if (search) {
+            query = query.or(`business_name.ilike.%${search}%,instagram.ilike.%${search}%,contact_email.ilike.%${search}%`);
         }
 
         const { data, error, count } = await query;
@@ -187,6 +191,16 @@ export class AdminProspectRepository extends BaseRepository {
                     interestedAt: i.created_at,
                 })),
         }));
+    }
+
+    async getProspectEvents(prospectId: string) {
+        const { data, error } = await this.client
+            .from('events')
+            .select('id, title, date, end_date, location_name, city, event_type, capacity')
+            .eq('prospect_vendor_id', prospectId)
+            .order('date', { ascending: true });
+        if (error) this.handleError(error, 'AdminProspectRepository.getProspectEvents');
+        return data || [];
     }
 
     async convertProspect(prospectId: string, vendorId: string, systemVendorId: string) {

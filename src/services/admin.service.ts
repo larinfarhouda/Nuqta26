@@ -174,9 +174,9 @@ export class AdminService {
         return prospect;
     }
 
-    async getProspects(page = 1, pageSize = 20, status?: string) {
-        logger.info('AdminService: Fetching prospects', { page, status });
-        return this.prospectRepo.getProspects(page, pageSize, status);
+    async getProspects(page = 1, pageSize = 20, status?: string, search?: string) {
+        logger.info('AdminService: Fetching prospects', { page, status, search });
+        return this.prospectRepo.getProspects(page, pageSize, status, search);
     }
 
     async contactProspect(prospectId: string, adminId: string) {
@@ -204,6 +204,11 @@ export class AdminService {
         return this.prospectRepo.getProspectInterests(prospectId);
     }
 
+    async getProspectEvents(prospectId: string) {
+        logger.info('AdminService: Fetching prospect events', { prospectId });
+        return this.prospectRepo.getProspectEvents(prospectId);
+    }
+
     async convertProspect(prospectId: string, vendorId: string, systemVendorId: string, adminId: string) {
         logger.info('AdminService: Converting prospect to vendor', { prospectId, vendorId });
         await this.prospectRepo.convertProspect(prospectId, vendorId, systemVendorId);
@@ -225,6 +230,18 @@ export class AdminService {
             entity_type: 'prospect_vendor',
             entity_id: prospectId,
             metadata: { fields: Object.keys(input) },
+        });
+    }
+
+    async updateProspectStatus(prospectId: string, status: string, adminId: string) {
+        logger.info('AdminService: Updating prospect status', { prospectId, status });
+        await this.prospectRepo.updateProspectStatus(prospectId, status);
+        await this.logActivity({
+            user_id: adminId,
+            action: 'prospect_status_changed',
+            entity_type: 'prospect_vendor',
+            entity_id: prospectId,
+            metadata: { new_status: status },
         });
     }
 

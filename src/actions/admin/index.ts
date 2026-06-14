@@ -286,11 +286,11 @@ export async function createProspectVendor(data: {
     }
 }
 
-export async function getAdminProspects(page = 1, pageSize = 20, status?: string) {
+export async function getAdminProspects(page = 1, pageSize = 20, status?: string, search?: string) {
     try {
         await requireAdmin();
         const service = await getAdminService();
-        return await service.getProspects(page, pageSize, status);
+        return await service.getProspects(page, pageSize, status, search);
     } catch (error) {
         logger.error('Failed to get prospects', { error });
         return null;
@@ -447,6 +447,17 @@ export async function getProspectInterests(prospectId: string) {
     }
 }
 
+export async function getProspectEvents(prospectId: string) {
+    try {
+        await requireAdmin();
+        const service = await getAdminService();
+        return await service.getProspectEvents(prospectId);
+    } catch (error) {
+        logger.error('Failed to get prospect events', { error });
+        return [];
+    }
+}
+
 export async function updateProspectVendor(prospectId: string, data: {
     business_name: string;
     logo_url?: string;
@@ -466,6 +477,22 @@ export async function updateProspectVendor(prospectId: string, data: {
     } catch (error) {
         logger.error('Failed to update prospect vendor', { error });
         return { error: 'Failed to update prospect vendor' };
+    }
+}
+
+export async function updateProspectStatus(prospectId: string, status: string) {
+    try {
+        const { user } = await requireAdmin();
+        const validStatuses = ['lead', 'building', 'pitched', 'free', 'paying', 'churned', 'lost'];
+        if (!validStatuses.includes(status)) {
+            return { error: `Invalid status: ${status}` };
+        }
+        const service = await getAdminService();
+        await service.updateProspectStatus(prospectId, status, user.id);
+        return { success: true };
+    } catch (error) {
+        logger.error('Failed to update prospect status', { error });
+        return { error: 'Failed to update status' };
     }
 }
 

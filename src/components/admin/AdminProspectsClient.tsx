@@ -4,7 +4,8 @@ import { useState, useTransition, useRef, useEffect } from 'react';
 import {
     UserPlus, Link as LinkIcon, Eye, Plus, Loader2, ExternalLink, Copy, Users, Calendar,
     MessageCircle, Mail, Upload, TrendingUp, Clock, Target, Heart, AlertCircle,
-    Store, Edit2, Trash2,
+    Store, Edit2, Trash2, Search, Instagram, Download, ChevronDown, ArrowUpDown,
+    FileText, Send,
 } from 'lucide-react';
 import {
     getAdminProspects,
@@ -12,8 +13,10 @@ import {
     contactProspect,
     createProspectEvent,
     getProspectInterests,
+    getProspectEvents,
     bulkCreateProspects,
     updateProspectVendor,
+    updateProspectStatus,
     deleteProspectVendor,
     scoutInstagramProfile,
 } from '@/actions/admin';
@@ -79,9 +82,17 @@ export default function AdminProspectsClient({
     const [bulkResult, setBulkResult] = useState<{ created: number; failed: number } | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
+    // Search & sort
+    const [search, setSearch] = useState('');
+    const [sortField, setSortField] = useState<'created_at' | 'business_name' | 'status'>('created_at');
+    const [sortAsc, setSortAsc] = useState(false);
+
     // Edit/Delete states
     const [editingProspect, setEditingProspect] = useState<ProspectVendor | null>(null);
     const [deletingProspect, setDeletingProspect] = useState<ProspectVendor | null>(null);
+    const [statusChanging, setStatusChanging] = useState<string | null>(null); // prospect ID
+    const [prospectEvents, setProspectEvents] = useState<{ prospectId: string; events: any[] } | null>(null);
+    const [copied, setCopied] = useState<string | null>(null);
 
     // Form states
     const [form, setForm] = useState({
@@ -100,16 +111,83 @@ export default function AdminProspectsClient({
         event_type: '', capacity: 50, image_url: '',
     });
 
-    const reload = (p = page, s = statusFilter) => {
+    const reload = (p = page, s = statusFilter, q = search) => {
         startTransition(async () => {
-            const result = await getAdminProspects(p, 20, s || undefined);
+            const result = await getAdminProspects(p, 20, s || undefined, q || undefined);
             setData(result);
         });
     };
 
+    const handleSearch = (q: string) => {
+        setSearch(q);
+        setPage(1);
+        reload(1, statusFilter, q);
+    };
+
+    const handleStatusChange = async (prospectId: string, newStatus: string) => {
+        setLoading(true);
+        await updateProspectStatus(prospectId, newStatus);
+        setStatusChanging(null);
+        setLoading(false);
+        reload();
+    };
+
+    const handleViewEvents = async (prospectId: string) => {
+        setLoading(true);
+        const events = await getProspectEvents(prospectId);
+        setProspectEvents({ prospectId, events });
+        setLoading(false);
+    };
+
+    const copyToClipboard = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(id);
+        setTimeout(() => setCopied(null), 2000);
+    };
+
+    const coldPitchMessage = (name: string) =>
+        `مرحباً 👋\nأنا من فريق Nuqta — منصة لإدارة الفعاليات والحجوزات.\nأعجبنا شغلكم وحابين نساعدكم تنظمون فعالياتكم بشكل أسهل.\nالمنصة تقدم صفحة خاصة لكم + إدارة حجوزات + رسائل تأكيد تلقائية ✨\nمجانية تماماً — تحبوا أشرح أكثر؟`;
+
+    const handleExportCsv = () => {
+        if (!data?.data) return;
+        const headers = ['business_name', 'status', 'contact_email', 'contact_phone', 'instagram', 'website', 'location', 'notes', 'created_at'];
+        const rows = data.data.map(p => headers.map(h => {
+            const val = (p as any)[h] || '';
+            return `"${String(val).replace(/"/g, '""')}"`;
+        }).join(','));
+        const csv = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `prospects_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    };
+
+    const handleSort = (field: typeof sortField) => {
+        if (sortField === field) {
+            setSortAsc(!sortAsc);
+        } else {
+            setSortField(field);
+            setSortAsc(field === 'business_name');
+        }
+    };
+
+    const sortedData = (() => {
+        if (!data?.data) return [];
+        const sorted = [...data.data];
+        sorted.sort((a, b) => {
+            let cmp = 0;
+            if (sortField === 'business_name') cmp = (a.business_name || '').localeCompare(b.business_name || '');
+            else if (sortField === 'status') cmp = (a.status || '').localeCompare(b.status || '');
+            else cmp = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+            return sortAsc ? cmp : -cmp;
+        });
+        return sorted;
+    })();
+
     // Global escape handler for modals
     useEffect(() => {
-        if (!showCreate && !editingProspect && !deletingProspect && !showEvent && !showInterests) return;
+        if (!showCreate && !editingProspect && !deletingProspect && !showEvent && !showInterests && !statusChanging && !prospectEvents) return;
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 setShowCreate(false);
@@ -117,11 +195,13 @@ export default function AdminProspectsClient({
                 setDeletingProspect(null);
                 setShowEvent(null);
                 setShowInterests(null);
+                setStatusChanging(null);
+                setProspectEvents(null);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showCreate, editingProspect, deletingProspect, showEvent, showInterests]);
+    }, [showCreate, editingProspect, deletingProspect, showEvent, showInterests, statusChanging, prospectEvents]);
 
     const handleScoutInstagram = async (instagramHandle: string, isEdit: boolean) => {
         const handle = instagramHandle.replace(/^@/, '').trim();
@@ -355,7 +435,25 @@ export default function AdminProspectsClient({
                 </div>
             )}
 
-            {/* Action Bar: CSV Import + Filters */}
+            {/* Search Bar */}
+            <div className="mb-4">
+                <div className="relative max-w-md">
+                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                        type="text"
+                        placeholder="Search by name, IG handle, or email..."
+                        value={search}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#2CA58D] focus:ring-4 focus:ring-[#2CA58D]/10 outline-none transition-all duration-200"
+                        style={{ direction: 'ltr' }}
+                    />
+                    {search && (
+                        <button onClick={() => handleSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 bg-transparent border-none cursor-pointer text-xs">✕</button>
+                    )}
+                </div>
+            </div>
+
+            {/* Action Bar: CSV Import + Export + Filters */}
             <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <div className="flex gap-2 flex-wrap">
                     {['', 'lead', 'building', 'pitched', 'free', 'paying', 'churned', 'lost'].map(s => (
@@ -376,6 +474,9 @@ export default function AdminProspectsClient({
                     <input type="file" ref={fileRef} accept=".csv" onChange={handleCsvImport} className="hidden" />
                     <AdminButton variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={loading}>
                         <Upload size={14} className="mr-1.5" /> Import CSV
+                    </AdminButton>
+                    <AdminButton variant="outline" size="sm" onClick={handleExportCsv} disabled={!data?.data?.length}>
+                        <Download size={14} className="mr-1.5" /> Export CSV
                     </AdminButton>
                 </div>
             </div>
@@ -822,16 +923,35 @@ export default function AdminProspectsClient({
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                            {['Business', 'Status', 'Events', 'Interests', 'Contact', 'Claim URL', 'Follow-up', 'Actions'].map(h => (
-                                <th key={h} className="px-4 py-3.5 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{h}</th>
+                            {[
+                                { key: 'business_name', label: 'Business', sortable: true },
+                                { key: 'status', label: 'Status', sortable: true },
+                                { key: 'events', label: 'Events', sortable: false },
+                                { key: 'interests', label: 'Interests', sortable: false },
+                                { key: 'contact', label: 'Contact', sortable: false },
+                                { key: 'notes', label: 'Notes', sortable: false },
+                                { key: 'claim', label: 'Claim URL', sortable: false },
+                                { key: 'followup', label: 'Follow-up', sortable: false },
+                                { key: 'actions', label: 'Actions', sortable: false },
+                            ].map(h => (
+                                <th
+                                    key={h.key}
+                                    onClick={() => h.sortable && handleSort(h.key as any)}
+                                    className={`px-4 py-3.5 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider ${h.sortable ? 'cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 select-none' : ''}`}
+                                >
+                                    <span className="flex items-center gap-1">
+                                        {h.label}
+                                        {h.sortable && sortField === h.key && <ArrowUpDown size={12} className="text-[#2CA58D]" />}
+                                    </span>
+                                </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {(data?.data || []).length === 0 && (
-                            <tr><td colSpan={8} className="px-10 py-10 text-center text-zinc-400">No prospects yet. Create your first one!</td></tr>
+                        {sortedData.length === 0 && (
+                            <tr><td colSpan={9} className="px-10 py-10 text-center text-zinc-400">{search ? 'No prospects match your search.' : 'No prospects yet. Create your first one!'}</td></tr>
                         )}
-                        {(data?.data || []).map(p => {
+                        {sortedData.map(p => {
                             const days = daysSince(p.status === 'pitched' ? (p.last_contacted_at || p.updated_at || p.created_at) : null);
                             const stale = days !== null && days >= 7;
                             return (
@@ -875,10 +995,34 @@ export default function AdminProspectsClient({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-4 py-3.5">
-                                    <AdminBadge variant={STATUS_BADGE_VARIANT[p.status ?? ''] || 'neutral'}>
-                                        {p.status}
-                                    </AdminBadge>
+                                <td className="px-4 py-3.5 relative">
+                                    <button
+                                        onClick={() => setStatusChanging(statusChanging === p.id ? null : p.id)}
+                                        className="bg-transparent border-none cursor-pointer p-0 flex items-center gap-1"
+                                    >
+                                        <AdminBadge variant={STATUS_BADGE_VARIANT[p.status ?? ''] || 'neutral'}>
+                                            {p.status}
+                                        </AdminBadge>
+                                        <ChevronDown size={12} className="text-zinc-400" />
+                                    </button>
+                                    {statusChanging === p.id && (
+                                        <div className="absolute top-full left-2 mt-1 z-40 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl py-1.5 min-w-[140px]">
+                                            {['lead', 'building', 'pitched', 'free', 'paying', 'churned', 'lost'].map(s => (
+                                                <button
+                                                    key={s}
+                                                    disabled={s === p.status}
+                                                    onClick={() => handleStatusChange(p.id, s)}
+                                                    className={`w-full text-left px-3.5 py-2 text-[12px] font-medium border-none cursor-pointer transition-colors ${
+                                                        s === p.status
+                                                            ? 'bg-[#2CA58D]/10 text-[#2CA58D] font-semibold cursor-default'
+                                                            : 'bg-transparent text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                                    }`}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </td>
                                 <td className="px-4 py-3.5 text-sm text-zinc-600 dark:text-zinc-300">
                                     <span className="flex items-center gap-1">
@@ -891,7 +1035,26 @@ export default function AdminProspectsClient({
                                     </span>
                                 </td>
                                 <td className="px-4 py-3.5 text-xs text-zinc-400">
-                                    {p.contact_phone || p.contact_email || '—'}
+                                    <div className="flex flex-col gap-0.5">
+                                        {p.contact_email && <span className="truncate max-w-[140px]" title={p.contact_email}>{p.contact_email}</span>}
+                                        {p.contact_phone && <span>{p.contact_phone}</span>}
+                                        {p.instagram && (
+                                            <a href={`https://instagram.com/${p.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-[#E1306C] no-underline hover:underline flex items-center gap-0.5">
+                                                <Instagram size={10} /> {p.instagram}
+                                            </a>
+                                        )}
+                                        {!p.contact_email && !p.contact_phone && !p.instagram && '—'}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3.5 text-xs text-zinc-400 max-w-[150px]">
+                                    {p.notes ? (
+                                        <span className="truncate block" title={p.notes}>
+                                            <FileText size={10} className="inline mr-0.5" />
+                                            {p.notes.replace(/\[pitch-pending\]/g, '').slice(0, 40)}{p.notes.length > 40 ? '…' : ''}
+                                        </span>
+                                    ) : (
+                                        <span className="text-zinc-300 dark:text-zinc-600">—</span>
+                                    )}
                                 </td>
                                 <td className="px-4 py-3.5 text-xs">
                                     {p.claim_token ? (
@@ -927,29 +1090,56 @@ export default function AdminProspectsClient({
                                         <button
                                             onClick={() => setShowEvent(p.id)}
                                             className="px-2.5 py-1.5 rounded-lg bg-[#2CA58D]/10 text-[#2CA58D] text-[11px] font-semibold cursor-pointer border-none hover:bg-[#2CA58D]/20 transition-colors"
+                                            title="Add event"
                                         >
                                             + Event
                                         </button>
                                         <button
-                                            onClick={() => viewInterests(p.id)}
+                                            onClick={() => handleViewEvents(p.id)}
                                             className="px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold cursor-pointer border-none hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            title="View events & interests"
                                         >
-                                            View
+                                            <Eye size={10} className="inline mr-0.5" /> View
                                         </button>
                                         {p.status !== 'free' && p.status !== 'paying' && !p.claim_token && (
                                             <button
                                                 onClick={() => handleContact(p)}
                                                 disabled={loading}
                                                 className="px-2.5 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-blue-200 dark:hover:bg-blue-500/20 transition-colors"
+                                                title="Generate claim URL & pitch"
                                             >
-                                                Pitch
+                                                <Send size={10} className="inline mr-0.5" /> Pitch
                                             </button>
                                         )}
-                                        {p.status === 'pitched' && p.contact_phone && (
+                                        {/* Cold pitch — for leads without claim URL */}
+                                        {!p.claim_token && p.instagram && (
+                                            <button
+                                                onClick={() => copyToClipboard(coldPitchMessage(p.business_name), `cold-${p.id}`)}
+                                                className="px-2.5 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
+                                                title="Copy cold DM pitch to clipboard"
+                                            >
+                                                {copied === `cold-${p.id}` ? '✓ Copied!' : <><Copy size={10} className="inline mr-0.5" /> Cold DM</>}
+                                            </button>
+                                        )}
+                                        {/* Instagram DM link */}
+                                        {p.instagram && (
+                                            <a
+                                                href={`https://ig.me/m/${p.instagram.replace('@', '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gradient-to-br from-[#E1306C]/10 to-[#F77737]/10 text-[#E1306C] text-[11px] font-semibold no-underline hover:from-[#E1306C]/20 hover:to-[#F77737]/20 transition-all"
+                                                title="Open Instagram DM"
+                                            >
+                                                <Instagram size={10} /> DM
+                                            </a>
+                                        )}
+                                        {/* WhatsApp */}
+                                        {p.contact_phone && (
                                             <a
                                                 href={`https://wa.me/${p.contact_phone.replace(/[^0-9]/g, '')}`}
                                                 target="_blank"
-                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#25D366] text-white text-[11px] font-semibold no-underline hover:bg-[#20bd5a] transition-colors"
+                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#25D366]/10 text-[#25D366] text-[11px] font-semibold no-underline hover:bg-[#25D366]/20 transition-colors"
+                                                title="Open WhatsApp"
                                             >
                                                 <MessageCircle size={10} /> WA
                                             </a>
@@ -970,14 +1160,16 @@ export default function AdminProspectsClient({
                                                 });
                                             }}
                                             className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-semibold cursor-pointer border-none hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            title="Edit prospect"
                                         >
-                                            <Edit2 size={11} /> Edit
+                                            <Edit2 size={11} />
                                         </button>
                                         <button
                                             onClick={() => setDeletingProspect(p)}
                                             className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
+                                            title="Delete prospect"
                                         >
-                                            <Trash2 size={11} /> Delete
+                                            <Trash2 size={11} />
                                         </button>
                                     </div>
                                 </td>
@@ -988,22 +1180,79 @@ export default function AdminProspectsClient({
                 </table>
             </AdminCard>
 
+            {/* View Events/Interests Modal */}
+            {prospectEvents && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm"
+                    onClick={() => setProspectEvents(null)}>
+                    <AdminCard onClick={(e) => e.stopPropagation()} className="w-full max-w-[560px] relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] overflow-auto">
+                        <h3 className="text-lg font-bold mb-4 text-zinc-900 dark:text-white">Events & Interests</h3>
+                        {prospectEvents.events.length === 0 ? (
+                            <p className="text-zinc-400 text-sm">No events created yet for this prospect.</p>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {prospectEvents.events.map((ev: any) => (
+                                    <div key={ev.id} className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="font-semibold text-sm text-zinc-900 dark:text-white">{ev.title}</div>
+                                                <div className="text-xs text-zinc-400 mt-0.5">{ev.event_type} · {ev.city || 'No location'}</div>
+                                            </div>
+                                            <div className="text-xs text-zinc-500 whitespace-nowrap">
+                                                <Calendar size={10} className="inline mr-0.5" />
+                                                {new Date(ev.date).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                        {ev.capacity && <div className="text-xs text-zinc-400 mt-1">Capacity: {ev.capacity}</div>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                            <AdminButton variant="outline" size="sm" onClick={() => {
+                                setProspectEvents(null);
+                                viewInterests(prospectEvents.prospectId);
+                            }}>
+                                <Users size={14} className="mr-1.5" /> View Interested Users
+                            </AdminButton>
+                        </div>
+                        <AdminButton variant="ghost" onClick={() => setProspectEvents(null)} className="w-full mt-3">Close</AdminButton>
+                    </AdminCard>
+                </div>
+            )}
+
             {/* Pagination */}
             {data && data.totalPages > 1 && (
                 <div className="flex justify-center gap-2 mt-5">
-                    {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((p) => (
-                        <button
-                            key={p}
-                            onClick={() => { setPage(p); reload(p, statusFilter); }}
-                            className={`px-3.5 py-2 rounded-xl border text-[13px] font-semibold cursor-pointer transition-all duration-200 ${
-                                p === page
-                                    ? 'bg-[#2CA58D] text-white border-[#2CA58D] shadow-md shadow-[#2CA58D]/20'
-                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
-                            }`}
-                        >
-                            {p}
-                        </button>
-                    ))}
+                    {(() => {
+                        const total = data.totalPages;
+                        const pages: (number | '...')[] = [];
+                        if (total <= 7) {
+                            for (let i = 1; i <= total; i++) pages.push(i);
+                        } else {
+                            pages.push(1);
+                            if (page > 3) pages.push('...');
+                            for (let i = Math.max(2, page - 1); i <= Math.min(total - 1, page + 1); i++) pages.push(i);
+                            if (page < total - 2) pages.push('...');
+                            pages.push(total);
+                        }
+                        return pages.map((p, i) =>
+                            p === '...' ? (
+                                <span key={`dots-${i}`} className="px-2 py-2 text-zinc-400 text-sm">…</span>
+                            ) : (
+                                <button
+                                    key={p}
+                                    onClick={() => { setPage(p); reload(p, statusFilter); }}
+                                    className={`px-3.5 py-2 rounded-xl border text-[13px] font-semibold cursor-pointer transition-all duration-200 ${
+                                        p === page
+                                            ? 'bg-[#2CA58D] text-white border-[#2CA58D] shadow-md shadow-[#2CA58D]/20'
+                                            : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                                    }`}
+                                >
+                                    {p}
+                                </button>
+                            )
+                        );
+                    })()}
                 </div>
             )}
         </div>
