@@ -615,6 +615,21 @@
             "cta_secondary": "No Credit Card Required",
             "active_events": "Active Events"
         },
+        "LeadCapture": {
+            "title": "Not Ready to Sign Up Yet?",
+            "subtitle": "Leave your details and we'll show you how Nuqta can help your business — no commitment needed.",
+            "field_business_name": "Business Name *",
+            "field_email": "Email Address *",
+            "field_phone": "Phone Number (optional)",
+            "field_instagram": "Instagram Handle (optional)",
+            "submit": "Get Started",
+            "submitting": "Sending...",
+            "privacy_note": "We'll only use your info to reach out about Nuqta. No spam, ever.",
+            "success_title": "We Got Your Details! 🎉",
+            "success_message": "Our team will reach out shortly to show you how Nuqta can help streamline your events. Check your email for more info!",
+            "error_generic": "Something went wrong. Please try again.",
+            "error_duplicate": "This email is already registered. Check your inbox!"
+        },
         "FinalCTA": {
             "title": "Your Next Event Could Run Itself",
             "subtitle": "300+ organizers already made the switch. They stopped drowning in scattered DMs and started running events on autopilot. The only question is — why haven't you?",

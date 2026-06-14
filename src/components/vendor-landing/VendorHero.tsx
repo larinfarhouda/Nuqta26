@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight, Users, Zap, Clock, CheckCircle2, Calendar, TrendingUp, Star } from 'lucide-react';
 import { Link } from '@/navigation';
 import { useState, useEffect, useRef } from 'react';
+import { useCountryId } from '@/hooks/useCountry';
+import { getCurrencySymbol } from '@/utils/country-helpers';
 
 function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: string }) {
     const [display, setDisplay] = useState(target);
@@ -51,6 +53,8 @@ function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: str
 export default function VendorHero() {
     const t = useTranslations('VendorLanding.Hero');
     const [isLoaded, setIsLoaded] = useState(false);
+    const countryId = useCountryId();
+    const currency = getCurrencySymbol(countryId);
 
     useEffect(() => {
         setIsLoaded(true);
@@ -175,7 +179,7 @@ export default function VendorHero() {
                                     </div>
                                     <div className="bg-white/5 rounded-xl p-3 border border-white/5">
                                         <p className="text-[10px] text-white/40 font-medium mb-1">Revenue</p>
-                                        <p className="text-xl font-black text-white">₺12.4K</p>
+                                        <p className="text-xl font-black text-white">{`${currency}12.4K`}</p>
                                         <p className="text-[10px] text-green-400 font-bold">+24% ↑</p>
                                     </div>
                                     <div className="bg-white/5 rounded-xl p-3 border border-white/5">
@@ -222,7 +226,7 @@ export default function VendorHero() {
                                             <p className="text-[10px] text-white/40">Email sent automatically • Just now</p>
                                         </div>
                                     </div>
-                                    <span className="text-xs font-bold text-[#2CA58D]">₺150</span>
+                                    <span className="text-xs font-bold text-[#2CA58D]">{`${currency}150`}</span>
                                 </div>
                             </div>
 

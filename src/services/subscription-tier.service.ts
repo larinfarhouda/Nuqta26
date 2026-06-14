@@ -81,4 +81,33 @@ export class SubscriptionTierService {
         if (currentIndex === -1 || currentIndex >= tiers.length - 1) return null;
         return tiers[currentIndex + 1].id;
     }
+
+    /**
+     * Check if a vendor's subscription has expired
+     */
+    async isSubscriptionExpired(expiresAt: string | null): Promise<boolean> {
+        if (!expiresAt) return false;
+        return new Date(expiresAt) < new Date();
+    }
+
+    /**
+     * Get days until subscription expires
+     * Returns null if no expiry date
+     */
+    getDaysUntilExpiry(expiresAt: string | null): number | null {
+        if (!expiresAt) return null;
+        const now = new Date();
+        const expiry = new Date(expiresAt);
+        return Math.ceil((expiry.getTime() - now.getTime()) / 86400000);
+    }
+
+    /**
+     * Get the starter (free) tier ID
+     */
+    async getStarterTierId(): Promise<string | null> {
+        const tiers = await this.tierRepo.findAll(true);
+        const starter = tiers.find(t => t.regular_price === 0);
+        return starter?.id || null;
+    }
 }
+

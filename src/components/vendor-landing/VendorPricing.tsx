@@ -4,10 +4,30 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, ArrowRight, Zap, Sparkles, Crown, TrendingUp, Calendar, Shield } from 'lucide-react';
 import { Link } from '@/navigation';
+import { useCountryId } from '@/hooks/useCountry';
+import { getCurrencySymbol } from '@/utils/country-helpers';
+import { COUNTRY_PRICING } from '@/lib/constants/subscription';
 
 export default function VendorPricing() {
     const t = useTranslations('VendorLanding.Pricing');
     const [isAnnual, setIsAnnual] = useState(true);
+
+    const countryId = useCountryId();
+    const currency = getCurrencySymbol(countryId);
+    const prices = COUNTRY_PRICING[countryId] || COUNTRY_PRICING['tr'];
+
+    // Computed price strings
+    const proMonthly = `${currency}${prices.pro.monthly}`;
+    const proAnnualMonthly = `${currency}${Math.round(prices.pro.annual / 12)}`;
+    const proAnnualTotal = `${currency}${prices.pro.annual.toLocaleString()}/yr`;
+    const proSavings = `${currency}${(prices.pro.monthly * 12 - prices.pro.annual).toLocaleString()}`;
+
+    const bizMonthly = `${currency}${prices.business.monthly}`;
+    const bizAnnualMonthly = `${currency}${Math.round(prices.business.annual / 12)}`;
+    const bizAnnualTotal = `${currency}${prices.business.annual.toLocaleString()}/yr`;
+    const bizSavings = `${currency}${(prices.business.monthly * 12 - prices.business.annual).toLocaleString()}`;
+
+    const freePrice = `${currency}0`;
 
     const freeFeatures = t.raw('features_list') as string[];
     const proFeatures = t.raw('pro_features_list') as string[];
@@ -82,7 +102,7 @@ export default function VendorPricing() {
                         {/* Price */}
                         <div className="mb-6">
                             <div className="flex items-baseline gap-1">
-                                <span className="text-5xl font-black text-gray-900">{t('starter_price')}</span>
+                                <span className="text-5xl font-black text-gray-900">{freePrice}</span>
                             </div>
                             <p className="text-sm text-gray-500 font-medium mt-1">{t('starter_price_label')}</p>
                         </div>
@@ -139,20 +159,20 @@ export default function VendorPricing() {
                         <div className="mb-6">
                             <div className="flex items-baseline gap-2">
                                 <span className="text-5xl font-black text-white">
-                                    {isAnnual ? t('growth_price_annual') : t('growth_price_monthly')}
+                                    {isAnnual ? proAnnualMonthly : proMonthly}
                                 </span>
                                 <span className="text-base text-gray-400 font-medium">{t('growth_period')}</span>
                             </div>
                             {isAnnual && (
                                 <div className="flex items-center gap-3 mt-2">
-                                    <span className="text-sm text-gray-500 line-through font-medium">{t('growth_price_monthly')}{t('growth_period')}</span>
+                                    <span className="text-sm text-gray-500 line-through font-medium">{proMonthly}{t('growth_period')}</span>
                                     <span className="inline-flex px-2.5 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">
-                                        {t('save_badge', { amount: t('growth_annual_savings') })}
+                                        {t('save_badge', { amount: proSavings })}
                                     </span>
                                 </div>
                             )}
                             {isAnnual && (
-                                <p className="text-xs text-gray-500 mt-1">{t('growth_annual_total')} · {t('billed_annually')}</p>
+                                <p className="text-xs text-gray-500 mt-1">{proAnnualTotal} · {t('billed_annually')}</p>
                             )}
                         </div>
 
@@ -202,20 +222,20 @@ export default function VendorPricing() {
                         <div className="mb-6">
                             <div className="flex items-baseline gap-2">
                                 <span className="text-5xl font-black text-gray-900">
-                                    {isAnnual ? t('professional_price_annual') : t('professional_price_monthly')}
+                                    {isAnnual ? bizAnnualMonthly : bizMonthly}
                                 </span>
                                 <span className="text-base text-gray-500 font-medium">{t('professional_period')}</span>
                             </div>
                             {isAnnual && (
                                 <div className="flex items-center gap-3 mt-2">
-                                    <span className="text-sm text-gray-400 line-through font-medium">{t('professional_price_monthly')}{t('professional_period')}</span>
+                                    <span className="text-sm text-gray-400 line-through font-medium">{bizMonthly}{t('professional_period')}</span>
                                     <span className="inline-flex px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                                        {t('save_badge', { amount: t('professional_annual_savings') })}
+                                        {t('save_badge', { amount: bizSavings })}
                                     </span>
                                 </div>
                             )}
                             {isAnnual && (
-                                <p className="text-xs text-gray-500 mt-1">{t('professional_annual_total')} · {t('billed_annually')}</p>
+                                <p className="text-xs text-gray-500 mt-1">{bizAnnualTotal} · {t('billed_annually')}</p>
                             )}
                         </div>
 

@@ -24,6 +24,13 @@ export async function POST(request: Request) {
             additionalInfo,
         });
 
+        // Fire-and-forget: send welcome email to the new user
+        notificationService.sendWelcomeEmail({
+            email: userEmail,
+            name: userName,
+            locale: 'en',
+        });
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error in notify-signup API:', error);

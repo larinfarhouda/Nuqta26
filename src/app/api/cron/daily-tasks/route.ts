@@ -12,6 +12,11 @@ const BATCH_DELAY_MS = 600; // Delay between batches to respect Resend's 2 req/s
  * Vercel Cron Job: runs daily and handles:
  *   1. Event reminders — emails to users with confirmed bookings for events tomorrow
  *   2. Review requests — emails to users who attended events yesterday
+ *   3. Prospect follow-ups — nurture emails for pitched prospects
+ *   4. Subscription expiry warnings — warn vendors before subscription expires
+ *   5. Onboarding drips — guide new vendors through setup
+ *   6. Re-engagement emails — bring back inactive vendors
+ *   7. Lead nurture drips — nurture website leads
  * Secured via CRON_SECRET / Authorization header.
  */
 export async function GET(request: Request) {
@@ -98,13 +103,29 @@ export async function GET(request: Request) {
     );
 
     // ─── Task 3: Prospect Follow-up Emails ───────────────────────────────
-    const prospectResult = await sendProspectFollowups(supabase);
+    const prospectResult = await sendProspectFollowups(supabase, notificationService);
+
+    // ─── Task 4: Subscription Expiry Warnings ────────────────────────────
+    const expiryResult = await checkSubscriptionExpiry(supabase, notificationService);
+
+    // ─── Task 5: Onboarding Drip Emails ──────────────────────────────────
+    const onboardingResult = await sendOnboardingDrips(supabase, notificationService);
+
+    // ─── Task 6: Re-engagement Emails ────────────────────────────────────
+    const reengagementResult = await sendReEngagementEmails(supabase, notificationService);
+
+    // ─── Task 7: Lead Nurture Drips ──────────────────────────────────────
+    const leadNurtureResult = await sendLeadNurtureDrips(supabase, notificationService);
 
     const summary = {
         success: true,
         reminders: reminderResult,
         reviewRequests: reviewResult,
         prospectFollowups: prospectResult,
+        subscriptionExpiry: expiryResult,
+        onboardingDrips: onboardingResult,
+        reengagement: reengagementResult,
+        leadNurture: leadNurtureResult,
         durationMs: Date.now() - startTime,
     };
 
@@ -324,11 +345,9 @@ async function sendReviewRequests(
 
 // ─── Prospect Follow-up Emails ───────────────────────────────────────────────
 
-import { sendEmail } from '@/utils/mail';
-
 const FOLLOWUP_DAYS = [3, 7]; // Send follow-ups at day 3 and day 7
 
-async function sendProspectFollowups(supabase: any) {
+async function sendProspectFollowups(supabase: any, notificationService: NotificationService) {
     let sentCount = 0;
     let skippedCount = 0;
 
@@ -381,20 +400,14 @@ async function sendProspectFollowups(supabase: any) {
                 interestCount = count || 0;
             }
 
-            const isDay3 = daysSince === 3;
-            const subject = isDay3
-                ? `Reminder: ${prospect.business_name}, your Nuqta page is waiting!`
-                : `Last chance: Claim your Nuqta page, ${prospect.business_name}`;
-
-            const body = isDay3
-                ? `Hi ${prospect.business_name},\n\nJust a friendly reminder — we created a page for you on Nuqta a few days ago.${interestCount > 0 ? ` ${interestCount} people have already expressed interest in your events!` : ''}\n\nClaim your free page to start managing bookings:\n${claimUrl}\n\nBest regards,\nThe Nuqta Team`
-                : `Hi ${prospect.business_name},\n\nWe reached out last week about your page on Nuqta.${interestCount > 0 ? ` ${interestCount} people are interested in your events — don't miss out!` : ' People are discovering your events on our platform.'}\n\nThis is the last automated reminder. Claim your free page anytime:\n${claimUrl}\n\nWe'd love to have you on board!\nThe Nuqta Team`;
-
             try {
-                await sendEmail({
-                    to: prospect.contact_email,
-                    subject,
-                    html: body.replace(/\n/g, '<br>'),
+                await notificationService.sendProspectFollowup({
+                    email: prospect.contact_email,
+                    businessName: prospect.business_name,
+                    claimUrl,
+                    interestCount,
+                    daysSincePitch: daysSince,
+                    locale: 'en',
                 });
 
                 // Mark this follow-up as sent in notes
@@ -418,5 +431,436 @@ async function sendProspectFollowups(supabase: any) {
     } catch (error) {
         logger.error('Prospect follow-up task failed', { error });
         return { total: 0, sent: sentCount, skipped: skippedCount, error: 'Task failed' };
+    }
+}
+
+// ─── Subscription Expiry Warnings ────────────────────────────────────────────
+
+async function checkSubscriptionExpiry(supabase: any, notificationService: NotificationService) {
+    let warningsSent = 0;
+    let downgradedCount = 0;
+
+    try {
+        // Get the starter (free) tier ID for downgrading
+        const { data: starterTier } = await supabase
+            .from('subscription_tiers')
+            .select('id')
+            .eq('regular_price', 0)
+            .single();
+
+        if (!starterTier) {
+            logger.error('Could not find starter tier for subscription expiry check');
+            return { warningsSent: 0, downgraded: 0, error: 'No starter tier found' };
+        }
+
+        const starterTierId = starterTier.id;
+
+        // Query vendors with active paid subscriptions that have expiry dates
+        const { data: vendors, error } = await supabase
+            .from('vendors')
+            .select('id, business_name, subscription_tier, subscription_expires_at, subscription_status, profiles!inner(email, full_name)')
+            .not('subscription_expires_at', 'is', null)
+            .neq('subscription_tier', starterTierId);
+
+        if (error) {
+            logger.error('Failed to query vendors for subscription expiry', { error });
+            return { warningsSent: 0, downgraded: 0, error: 'Query failed' };
+        }
+
+        if (!vendors || vendors.length === 0) {
+            logger.info('No vendors with expiring subscriptions');
+            return { warningsSent: 0, downgraded: 0, total: 0 };
+        }
+
+        logger.info(`Checking subscription expiry for ${vendors.length} vendors`);
+
+        for (let i = 0; i < vendors.length; i += BATCH_SIZE) {
+            const batch = vendors.slice(i, i + BATCH_SIZE);
+
+            await Promise.allSettled(
+                batch.map(async (vendor: any) => {
+                    const profile = vendor.profiles;
+                    const email = profile?.email;
+                    const name = profile?.full_name || vendor.business_name;
+
+                    if (!email) {
+                        logger.warn('Vendor has no profile email, skipping expiry check', { vendorId: vendor.id });
+                        return;
+                    }
+
+                    const now = new Date();
+                    const expiryDate = new Date(vendor.subscription_expires_at);
+                    const daysLeft = Math.ceil((expiryDate.getTime() - now.getTime()) / 86400000);
+
+                    if (daysLeft <= 0) {
+                        // Subscription has expired — auto-downgrade to starter
+                        const { error: updateError } = await supabase
+                            .from('vendors')
+                            .update({
+                                subscription_tier: starterTierId,
+                                subscription_status: 'expired',
+                                subscription_expires_at: null,
+                            })
+                            .eq('id', vendor.id);
+
+                        if (updateError) {
+                            logger.error('Failed to downgrade vendor', { vendorId: vendor.id, error: updateError });
+                            return;
+                        }
+
+                        // Send expired notification
+                        try {
+                            await notificationService.sendSubscriptionExpired({
+                                email,
+                                name,
+                                businessName: vendor.business_name,
+                                locale: 'en',
+                            });
+                        } catch (err) {
+                            logger.error('Failed to send subscription expired email', { vendorId: vendor.id, error: err });
+                        }
+
+                        downgradedCount++;
+                        logger.info('Vendor subscription expired and downgraded', {
+                            vendorId: vendor.id,
+                            businessName: vendor.business_name,
+                        });
+                    } else if ([7, 3, 1].includes(daysLeft)) {
+                        // Send warning email
+                        try {
+                            await notificationService.sendSubscriptionWarning({
+                                email,
+                                name,
+                                businessName: vendor.business_name,
+                                daysLeft,
+                                locale: 'en',
+                            });
+                            warningsSent++;
+                            logger.info('Subscription warning sent', {
+                                vendorId: vendor.id,
+                                daysLeft,
+                            });
+                        } catch (err) {
+                            logger.error('Failed to send subscription warning', { vendorId: vendor.id, error: err });
+                        }
+                    }
+                })
+            );
+
+            // Rate limit between batches
+            if (i + BATCH_SIZE < vendors.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
+        }
+
+        return { total: vendors.length, warningsSent, downgraded: downgradedCount };
+    } catch (error) {
+        logger.error('Subscription expiry check failed', { error });
+        return { warningsSent, downgraded: downgradedCount, error: 'Task failed' };
+    }
+}
+
+// ─── Onboarding Drip Emails ─────────────────────────────────────────────────
+
+// Map of days since onboarding started → step number
+const ONBOARDING_STEP_DAYS: Record<number, number> = {
+    1: 1,
+    3: 2,
+    7: 3,
+    14: 4,
+    30: 5,
+};
+
+async function sendOnboardingDrips(supabase: any, notificationService: NotificationService) {
+    let sentCount = 0;
+    let skippedCount = 0;
+
+    try {
+        // Query vendors who are in the onboarding flow
+        const { data: vendors, error } = await supabase
+            .from('vendors')
+            .select('id, business_name, onboarding_email_step, onboarding_started_at, profiles!inner(email, full_name)')
+            .lt('onboarding_email_step', 5)
+            .not('onboarding_started_at', 'is', null);
+
+        if (error) {
+            logger.error('Failed to query vendors for onboarding drips', { error });
+            return { sent: 0, skipped: 0, error: 'Query failed' };
+        }
+
+        if (!vendors || vendors.length === 0) {
+            logger.info('No vendors need onboarding drips');
+            return { total: 0, sent: 0, skipped: 0 };
+        }
+
+        logger.info(`Checking onboarding drips for ${vendors.length} vendors`);
+
+        const now = Date.now();
+
+        for (let i = 0; i < vendors.length; i += BATCH_SIZE) {
+            const batch = vendors.slice(i, i + BATCH_SIZE);
+
+            await Promise.allSettled(
+                batch.map(async (vendor: any) => {
+                    const profile = vendor.profiles;
+                    const email = profile?.email;
+
+                    if (!email) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    const startedAt = new Date(vendor.onboarding_started_at).getTime();
+                    const daysSinceStart = Math.floor((now - startedAt) / 86400000);
+
+                    // Check if this day corresponds to a step
+                    const stepForToday = ONBOARDING_STEP_DAYS[daysSinceStart];
+
+                    if (!stepForToday || vendor.onboarding_email_step >= stepForToday) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    try {
+                        await notificationService.sendOnboardingDrip({
+                            email,
+                            name: profile?.full_name || vendor.business_name,
+                            businessName: vendor.business_name,
+                            step: stepForToday,
+                            locale: 'en',
+                        });
+
+                        // Update the step
+                        await supabase
+                            .from('vendors')
+                            .update({ onboarding_email_step: stepForToday })
+                            .eq('id', vendor.id);
+
+                        sentCount++;
+                        logger.info('Onboarding drip sent', {
+                            vendorId: vendor.id,
+                            step: stepForToday,
+                            daysSinceStart,
+                        });
+                    } catch (err) {
+                        logger.error('Failed to send onboarding drip', { vendorId: vendor.id, step: stepForToday, error: err });
+                    }
+                })
+            );
+
+            // Rate limit between batches
+            if (i + BATCH_SIZE < vendors.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
+        }
+
+        return { total: vendors.length, sent: sentCount, skipped: skippedCount };
+    } catch (error) {
+        logger.error('Onboarding drips task failed', { error });
+        return { sent: sentCount, skipped: skippedCount, error: 'Task failed' };
+    }
+}
+
+// ─── Re-engagement Emails ────────────────────────────────────────────────────
+
+const REENGAGEMENT_DAYS = [14, 30, 60]; // Days of inactivity that trigger re-engagement
+
+async function sendReEngagementEmails(supabase: any, notificationService: NotificationService) {
+    let sentCount = 0;
+    let skippedCount = 0;
+
+    try {
+        // Query approved vendors who have been inactive for more than 14 days
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setUTCDate(fourteenDaysAgo.getUTCDate() - 14);
+
+        const { data: vendors, error } = await supabase
+            .from('vendors')
+            .select('id, business_name, last_active_at, reengagement_email_sent_at, profiles!inner(email, full_name)')
+            .eq('status', 'approved')
+            .lt('last_active_at', fourteenDaysAgo.toISOString());
+
+        if (error) {
+            logger.error('Failed to query vendors for re-engagement', { error });
+            return { sent: 0, skipped: 0, error: 'Query failed' };
+        }
+
+        if (!vendors || vendors.length === 0) {
+            logger.info('No vendors need re-engagement emails');
+            return { total: 0, sent: 0, skipped: 0 };
+        }
+
+        logger.info(`Checking re-engagement for ${vendors.length} inactive vendors`);
+
+        const now = Date.now();
+
+        for (let i = 0; i < vendors.length; i += BATCH_SIZE) {
+            const batch = vendors.slice(i, i + BATCH_SIZE);
+
+            await Promise.allSettled(
+                batch.map(async (vendor: any) => {
+                    const profile = vendor.profiles;
+                    const email = profile?.email;
+
+                    if (!email) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    // Check if we already sent a re-engagement email recently (within 14 days)
+                    if (vendor.reengagement_email_sent_at) {
+                        const lastSent = new Date(vendor.reengagement_email_sent_at).getTime();
+                        const daysSinceLastSent = Math.floor((now - lastSent) / 86400000);
+                        if (daysSinceLastSent < 14) {
+                            skippedCount++;
+                            return;
+                        }
+                    }
+
+                    const lastActiveAt = new Date(vendor.last_active_at).getTime();
+                    const daysSinceActive = Math.floor((now - lastActiveAt) / 86400000);
+
+                    // Check if days since active matches a re-engagement milestone (±1 day window)
+                    const matchesMilestone = REENGAGEMENT_DAYS.some(
+                        day => Math.abs(daysSinceActive - day) <= 1
+                    );
+
+                    if (!matchesMilestone) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    try {
+                        await notificationService.sendReEngagement({
+                            email,
+                            name: profile?.full_name || vendor.business_name,
+                            businessName: vendor.business_name,
+                            daysSinceActive,
+                            locale: 'en',
+                        });
+
+                        // Update re-engagement sent timestamp
+                        await supabase
+                            .from('vendors')
+                            .update({ reengagement_email_sent_at: new Date().toISOString() })
+                            .eq('id', vendor.id);
+
+                        sentCount++;
+                        logger.info('Re-engagement email sent', {
+                            vendorId: vendor.id,
+                            daysSinceActive,
+                        });
+                    } catch (err) {
+                        logger.error('Failed to send re-engagement email', { vendorId: vendor.id, error: err });
+                    }
+                })
+            );
+
+            // Rate limit between batches
+            if (i + BATCH_SIZE < vendors.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
+        }
+
+        return { total: vendors.length, sent: sentCount, skipped: skippedCount };
+    } catch (error) {
+        logger.error('Re-engagement emails task failed', { error });
+        return { sent: sentCount, skipped: skippedCount, error: 'Task failed' };
+    }
+}
+
+// ─── Lead Nurture Drip Emails ────────────────────────────────────────────────
+
+// Map of days since lead creation → step number
+// Step 1 (day 0) is sent immediately on capture, so we only process steps 2-3 here
+const LEAD_NURTURE_STEP_DAYS: Record<number, number> = {
+    3: 2,
+    7: 3,
+};
+
+async function sendLeadNurtureDrips(supabase: any, notificationService: NotificationService) {
+    let sentCount = 0;
+    let skippedCount = 0;
+
+    try {
+        // Query website leads that haven't completed the nurture sequence
+        const { data: prospects, error } = await supabase
+            .from('prospect_vendors')
+            .select('id, business_name, contact_email, lead_nurture_step, created_at')
+            .eq('status', 'lead')
+            .eq('lead_source', 'website')
+            .lt('lead_nurture_step', 3);
+
+        if (error) {
+            logger.error('Failed to query prospects for lead nurture', { error });
+            return { sent: 0, skipped: 0, error: 'Query failed' };
+        }
+
+        if (!prospects || prospects.length === 0) {
+            logger.info('No leads need nurture drips');
+            return { total: 0, sent: 0, skipped: 0 };
+        }
+
+        logger.info(`Checking lead nurture drips for ${prospects.length} prospects`);
+
+        const now = Date.now();
+
+        for (let i = 0; i < prospects.length; i += BATCH_SIZE) {
+            const batch = prospects.slice(i, i + BATCH_SIZE);
+
+            await Promise.allSettled(
+                batch.map(async (prospect: any) => {
+                    if (!prospect.contact_email) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    const createdAt = new Date(prospect.created_at).getTime();
+                    const daysSinceCreation = Math.floor((now - createdAt) / 86400000);
+
+                    // Check if this day corresponds to a step
+                    const stepForToday = LEAD_NURTURE_STEP_DAYS[daysSinceCreation];
+
+                    if (!stepForToday || prospect.lead_nurture_step >= stepForToday) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    try {
+                        await notificationService.sendLeadNurture({
+                            email: prospect.contact_email,
+                            businessName: prospect.business_name,
+                            step: stepForToday,
+                            locale: 'en',
+                        });
+
+                        // Update the nurture step
+                        await supabase
+                            .from('prospect_vendors')
+                            .update({ lead_nurture_step: stepForToday })
+                            .eq('id', prospect.id);
+
+                        sentCount++;
+                        logger.info('Lead nurture drip sent', {
+                            prospectId: prospect.id,
+                            step: stepForToday,
+                            daysSinceCreation,
+                        });
+                    } catch (err) {
+                        logger.error('Failed to send lead nurture drip', { prospectId: prospect.id, step: stepForToday, error: err });
+                    }
+                })
+            );
+
+            // Rate limit between batches
+            if (i + BATCH_SIZE < prospects.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            }
+        }
+
+        return { total: prospects.length, sent: sentCount, skipped: skippedCount };
+    } catch (error) {
+        logger.error('Lead nurture drips task failed', { error });
+        return { sent: sentCount, skipped: skippedCount, error: 'Task failed' };
     }
 }

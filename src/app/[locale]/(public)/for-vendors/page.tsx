@@ -1,7 +1,10 @@
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import dynamic from 'next/dynamic';
+import { cookies } from 'next/headers';
 import { generateLocaleBreadcrumbSchema } from '@/lib/seo';
+import { COUNTRY_COOKIE_NAME, DEFAULT_COUNTRY, getCurrencyCode, getCountryCode, getCountryNameEn } from '@/utils/country-helpers';
+import { COUNTRY_PRICING } from '@/lib/constants/subscription';
 
 const VendorHero = dynamic(() => import('@/components/vendor-landing/VendorHero'), {
     loading: () => <div className="h-[70vh] w-full animate-pulse bg-[#fffdfa]" />
@@ -31,6 +34,10 @@ const VendorFAQ = dynamic(() => import('@/components/vendor-landing/VendorFAQ'),
 
 const VendorPricing = dynamic(() => import('@/components/vendor-landing/VendorPricing'), {
     loading: () => <div className="h-[600px] w-full animate-pulse bg-gray-50" />
+});
+
+const VendorLeadCapture = dynamic(() => import('@/components/vendor-landing/VendorLeadCapture'), {
+    loading: () => <div className="h-[400px] w-full animate-pulse bg-[#f0faf7]" />
 });
 
 const VendorFinalCTA = dynamic(() => import('@/components/vendor-landing/VendorFinalCTA'), {
@@ -85,6 +92,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VendorLandingPage({ params }: Props) {
     const { locale } = await params;
 
+    // Region detection
+    const cookieStore = await cookies();
+    const countryId = cookieStore.get(COUNTRY_COOKIE_NAME)?.value || DEFAULT_COUNTRY;
+    const currencyCode = getCurrencyCode(countryId);
+    const countryCode = getCountryCode(countryId);
+    const countryName = getCountryNameEn(countryId);
+    const cityName = countryId === 'eg' ? 'Cairo' : 'Istanbul';
+    const prices = COUNTRY_PRICING[countryId] || COUNTRY_PRICING['tr'];
+    const audienceType = countryId === 'eg'
+        ? 'Event Organizers in Egypt'
+        : 'Arab Event Organizers in Turkey';
+
     const breadcrumbSchema = generateLocaleBreadcrumbSchema(locale, [
         { name: locale === 'ar' ? 'الرئيسية' : 'Home', path: '' },
         { name: locale === 'ar' ? 'للمنظمين' : 'For Vendors', path: '/for-vendors' },
@@ -111,21 +130,21 @@ export default async function VendorLandingPage({ params }: Props) {
                                 '@type': 'Offer',
                                 name: 'Free Plan',
                                 price: '0',
-                                priceCurrency: 'TRY',
+                                priceCurrency: currencyCode,
                                 description: 'Up to 3 active events with full automation, bilingual emails, and custom landing page'
                             },
                             {
                                 '@type': 'Offer',
                                 name: 'Pro Plan',
-                                price: '299',
-                                priceCurrency: 'TRY',
+                                price: String(prices.pro.monthly),
+                                priceCurrency: currencyCode,
                                 description: 'Unlimited events, verified badge, discount codes, CRM, and advanced analytics'
                             },
                             {
                                 '@type': 'Offer',
                                 name: 'Business Plan',
-                                price: '499',
-                                priceCurrency: 'TRY',
+                                price: String(prices.business.monthly),
+                                priceCurrency: currencyCode,
                                 description: 'Everything in Pro plus dedicated account manager and priority WhatsApp support'
                             }
                         ],
@@ -160,8 +179,8 @@ export default async function VendorLandingPage({ params }: Props) {
                         description: 'Event management platform for organizers',
                         address: {
                             '@type': 'PostalAddress',
-                            addressCountry: 'TR',
-                            addressLocality: 'Istanbul'
+                            addressCountry: countryCode,
+                            addressLocality: cityName
                         },
                         sameAs: [
                             'https://twitter.com/nuqta_ist'
@@ -190,9 +209,9 @@ export default async function VendorLandingPage({ params }: Props) {
                         },
                         offers: {
                             '@type': 'AggregateOffer',
-                            priceCurrency: 'TRY',
+                            priceCurrency: currencyCode,
                             lowPrice: '0',
-                            highPrice: '499',
+                            highPrice: String(prices.business.monthly),
                             offerCount: '3'
                         }
                     })
@@ -213,11 +232,11 @@ export default async function VendorLandingPage({ params }: Props) {
                         },
                         areaServed: {
                             '@type': 'Country',
-                            name: 'Turkey'
+                            name: countryName
                         },
                         audience: {
                             '@type': 'Audience',
-                            audienceType: 'Arab Event Organizers in Turkey'
+                            audienceType: audienceType
                         }
                     })
                 }}
@@ -276,6 +295,7 @@ export default async function VendorLandingPage({ params }: Props) {
                 <VendorHowItWorks />
                 <VendorPricing />
                 <VendorTestimonials />
+                <VendorLeadCapture />
                 <VendorFAQ />
                 <VendorFinalCTA />
             </main>

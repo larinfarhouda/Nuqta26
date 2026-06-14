@@ -19,6 +19,23 @@ export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled';
 export type BadgeType = 'verified' | 'premium' | null;
 
 /**
+ * Per-country pricing for landing page display.
+ * Source of truth is the admin panel — these are fallback defaults.
+ */
+export const COUNTRY_PRICING: Record<string, Record<SubscriptionTier, { monthly: number; annual: number }>> = {
+    tr: {
+        free: { monthly: 0, annual: 0 },
+        pro: { monthly: 299, annual: 2990 },
+        business: { monthly: 499, annual: 4990 },
+    },
+    eg: {
+        free: { monthly: 0, annual: 0 },
+        pro: { monthly: 149, annual: 1490 },
+        business: { monthly: 249, annual: 2490 },
+    },
+};
+
+/**
  * Shape of a subscription tier config (matches the DB schema)
  */
 export interface SubscriptionTierConfig {

@@ -17,6 +17,7 @@ import {
     LogOut,
     Menu,
     X,
+    Wand2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -31,6 +32,7 @@ const navItems = [
     { label: 'Bookings', icon: CreditCard, href: '/admin/bookings' },
     { label: 'Moderation', icon: Shield, href: '/admin/moderation' },
     { label: 'Prospects', icon: UserPlus, href: '/admin/prospects' },
+    { label: 'Prospect Builder', icon: Wand2, href: '/admin/prospect-builder' },
     { label: 'Users', icon: Users, href: '/admin/users' },
     { label: 'Countries', icon: Globe, href: '/admin/countries' },
     { label: 'Subscriptions', icon: Crown, href: '/admin/subscriptions' },

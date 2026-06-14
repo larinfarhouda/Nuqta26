@@ -481,6 +481,127 @@ export async function deleteProspectVendor(prospectId: string) {
     }
 }
 
+/**
+ * Full automated prospect pipeline:
+ * Creates prospect → adds events → generates claim URL → sends pitch email.
+ */
+export async function autoProspectPipeline(input: {
+    business_name: string;
+    contact_email?: string;
+    contact_phone?: string;
+    instagram?: string;
+    website?: string;
+    bio?: string;
+    logo_url?: string;
+    location?: string;
+    events: Array<{
+        title: string;
+        date: string;
+        description?: string;
+        image_url?: string;
+        location_name?: string;
+        city?: string;
+        country?: string;
+        event_type?: string;
+        capacity?: number;
+    }>;
+    sendPitch: boolean;
+    locale?: 'en' | 'ar';
+}) {
+    try {
+        const { user } = await requireAdmin();
+        const service = await getAdminService();
+        const adminClient = await createAdminClient();
+
+        // 1. Get system vendor
+        const { data: systemVendor } = await adminClient
+            .from('vendors')
+            .select('id')
+            .eq('slug', 'nuqta-platform')
+            .single();
+
+        if (!systemVendor) {
+            return { error: 'System vendor account not found. Please create the Nuqta Platform vendor first.' };
+        }
+
+        // 2. Create prospect vendor
+        const prospect = await service.createProspectVendor({
+            business_name: input.business_name,
+            contact_email: input.contact_email,
+            contact_phone: input.contact_phone,
+            instagram: input.instagram,
+            website: input.website,
+            bio: input.bio,
+            logo_url: input.logo_url,
+            location: input.location,
+            notes: `[auto-pipeline] Created via Prospect Builder`,
+        }, user.id);
+
+        if (!prospect?.id) {
+            return { error: 'Failed to create prospect vendor record' };
+        }
+
+        // 3. Create prospect events
+        const eventIds: string[] = [];
+        for (const eventData of input.events) {
+            if (!eventData.title || !eventData.date) continue;
+            try {
+                const event = await service.createProspectEvent({
+                    prospect_vendor_id: prospect.id,
+                    ...eventData,
+                }, systemVendor.id);
+                if (event?.id) eventIds.push(event.id);
+            } catch (eventErr) {
+                logger.error('Failed to create prospect event in pipeline', { error: eventErr, prospectId: prospect.id });
+            }
+        }
+
+        // 4. Generate claim token + URL
+        const claimToken = await service.contactProspect(prospect.id, user.id);
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist';
+        const claimUrl = `${baseUrl}/claim/${claimToken}`;
+
+        // 5. Send pitch email (fire-and-forget)
+        let emailSent = false;
+        if (input.sendPitch && input.contact_email) {
+            try {
+                const { NotificationService } = await import('@/services/notification.service');
+                const notificationService = new NotificationService();
+                await notificationService.sendProspectFollowup({
+                    email: input.contact_email,
+                    businessName: input.business_name,
+                    claimUrl,
+                    interestCount: 0,
+                    daysSincePitch: 0,
+                    locale: input.locale || 'ar',
+                });
+                emailSent = true;
+            } catch (emailErr) {
+                logger.error('Failed to send pitch email in pipeline', { error: emailErr, prospectId: prospect.id });
+            }
+        }
+
+        logger.info('Auto-prospect pipeline completed', {
+            prospectId: prospect.id,
+            eventsCreated: eventIds.length,
+            emailSent,
+            claimUrl,
+        });
+
+        return {
+            success: true,
+            prospectId: prospect.id,
+            claimUrl,
+            claimToken,
+            eventIds,
+            emailSent,
+        };
+    } catch (error) {
+        logger.error('Auto-prospect pipeline failed', { error });
+        return { error: 'Auto-prospect pipeline failed. Check logs for details.' };
+    }
+}
+
 // ─── Activity Logs ──────────────────────────────────────────────────────────
 
 export async function getAdminActivity(page = 1, pageSize = 50) {

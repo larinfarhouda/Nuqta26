@@ -430,4 +430,287 @@ export class NotificationService {
             // Don't throw - admin notification failure shouldn't break signup
         }
     }
+
+    /**
+     * Send prospect follow-up email (replaces raw HTML with React Email template)
+     */
+    async sendProspectFollowup(params: {
+        email: string;
+        businessName: string;
+        claimUrl: string;
+        interestCount: number;
+        daysSincePitch: number;
+        locale: 'en' | 'ar';
+    }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        logger.info('NotificationService: Sending prospect follow-up', {
+            email: params.email,
+            daysSincePitch: params.daysSincePitch,
+        });
+
+        try {
+            const ProspectFollowupTemplate = (await import('@/components/emails/ProspectFollowupTemplate')).default;
+            const subjects: Record<number, string> = {
+                3: isAr
+                    ? `تذكير: ${params.businessName}، صفحتك على نقطة جاهزة!`
+                    : `Reminder: ${params.businessName}, your Nuqta page is waiting!`,
+                7: isAr
+                    ? `فرصة أخيرة: استلم صفحتك على نقطة، ${params.businessName}`
+                    : `Last chance: Claim your Nuqta page, ${params.businessName}`,
+                14: isAr
+                    ? `آخر إشعار: صفحة ${params.businessName} ستتم أرشفتها`
+                    : `Final notice: ${params.businessName}'s page will be archived`,
+            };
+
+            await sendEmail({
+                to: params.email,
+                subject: subjects[params.daysSincePitch] || `Nuqta — ${params.businessName}`,
+                react: React.createElement(ProspectFollowupTemplate, {
+                    businessName: params.businessName,
+                    claimUrl: params.claimUrl,
+                    interestCount: params.interestCount,
+                    daysSincePitch: params.daysSincePitch,
+                    locale,
+                }),
+            });
+
+            logger.info('Prospect follow-up sent successfully');
+        } catch (error) {
+            logger.error('Failed to send prospect follow-up', { error, params });
+        }
+    }
+
+    /**
+     * Send subscription expiry warning email
+     */
+    async sendSubscriptionWarning(params: {
+        email: string;
+        name: string;
+        businessName: string;
+        daysLeft: number;
+        locale?: 'en' | 'ar';
+    }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        logger.info('NotificationService: Sending subscription warning', {
+            email: params.email,
+            daysLeft: params.daysLeft,
+        });
+
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
+            const SubscriptionWarningTemplate = (await import('@/components/emails/SubscriptionWarningTemplate')).default;
+            await sendEmail({
+                to: params.email,
+                subject: isAr
+                    ? `⚠️ اشتراكك ينتهي خلال ${params.daysLeft} ${params.daysLeft > 1 ? 'أيام' : 'يوم'} | Subscription expires in ${params.daysLeft} day${params.daysLeft > 1 ? 's' : ''}`
+                    : `⚠️ Subscription expires in ${params.daysLeft} day${params.daysLeft > 1 ? 's' : ''} | اشتراكك ينتهي خلال ${params.daysLeft} ${params.daysLeft > 1 ? 'أيام' : 'يوم'}`,
+                react: React.createElement(SubscriptionWarningTemplate, {
+                    vendorName: params.name,
+                    planName: params.businessName,
+                    daysLeft: params.daysLeft,
+                    renewUrl: `${baseUrl}/dashboard/vendor`,
+                    locale,
+                }),
+            });
+
+            logger.info('Subscription warning sent successfully');
+        } catch (error) {
+            logger.error('Failed to send subscription warning', { error, params });
+        }
+    }
+
+    /**
+     * Send subscription expired notification email
+     */
+    async sendSubscriptionExpired(params: {
+        email: string;
+        name: string;
+        businessName: string;
+        locale?: 'en' | 'ar';
+    }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        logger.info('NotificationService: Sending subscription expired notification', {
+            email: params.email,
+        });
+
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
+            const SubscriptionExpiredTemplate = (await import('@/components/emails/SubscriptionExpiredTemplate')).default;
+            await sendEmail({
+                to: params.email,
+                subject: isAr
+                    ? `اشتراكك انتهى | Your subscription has expired — ${params.businessName}`
+                    : `Your subscription has expired | اشتراكك انتهى — ${params.businessName}`,
+                react: React.createElement(SubscriptionExpiredTemplate, {
+                    vendorName: params.name,
+                    previousPlan: params.businessName,
+                    renewUrl: `${baseUrl}/dashboard/vendor`,
+                    locale,
+                }),
+            });
+
+            logger.info('Subscription expired notification sent successfully');
+        } catch (error) {
+            logger.error('Failed to send subscription expired notification', { error, params });
+        }
+    }
+
+    /**
+     * Send onboarding drip email
+     */
+    async sendOnboardingDrip(params: {
+        email: string;
+        name: string;
+        businessName: string;
+        step: number;
+        locale?: 'en' | 'ar';
+    }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        logger.info('NotificationService: Sending onboarding drip', {
+            email: params.email,
+            step: params.step,
+        });
+
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
+            const OnboardingDripTemplate = (await import('@/components/emails/OnboardingDripTemplate')).default;
+
+            const stepSubjects: Record<number, { ar: string; en: string }> = {
+                1: {
+                    ar: `أنشئ فعاليتك الأولى في 5 دقائق | Create your first event`,
+                    en: `Create your first event in 5 minutes | أنشئ فعاليتك الأولى`,
+                },
+                2: {
+                    ar: `شارك فعاليتك واحصل على أول حضور | Share your event`,
+                    en: `Share your event & get your first attendees | شارك فعاليتك`,
+                },
+                3: {
+                    ar: `شوف تحليلاتك — مين يتابع فعالياتك | Check your analytics`,
+                    en: `Check your analytics — see who's watching | شوف تحليلاتك`,
+                },
+                4: {
+                    ar: `جاهز للنمو؟ ترقى لأكثر فعاليات | Ready to grow?`,
+                    en: `Ready to grow? Upgrade for more events | جاهز للنمو؟`,
+                },
+                5: {
+                    ar: `كيف الأمور؟ نحب نسمع رأيك | How's it going?`,
+                    en: `How's it going? We'd love your feedback | كيف الأمور؟`,
+                },
+            };
+
+            const subject = stepSubjects[params.step]?.[locale] || `Nuqta — Step ${params.step}`;
+
+            await sendEmail({
+                to: params.email,
+                subject,
+                react: React.createElement(OnboardingDripTemplate, {
+                    vendorName: params.name,
+                    step: params.step as 1 | 2 | 3 | 4 | 5,
+                    dashboardUrl: `${baseUrl}/dashboard/vendor`,
+                    locale,
+                }),
+            });
+
+            logger.info('Onboarding drip sent successfully', { step: params.step });
+        } catch (error) {
+            logger.error('Failed to send onboarding drip', { error, params });
+        }
+    }
+
+    /**
+     * Send re-engagement email to inactive vendor
+     */
+    async sendReEngagement(params: {
+        email: string;
+        name: string;
+        businessName: string;
+        daysSinceActive: number;
+        locale?: 'en' | 'ar';
+    }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        logger.info('NotificationService: Sending re-engagement email', {
+            email: params.email,
+            daysSinceActive: params.daysSinceActive,
+        });
+
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
+            const ReEngagementTemplate = (await import('@/components/emails/ReEngagementTemplate')).default;
+            await sendEmail({
+                to: params.email,
+                subject: isAr
+                    ? `اشتقنالك ${params.name}! صفحتك على نقطة بانتظارك`
+                    : `We miss you, ${params.name}! Your Nuqta page is waiting`,
+                react: React.createElement(ReEngagementTemplate, {
+                    vendorName: params.name,
+                    daysSinceActive: params.daysSinceActive,
+                    dashboardUrl: `${baseUrl}/dashboard/vendor`,
+                    locale,
+                }),
+            });
+
+            logger.info('Re-engagement email sent successfully');
+        } catch (error) {
+            logger.error('Failed to send re-engagement email', { error, params });
+        }
+    }
+
+    /**
+     * Send lead nurture email to prospect
+     */
+    async sendLeadNurture(params: {
+        email: string;
+        businessName: string;
+        step: number;
+        locale?: 'en' | 'ar';
+    }) {
+        const locale = params.locale || 'ar';
+        const isAr = locale === 'ar';
+        logger.info('NotificationService: Sending lead nurture email', {
+            email: params.email,
+            step: params.step,
+        });
+
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nuqta.ist';
+            const LeadNurtureTemplate = (await import('@/components/emails/LeadNurtureTemplate')).default;
+
+            const stepSubjects: Record<number, { ar: string; en: string }> = {
+                1: {
+                    ar: `مرحباً! إليك كيف نقطة تساعد ${params.businessName}`,
+                    en: `Welcome! Here's how Nuqta can help ${params.businessName}`,
+                },
+                2: {
+                    ar: `شوف كيف المنظمين يديرون فعالياتهم على نقطة`,
+                    en: `See how organizers manage their events on Nuqta`,
+                },
+                3: {
+                    ar: `جاهز تبدأ؟ سجّل مجاناً الآن`,
+                    en: `Ready to get started? It's completely free`,
+                },
+            };
+
+            const subject = stepSubjects[params.step]?.[locale] || `Nuqta — ${params.businessName}`;
+
+            await sendEmail({
+                to: params.email,
+                subject,
+                react: React.createElement(LeadNurtureTemplate, {
+                    businessName: params.businessName,
+                    step: params.step as 1 | 2 | 3,
+                    registerUrl: `${baseUrl}/register?role=vendor`,
+                    locale,
+                }),
+            });
+
+            logger.info('Lead nurture email sent successfully', { step: params.step });
+        } catch (error) {
+            logger.error('Failed to send lead nurture email', { error, params });
+        }
+    }
 }
