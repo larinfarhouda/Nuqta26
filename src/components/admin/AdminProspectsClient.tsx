@@ -264,9 +264,28 @@ export default function AdminProspectsClient({
         try {
             const text = await file.text();
             const lines = text.split('\n').filter(l => l.trim());
-            const header = lines[0].toLowerCase().split(',').map(h => h.trim());
+            // CSV parser that handles quoted fields with commas
+            const parseCsvLine = (line: string): string[] => {
+                const result: string[] = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const ch = line[i];
+                    if (ch === '"' || ch === "'") {
+                        inQuotes = !inQuotes;
+                    } else if (ch === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += ch;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            };
+            const header = parseCsvLine(lines[0]).map(h => h.toLowerCase());
             const rows = lines.slice(1).map(line => {
-                const vals = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+                const vals = parseCsvLine(line);
                 const obj: Record<string, string> = {};
                 header.forEach((h, i) => { obj[h] = vals[i] || ''; });
                 return {

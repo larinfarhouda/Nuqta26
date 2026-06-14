@@ -169,7 +169,7 @@ export async function impersonateVendor(vendorId: string) {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
         const magicLink = actionLink.replace(url.origin, siteUrl);
 
-        return { success: true, url: actionLink };
+        return { success: true, url: magicLink };
     } catch (error) {
         logger.error('Failed to impersonate vendor', { error });
         return { error: 'Failed to impersonate vendor' };
@@ -836,6 +836,7 @@ export async function scoutInstagramProfile(handle: string) {
         logger.error('Failed to scout Instagram profile', { error, handle });
         const cleanHandle = handle.replace(/^@/, '').trim();
         return {
+            success: true,
             logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanHandle)}&background=8b5cf6&color=fff&size=128`,
             website: `https://instagram.com/${cleanHandle}`,
             businessName: cleanHandle

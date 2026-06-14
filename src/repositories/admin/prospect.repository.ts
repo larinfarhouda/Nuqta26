@@ -220,10 +220,10 @@ export class AdminProspectRepository extends BaseRepository {
     }
 
     async deleteProspectVendor(prospectId: string): Promise<void> {
-        // Disconnect associated events first to prevent FK constraint failures
+        // Delete associated phantom events (they belong to system vendor)
         const { error: eventError } = await this.client
             .from('events')
-            .update({ prospect_vendor_id: null, updated_at: new Date().toISOString() })
+            .delete()
             .eq('prospect_vendor_id', prospectId);
 
         if (eventError) this.handleError(eventError, 'AdminProspectRepository.deleteProspectVendor.disconnectEvents');

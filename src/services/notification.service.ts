@@ -452,6 +452,9 @@ export class NotificationService {
         try {
             const ProspectFollowupTemplate = (await import('@/components/emails/ProspectFollowupTemplate')).default;
             const subjects: Record<number, string> = {
+                0: isAr
+                    ? `${params.businessName}، صفحتك جاهزة على نقطة! ✨`
+                    : `${params.businessName}, your Nuqta page is live! ✨`,
                 3: isAr
                     ? `تذكير: ${params.businessName}، صفحتك على نقطة جاهزة!`
                     : `Reminder: ${params.businessName}, your Nuqta page is waiting!`,
@@ -465,7 +468,9 @@ export class NotificationService {
 
             await sendEmail({
                 to: params.email,
-                subject: subjects[params.daysSincePitch] || `Nuqta — ${params.businessName}`,
+                subject: subjects[params.daysSincePitch] || (isAr
+                    ? `${params.businessName}، صفحتك على نقطة جاهزة!`
+                    : `${params.businessName}, your Nuqta page is ready!`),
                 react: React.createElement(ProspectFollowupTemplate, {
                     businessName: params.businessName,
                     claimUrl: params.claimUrl,
@@ -479,6 +484,24 @@ export class NotificationService {
         } catch (error) {
             logger.error('Failed to send prospect follow-up', { error, params });
         }
+    }
+
+    /**
+     * Alias for initial pitch email (day 0 follow-up)
+     */
+    async sendProspectPitch(params: {
+        email: string;
+        businessName: string;
+        claimUrl: string;
+        interestCount?: number;
+        locale?: 'en' | 'ar';
+    }) {
+        return this.sendProspectFollowup({
+            ...params,
+            interestCount: params.interestCount ?? 0,
+            daysSincePitch: 0,
+            locale: params.locale || 'ar',
+        });
     }
 
     /**

@@ -45,6 +45,10 @@ export async function claimProspectBusiness(claimToken: string) {
             return { error: 'This business has already been claimed.' };
         }
 
+        if (prospect.status !== 'pitched') {
+            return { error: 'This claim link is no longer active.' };
+        }
+
         // 2. Get system vendor ID (phantom events are owned by this account)
         const { data: systemVendor } = await adminClient
             .from('vendors')

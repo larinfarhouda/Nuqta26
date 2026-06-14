@@ -59,6 +59,7 @@ export interface AdminVendor {
     full_name: string | null;
     eventCount: number;
     bookingCount: number;
+    country: string | null;
 }
 
 export interface AdminVendorDetail {

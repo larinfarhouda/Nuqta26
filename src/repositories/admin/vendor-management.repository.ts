@@ -80,7 +80,7 @@ export class AdminVendorRepository extends BaseRepository {
     async updateVendorStatus(vendorId: string, status: string, isVerified: boolean) {
         const { error } = await this.client
             .from('vendors')
-            .update({ status, is_verified: isVerified, updated_at: new Date().toISOString() })
+            .update({ status, is_verified: isVerified })
             .eq('id', vendorId);
 
         if (error) this.handleError(error, 'AdminVendorRepository.updateVendorStatus');
