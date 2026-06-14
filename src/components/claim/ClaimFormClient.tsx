@@ -1,9 +1,60 @@
 'use client';
 
 import { useState } from 'react';
-import { Store, Calendar, Check, ArrowRight, Loader2, Users, PartyPopper, ExternalLink } from 'lucide-react';
+import { Store, Calendar, Check, ArrowRight, Loader2, Users, PartyPopper, ExternalLink, Sparkles, Shield, BarChart3, Zap } from 'lucide-react';
 import { useRouter } from '@/navigation';
 import { claimProspectBusiness } from '@/actions/public/claim';
+
+// ─── Bilingual Strings ──────────────────────────────────────────────────────
+
+const t = (locale: string) => {
+    const isAr = locale === 'ar';
+    return {
+        dir: isAr ? 'rtl' as const : 'ltr' as const,
+        pageReady: isAr ? 'صفحتك جاهزة! ✨' : 'Your Page is Ready! ✨',
+        onNuqta: isAr ? 'على نقطة' : 'on Nuqta',
+        peopleInterested: (count: number) =>
+            isAr
+                ? `${count} ${count === 1 ? 'شخص مهتم' : 'أشخاص مهتمين'}`
+                : `${count} ${count === 1 ? 'person' : 'people'} interested`,
+        inYourEvents: isAr ? 'بفعالياتك على نقطة' : 'in your events on Nuqta',
+        yourEvents: isAr ? 'فعالياتك على نقطة:' : 'Your events on Nuqta:',
+        whatYouGet: isAr ? 'ماذا ستحصل عليه:' : 'What you get:',
+        benefits: isAr
+            ? [
+                'صفحتك كمنظم فعاليات — جاهزة ومنشورة',
+                'إدارة الفعاليات والحجوزات والمواعيد',
+                'معرفة من يهتم بفعالياتك وقبول المدفوعات',
+                'لوحة تحليلات — مجانية للبدء',
+            ]
+            : [
+                'Your own vendor page — already live on Nuqta',
+                'Manage your events, bookings & schedule',
+                'See who\'s interested and accept payments',
+                'Analytics dashboard — free to start',
+            ],
+        getStarted: isAr ? 'ابدأ الآن — مجاناً' : 'Get Started — It\'s Free',
+        signUp: isAr ? 'سجّل مجاناً' : 'Sign Up Free',
+        claiming: isAr ? 'جاري التفعيل...' : 'Claiming...',
+        terms: isAr
+            ? 'بالتسجيل، أنت توافق على شروط نقطة للمنظمين.\nالخطة المجانية — بدون بطاقة ائتمان.'
+            : 'By signing up, you agree to Nuqta\'s vendor terms.\nFree starter plan — no credit card needed.',
+        // Success
+        welcomeTitle: isAr ? '!أهلاً بك في نقطة 🎉' : 'Welcome to Nuqta! 🎉',
+        nowYours: (name: string) => isAr ? `${name} الآن ملكك.` : `${name} is now yours.`,
+        eventsTransferred: isAr
+            ? 'تم نقل فعالياتك إلى لوحة التحكم. يمكنك الآن إدارة الحجوزات ومعرفة المهتمين.'
+            : 'Your events have been transferred to your dashboard. You can now manage bookings and see who\'s interested.',
+        goToDashboard: isAr ? 'اذهب للوحة التحكم' : 'Go to Dashboard',
+        freeForever: isAr ? 'مجاني للأبد • بدون بطاقة ائتمان' : 'Free forever • No credit card',
+    };
+};
+
+// ─── Benefit Icons ──────────────────────────────────────────────────────────
+
+const BENEFIT_ICONS = [Store, Zap, BarChart3, Shield];
+
+// ─── Component ──────────────────────────────────────────────────────────────
 
 interface ClaimFormClientProps {
     prospect: any;
@@ -18,10 +69,11 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
     const [loading, setLoading] = useState(false);
     const [claimed, setClaimed] = useState(false);
     const [error, setError] = useState('');
+    const strings = t(locale);
+    const isAr = locale === 'ar';
 
     const handleClaim = async () => {
         if (!user) {
-            // Redirect to signup with claim redirect
             router.push(`/register?redirect=/claim/${prospect.claim_token}&role=vendor`);
             return;
         }
@@ -34,71 +86,38 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
         if (result.success) {
             setClaimed(true);
         } else {
-            setError(result.error || 'Something went wrong. Please try again.');
+            setError(result.error || (isAr ? 'حدث خطأ. حاول مرة أخرى.' : 'Something went wrong. Please try again.'));
         }
 
         setLoading(false);
     };
 
-    // ─── Success State ──────────────────────────────────────────────────────
+    // ─── Success State ──────────────────────────────────────────────────
+
     if (claimed) {
         return (
-            <div
-                style={{
-                    minHeight: '100vh',
-                    background: 'linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 50%, #fdf4ff 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '40px 20px',
-                }}
-            >
-                <div
-                    style={{
-                        maxWidth: '480px',
-                        width: '100%',
-                        background: '#fff',
-                        borderRadius: '24px',
-                        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                        padding: '48px 32px',
-                        textAlign: 'center',
-                    }}
-                >
-                    <div style={{
-                        width: '80px', height: '80px', borderRadius: '50%',
-                        background: '#dcfce7', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', margin: '0 auto 24px',
-                    }}>
-                        <PartyPopper size={40} style={{ color: '#16a34a' }} />
+            <div dir={strings.dir} className="min-h-screen bg-gradient-to-br from-emerald-50 via-sky-50 to-violet-50 flex items-center justify-center p-5">
+                <div className="max-w-md w-full bg-white rounded-3xl shadow-xl shadow-black/5 p-10 text-center animate-in fade-in zoom-in-95 duration-500">
+                    {/* Success Icon */}
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-6">
+                        <PartyPopper size={40} className="text-emerald-600" />
                     </div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', marginBottom: '12px' }}>
-                        Welcome to Nuqta! 🎉
+
+                    <h1 className="text-2xl font-black text-zinc-900 mb-3">
+                        {strings.welcomeTitle}
                     </h1>
-                    <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.6, marginBottom: '8px' }}>
-                        <strong>{prospect.business_name}</strong> is now yours.
+                    <p className="text-[15px] text-zinc-600 leading-relaxed mb-1">
+                        <strong>{strings.nowYours(prospect.business_name)}</strong>
                     </p>
-                    <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.6, marginBottom: '28px' }}>
-                        Your events have been transferred to your vendor dashboard.
-                        You can now manage bookings, see who&apos;s interested, and start selling tickets.
+                    <p className="text-sm text-zinc-500 leading-relaxed mb-8">
+                        {strings.eventsTransferred}
                     </p>
 
                     <a
                         href={`/${locale}/dashboard/vendor`}
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '16px 32px',
-                            borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                            color: '#fff',
-                            fontWeight: 700,
-                            fontSize: '16px',
-                            textDecoration: 'none',
-                            boxShadow: '0 4px 14px rgba(139, 92, 246, 0.3)',
-                        }}
+                        className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#2CA58D] to-[#258f7a] text-white font-bold text-base no-underline shadow-lg shadow-[#2CA58D]/30 hover:shadow-xl hover:shadow-[#2CA58D]/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        Go to Dashboard
+                        {strings.goToDashboard}
                         <ExternalLink size={18} />
                     </a>
                 </div>
@@ -106,80 +125,51 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
         );
     }
 
-    // ─── Claim Form ─────────────────────────────────────────────────────────
+    // ─── Claim Form ─────────────────────────────────────────────────────
+
     return (
-        <div
-            style={{
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #faf5ff 0%, #f0f9ff 50%, #fdf4ff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '40px 20px',
-            }}
-        >
-            <div
-                style={{
-                    maxWidth: '520px',
-                    width: '100%',
-                    background: '#fff',
-                    borderRadius: '24px',
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                    overflow: 'hidden',
-                }}
-            >
-                {/* Header */}
-                <div
-                    style={{
-                        background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                        padding: '40px 32px',
-                        textAlign: 'center',
-                        color: '#fff',
-                    }}
-                >
-                    <div
-                        style={{
-                            width: '72px', height: '72px', borderRadius: '20px',
-                            background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px',
-                        }}
-                    >
+        <div dir={strings.dir} className="min-h-screen bg-gradient-to-br from-violet-50/80 via-sky-50 to-fuchsia-50/60 flex items-center justify-center p-5">
+            <div className="max-w-[520px] w-full bg-white rounded-3xl shadow-xl shadow-black/5 overflow-hidden">
+
+                {/* ── Header ── */}
+                <div className="relative bg-gradient-to-br from-[#2CA58D] to-[#1e8a74] px-8 py-10 text-center text-white overflow-hidden">
+                    {/* Decorative circles */}
+                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+                    <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5" />
+
+                    {/* Logo */}
+                    <div className="relative w-[72px] h-[72px] rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 ring-2 ring-white/20">
                         {prospect.logo_url ? (
                             <img
                                 src={prospect.logo_url}
                                 alt={prospect.business_name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '20px' }}
+                                className="w-full h-full object-cover rounded-2xl"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                             />
                         ) : (
-                            <Store size={32} style={{ color: '#fff' }} />
+                            <Store size={32} className="text-white" />
                         )}
                     </div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>
-                        Your Page is Ready! ✨
-                    </h1>
-                    <p style={{ fontSize: '15px', opacity: 0.9 }}>
-                        {prospect.business_name}
-                    </p>
+
+                    <h1 className="relative text-2xl font-black mb-2">{strings.pageReady}</h1>
+                    <p className="relative text-[15px] opacity-90 font-medium">{prospect.business_name}</p>
                 </div>
 
-                <div style={{ padding: '32px' }}>
+                {/* ── Body ── */}
+                <div className="px-8 py-8 space-y-6">
+
                     {/* Social Proof — Interest Count */}
                     {interestCount > 0 && (
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: '10px',
-                            padding: '16px 20px', borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #faf5ff, #ede9fe)',
-                            border: '1px solid rgba(139, 92, 246, 0.2)',
-                            marginBottom: '24px',
-                        }}>
-                            <Users size={20} style={{ color: '#7c3aed', flexShrink: 0 }} />
+                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-violet-50 to-fuchsia-50 border border-violet-100">
+                            <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
+                                <Users size={20} className="text-violet-600" />
+                            </div>
                             <div>
-                                <div style={{ fontWeight: 800, fontSize: '16px', color: '#7c3aed' }}>
-                                    {interestCount} {interestCount === 1 ? 'person' : 'people'} interested
+                                <div className="font-bold text-[15px] text-violet-700">
+                                    {strings.peopleInterested(interestCount)}
                                 </div>
-                                <div style={{ fontSize: '12px', color: '#8b5cf6' }}>
-                                    in your events on Nuqta
+                                <div className="text-xs text-violet-500 font-medium">
+                                    {strings.inYourEvents}
                                 </div>
                             </div>
                         </div>
@@ -187,25 +177,24 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
 
                     {/* Events Listed */}
                     {events.length > 0 && (
-                        <div style={{ marginBottom: '24px' }}>
-                            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
-                                Your events on Nuqta:
+                        <div>
+                            <h3 className="text-sm font-bold text-zinc-800 mb-3 flex items-center gap-2">
+                                <Sparkles size={14} className="text-[#2CA58D]" />
+                                {strings.yourEvents}
                             </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className="space-y-2">
                                 {events.map(e => (
                                     <div
                                         key={e.id}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: '12px',
-                                            padding: '12px 16px', borderRadius: '12px',
-                                            background: '#f8fafc', border: '1px solid #e2e8f0',
-                                        }}
+                                        className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-50 border border-zinc-100 hover:border-[#2CA58D]/30 transition-colors"
                                     >
-                                        <Calendar size={16} style={{ color: '#8b5cf6', flexShrink: 0 }} />
-                                        <div>
-                                            <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{e.title}</div>
-                                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                                                {new Date(e.date).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        <div className="w-8 h-8 rounded-lg bg-[#2CA58D]/10 flex items-center justify-center flex-shrink-0">
+                                            <Calendar size={14} className="text-[#2CA58D]" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-semibold text-sm text-zinc-900 truncate">{e.title}</div>
+                                            <div className="text-xs text-zinc-400">
+                                                {new Date(e.date).toLocaleDateString(isAr ? 'ar-EG' : 'en', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </div>
                                         </div>
                                     </div>
@@ -215,39 +204,29 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
                     )}
 
                     {/* Benefits */}
-                    <div style={{ marginBottom: '28px' }}>
-                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
-                            What you get:
+                    <div>
+                        <h3 className="text-sm font-bold text-zinc-800 mb-3 flex items-center gap-2">
+                            <Check size={14} className="text-emerald-500" />
+                            {strings.whatYouGet}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {[
-                            'Your own vendor page — already live on Nuqta',
-                            'Manage your events, bookings & schedule',
-                            'See who\'s interested and accept payments',
-                            'Analytics dashboard — free to start',
-                            ].map((benefit, i) => (
-                                <div
-                                    key={i}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '10px',
-                                        fontSize: '14px', color: '#475569',
-                                    }}
-                                >
-                                    <Check size={16} style={{ color: '#10b981', flexShrink: 0 }} />
-                                    {benefit}
-                                </div>
-                            ))}
+                        <div className="space-y-2.5">
+                            {strings.benefits.map((benefit, i) => {
+                                const Icon = BENEFIT_ICONS[i] || Check;
+                                return (
+                                    <div key={i} className="flex items-center gap-3 text-sm text-zinc-600">
+                                        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                            <Icon size={14} className="text-emerald-500" />
+                                        </div>
+                                        <span>{benefit}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
                     {/* Error */}
                     {error && (
-                        <div style={{
-                            padding: '12px 16px', borderRadius: '12px',
-                            background: '#fef2f2', border: '1px solid #fecaca',
-                            color: '#991b1b', fontSize: '13px', fontWeight: 500,
-                            marginBottom: '16px',
-                        }}>
+                        <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
                             {error}
                         </div>
                     )}
@@ -256,48 +235,39 @@ export default function ClaimFormClient({ prospect, events, user, locale, intere
                     <button
                         onClick={handleClaim}
                         disabled={loading}
-                        style={{
-                            width: '100%',
-                            padding: '16px 24px',
-                            borderRadius: '14px',
-                            background: loading
-                                ? '#cbd5e1'
-                                : 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: loading ? 'wait' : 'pointer',
-                            fontWeight: 700,
-                            fontSize: '16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            boxShadow: loading ? 'none' : '0 4px 14px rgba(139, 92, 246, 0.3)',
-                            transition: 'all 0.2s',
-                        }}
+                        className={`w-full py-4 px-6 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2 transition-all duration-200 border-none cursor-pointer ${
+                            loading
+                                ? 'bg-zinc-300 cursor-wait shadow-none'
+                                : 'bg-gradient-to-r from-[#2CA58D] to-[#1e8a74] shadow-lg shadow-[#2CA58D]/30 hover:shadow-xl hover:shadow-[#2CA58D]/40 hover:scale-[1.01] active:scale-[0.99]'
+                        }`}
                     >
                         {loading ? (
                             <Loader2 size={18} className="animate-spin" />
                         ) : user ? (
                             <>
-                                Get Started — It&apos;s Free
-                                <ArrowRight size={18} />
+                                {strings.getStarted}
+                                <ArrowRight size={18} className={isAr ? 'rotate-180' : ''} />
                             </>
                         ) : (
                             <>
-                                Sign Up Free
-                                <ArrowRight size={18} />
+                                {strings.signUp}
+                                <ArrowRight size={18} className={isAr ? 'rotate-180' : ''} />
                             </>
                         )}
                     </button>
 
-                    <p style={{
-                        fontSize: '12px', color: '#94a3b8', textAlign: 'center',
-                        marginTop: '16px', lineHeight: 1.5,
-                    }}>
-                        By signing up, you agree to Nuqta&apos;s vendor terms.
-                        Free starter plan — no credit card needed.
+                    {/* Terms */}
+                    <p className="text-xs text-zinc-400 text-center leading-relaxed whitespace-pre-line">
+                        {strings.terms}
                     </p>
+
+                    {/* Free badge */}
+                    <div className="flex justify-center">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-bold">
+                            <Shield size={12} />
+                            {strings.freeForever}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
