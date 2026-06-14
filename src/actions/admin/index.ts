@@ -388,7 +388,7 @@ export async function contactProspect(prospectId: string) {
         const { user } = await requireAdmin();
         const service = await getAdminService();
         const claimToken = await service.contactProspect(prospectId, user.id);
-        const claimUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist'}/claim/${claimToken}`;
+        const claimUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist'}/ar/claim/${claimToken}`;
         return { success: true, claimUrl, claimToken };
     } catch (error) {
         logger.error('Failed to contact prospect', { error });
@@ -559,7 +559,8 @@ export async function autoProspectPipeline(input: {
         // 4. Generate claim token + URL
         const claimToken = await service.contactProspect(prospect.id, user.id);
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist';
-        const claimUrl = `${baseUrl}/claim/${claimToken}`;
+        const locale = input.locale || 'ar';
+        const claimUrl = `${baseUrl}/${locale}/claim/${claimToken}`;
 
         // 5. Send pitch email — check business hours first
         let emailSent = false;

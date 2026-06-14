@@ -407,7 +407,7 @@ async function sendProspectFollowups(supabase: any, notificationService: Notific
             }
 
             const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist';
-            const claimUrl = `${siteUrl}/claim/${prospect.claim_token}`;
+            const claimUrl = `${siteUrl}/ar/claim/${prospect.claim_token}`;
 
             // Get interest count for this prospect
             const { data: events } = await supabase
@@ -927,7 +927,7 @@ async function sendPendingPitches(
             }
 
             try {
-                const claimUrl = `${baseUrl}/claim/${prospect.claim_token}`;
+                const claimUrl = `${baseUrl}/ar/claim/${prospect.claim_token}`;
                 await notificationService.sendProspectFollowup({
                     email: prospect.contact_email,
                     businessName: prospect.business_name,

@@ -878,11 +878,11 @@ export default function AdminProspectsClient({
                                     {p.claim_token ? (
                                         <button
                                             onClick={() => {
-                                                const url = `${window.location.origin}/claim/${p.claim_token}`;
+                                                const url = `${window.location.origin}/ar/claim/${p.claim_token}`;
                                                 navigator.clipboard.writeText(url);
                                             }}
                                             className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors max-w-[120px] truncate"
-                                            title={`${window.location.origin}/claim/${p.claim_token}`}
+                                            title={`${window.location.origin}/ar/claim/${p.claim_token}`}
                                         >
                                             <Copy size={10} /> Copy link
                                         </button>
