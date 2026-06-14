@@ -803,14 +803,14 @@ export default function AdminProspectsClient({
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                            {['Business', 'Status', 'Events', 'Interests', 'Contact', 'Follow-up', 'Actions'].map(h => (
+                            {['Business', 'Status', 'Events', 'Interests', 'Contact', 'Claim URL', 'Follow-up', 'Actions'].map(h => (
                                 <th key={h} className="px-4 py-3.5 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {(data?.data || []).length === 0 && (
-                            <tr><td colSpan={7} className="px-10 py-10 text-center text-zinc-400">No prospects yet. Create your first one!</td></tr>
+                            <tr><td colSpan={8} className="px-10 py-10 text-center text-zinc-400">No prospects yet. Create your first one!</td></tr>
                         )}
                         {(data?.data || []).map(p => {
                             const days = daysSince(p.status === 'pitched' ? (p.last_contacted_at || p.updated_at || p.created_at) : null);
@@ -873,6 +873,22 @@ export default function AdminProspectsClient({
                                 </td>
                                 <td className="px-4 py-3.5 text-xs text-zinc-400">
                                     {p.contact_phone || p.contact_email || '—'}
+                                </td>
+                                <td className="px-4 py-3.5 text-xs">
+                                    {p.claim_token ? (
+                                        <button
+                                            onClick={() => {
+                                                const url = `${window.location.origin}/claim/${p.claim_token}`;
+                                                navigator.clipboard.writeText(url);
+                                            }}
+                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[11px] font-semibold cursor-pointer border-none hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors max-w-[120px] truncate"
+                                            title={`${window.location.origin}/claim/${p.claim_token}`}
+                                        >
+                                            <Copy size={10} /> Copy link
+                                        </button>
+                                    ) : (
+                                        <span className="text-zinc-300 dark:text-zinc-600">—</span>
+                                    )}
                                 </td>
                                 <td className="px-4 py-3.5 text-xs">
                                     {p.status === 'pitched' && days !== null ? (
