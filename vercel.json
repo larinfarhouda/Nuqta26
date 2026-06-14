@@ -3,6 +3,10 @@
         {
             "path": "/api/cron/daily-tasks",
             "schedule": "0 18 * * *"
+        },
+        {
+            "path": "/api/cron/daily-tasks?task=pending-pitches",
+            "schedule": "0 7 * * *"
         }
     ]
 }

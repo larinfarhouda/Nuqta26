@@ -39,15 +39,34 @@ export async function GET(request: Request) {
     }
 
     const startTime = Date.now();
+    const url = new URL(request.url);
+    const taskFilter = url.searchParams.get('task');
+
+    const supabase = await createAdminClient();
+    const notificationService = new NotificationService();
+
+    // ─── Morning-only task: send pending pitches ─────────────────────────
+    if (taskFilter === 'pending-pitches') {
+        logger.info('Morning cron: sending pending pitches');
+        const pendingResult = await sendPendingPitches(supabase, notificationService);
+        const summary = {
+            success: true,
+            task: 'pending-pitches',
+            pendingPitches: pendingResult,
+            durationMs: Date.now() - startTime,
+        };
+        logger.info('Morning cron completed', summary);
+        return NextResponse.json(summary);
+    }
+
+    // ─── Full daily tasks run ────────────────────────────────────────────
     logger.info('Daily tasks cron started', {
         timestamp: new Date().toISOString(),
         hasCronSecret: !!cronSecret,
         hasAuthHeader: !!authHeader,
     });
 
-    const supabase = await createAdminClient();
     const bookingRepo = new BookingRepository(supabase);
-    const notificationService = new NotificationService();
 
     // ─── Calculate date ranges (UTC-based for database comparison) ────────
     const now = new Date();
@@ -117,6 +136,9 @@ export async function GET(request: Request) {
     // ─── Task 7: Lead Nurture Drips ──────────────────────────────────────
     const leadNurtureResult = await sendLeadNurtureDrips(supabase, notificationService);
 
+    // ─── Task 8: Pending Pitches (also process during evening run) ───────
+    const pendingPitchResult = await sendPendingPitches(supabase, notificationService);
+
     const summary = {
         success: true,
         reminders: reminderResult,
@@ -126,6 +148,7 @@ export async function GET(request: Request) {
         onboardingDrips: onboardingResult,
         reengagement: reengagementResult,
         leadNurture: leadNurtureResult,
+        pendingPitches: pendingPitchResult,
         durationMs: Date.now() - startTime,
     };
 
@@ -862,5 +885,82 @@ async function sendLeadNurtureDrips(supabase: any, notificationService: Notifica
     } catch (error) {
         logger.error('Lead nurture drips task failed', { error });
         return { sent: sentCount, skipped: skippedCount, error: 'Task failed' };
+    }
+}
+
+// ─── Pending Pitches (queued outside business hours) ─────────────────────────
+
+async function sendPendingPitches(
+    supabase: any,
+    notificationService: NotificationService,
+) {
+    let sentCount = 0;
+    let failedCount = 0;
+
+    try {
+        // Find prospects with [pitch-pending] tag in notes
+        const { data: prospects, error } = await supabase
+            .from('prospect_vendors')
+            .select('id, business_name, contact_email, claim_token, notes')
+            .eq('status', 'pitched')
+            .like('notes', '%[pitch-pending]%');
+
+        if (error) throw error;
+        if (!prospects || prospects.length === 0) {
+            logger.info('No pending pitches to send');
+            return { total: 0, sent: 0, failed: 0 };
+        }
+
+        logger.info(`Found ${prospects.length} pending pitches to send`);
+
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist';
+
+        for (const prospect of prospects) {
+            if (!prospect.contact_email || !prospect.claim_token) {
+                // Remove tag but skip sending
+                const cleanNotes = (prospect.notes || '').replace(/\n?\[pitch-pending\]/g, '').trim();
+                await supabase
+                    .from('prospect_vendors')
+                    .update({ notes: cleanNotes || null })
+                    .eq('id', prospect.id);
+                continue;
+            }
+
+            try {
+                const claimUrl = `${baseUrl}/claim/${prospect.claim_token}`;
+                await notificationService.sendProspectFollowup({
+                    email: prospect.contact_email,
+                    businessName: prospect.business_name,
+                    claimUrl,
+                    interestCount: 0,
+                    daysSincePitch: 0,
+                    locale: 'ar',
+                });
+
+                // Remove [pitch-pending] tag from notes
+                const cleanNotes = (prospect.notes || '').replace(/\n?\[pitch-pending\]/g, '').trim();
+                await supabase
+                    .from('prospect_vendors')
+                    .update({
+                        notes: cleanNotes || null,
+                        last_contacted_at: new Date().toISOString(),
+                    })
+                    .eq('id', prospect.id);
+
+                sentCount++;
+                logger.info('Pending pitch email sent', { prospectId: prospect.id, email: prospect.contact_email });
+
+                // Rate limit
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+            } catch (err) {
+                failedCount++;
+                logger.error('Failed to send pending pitch', { prospectId: prospect.id, error: err });
+            }
+        }
+
+        return { total: prospects.length, sent: sentCount, failed: failedCount };
+    } catch (error) {
+        logger.error('Pending pitches task failed', { error });
+        return { sent: sentCount, failed: failedCount, error: 'Task failed' };
     }
 }

@@ -24,6 +24,8 @@ import {
     Sparkles,
     ExternalLink,
     AlertCircle,
+    MessageCircle,
+    Clock,
 } from 'lucide-react';
 
 // ─── Event Templates ────────────────────────────────────────────────────────
@@ -61,7 +63,23 @@ interface PipelineResult {
     claimUrl?: string;
     eventIds?: string[];
     emailSent?: boolean;
+    emailScheduled?: boolean;
 }
+
+// Pre-written pitch message template (Arabic + English)
+const PITCH_AR = (name: string, claimUrl: string) =>
+    `مرحباً ${name} 👋
+
+أنا من فريق Nuqta — منصة لإدارة الفعاليات والحجوزات.
+
+أعجبنا شغلكم وأنشأنا لكم صفحة جاهزة مجاناً على المنصة مع فعالياتكم 🌟
+
+يمكنكم استلامها من هنا:
+${claimUrl}
+
+المنصة تساعدكم في إدارة الحجوزات وإرسال رسائل تأكيد تلقائية بالعربي والإنجليزي ✨
+
+هل تحبوا أشرح أكثر؟`;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -199,7 +217,7 @@ export default function ProspectBuilderClient() {
         }
     }, [businessName, email, phone, instagram, website, bio, logoUrl, location, events, sendPitch]);
 
-    // ─── Copy Claim URL ──────────────────────────────────────────────────
+    // ─── Copy Claim URL ──────────────────────────────────────────────
 
     const copyClaimUrl = useCallback(() => {
         if (!result?.claimUrl) return;
@@ -207,6 +225,24 @@ export default function ProspectBuilderClient() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }, [result?.claimUrl]);
+
+    // ─── Open Instagram DM ───────────────────────────────────────────
+
+    const [dmCopied, setDmCopied] = useState(false);
+
+    const openInstagramDM = useCallback(() => {
+        const handle = instagram.replace(/^@/, '').trim();
+        if (!handle || !result?.claimUrl) return;
+
+        // Copy pitch message to clipboard
+        const message = PITCH_AR(businessName, result.claimUrl);
+        navigator.clipboard.writeText(message);
+        setDmCopied(true);
+        setTimeout(() => setDmCopied(false), 3000);
+
+        // Open Instagram DM
+        window.open(`https://ig.me/m/${handle}`, '_blank');
+    }, [instagram, result?.claimUrl, businessName]);
 
     // ─── Reset Form ──────────────────────────────────────────────────────
 
@@ -257,8 +293,19 @@ export default function ProspectBuilderClient() {
                                 <p className="text-sm text-emerald-700 mt-1">
                                     {result.eventIds?.length || 0} event{(result.eventIds?.length || 0) !== 1 ? 's' : ''} added
                                     {result.emailSent && ' • Pitch email sent'}
+                                    {result.emailScheduled && ' • Email scheduled for morning'}
                                 </p>
                             </div>
+
+                            {/* Email scheduling notice */}
+                            {result.emailScheduled && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-xl border border-amber-200">
+                                    <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                                    <p className="text-xs text-amber-700 font-medium">
+                                        Outside business hours — pitch email will be sent at 9AM automatically
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Claim URL */}
                             <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-emerald-200">
@@ -280,10 +327,21 @@ export default function ProspectBuilderClient() {
                                 </a>
                             </div>
 
-                            <AdminButton onClick={resetForm} variant="outline" size="sm">
-                                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                                Create Another
-                            </AdminButton>
+                            {/* Action buttons */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Instagram DM button */}
+                                {instagram.trim() && (
+                                    <AdminButton onClick={openInstagramDM} variant="outline" size="sm">
+                                        <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                                        {dmCopied ? '✅ Message copied — paste in Instagram' : 'Send Instagram DM'}
+                                    </AdminButton>
+                                )}
+
+                                <AdminButton onClick={resetForm} variant="ghost" size="sm">
+                                    <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                                    Create Another
+                                </AdminButton>
+                            </div>
                         </div>
                     </div>
                 </AdminCard>

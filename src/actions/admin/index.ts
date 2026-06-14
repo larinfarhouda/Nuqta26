@@ -561,23 +561,40 @@ export async function autoProspectPipeline(input: {
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nuqta.ist';
         const claimUrl = `${baseUrl}/claim/${claimToken}`;
 
-        // 5. Send pitch email (fire-and-forget)
+        // 5. Send pitch email — check business hours first
         let emailSent = false;
+        let emailScheduled = false;
+
         if (input.sendPitch && input.contact_email) {
-            try {
-                const { NotificationService } = await import('@/services/notification.service');
-                const notificationService = new NotificationService();
-                await notificationService.sendProspectFollowup({
-                    email: input.contact_email,
-                    businessName: input.business_name,
-                    claimUrl,
-                    interestCount: 0,
-                    daysSincePitch: 0,
-                    locale: input.locale || 'ar',
-                });
-                emailSent = true;
-            } catch (emailErr) {
-                logger.error('Failed to send pitch email in pipeline', { error: emailErr, prospectId: prospect.id });
+            // Determine target timezone based on location/country
+            const tz = guessTimezone(input.location);
+            const isBusinessTime = isBusinessHours(tz);
+
+            if (isBusinessTime) {
+                try {
+                    const { NotificationService } = await import('@/services/notification.service');
+                    const notificationService = new NotificationService();
+                    await notificationService.sendProspectFollowup({
+                        email: input.contact_email,
+                        businessName: input.business_name,
+                        claimUrl,
+                        interestCount: 0,
+                        daysSincePitch: 0,
+                        locale: input.locale || 'ar',
+                    });
+                    emailSent = true;
+                } catch (emailErr) {
+                    logger.error('Failed to send pitch email in pipeline', { error: emailErr, prospectId: prospect.id });
+                }
+            } else {
+                // Outside business hours — mark for morning cron delivery
+                const currentNotes = prospect.notes || '';
+                await adminClient
+                    .from('prospect_vendors')
+                    .update({ notes: `${currentNotes}\n[pitch-pending]`.trim() })
+                    .eq('id', prospect.id);
+                emailScheduled = true;
+                logger.info('Pitch email scheduled for morning delivery', { prospectId: prospect.id, tz });
             }
         }
 
@@ -585,6 +602,7 @@ export async function autoProspectPipeline(input: {
             prospectId: prospect.id,
             eventsCreated: eventIds.length,
             emailSent,
+            emailScheduled,
             claimUrl,
         });
 
@@ -595,11 +613,38 @@ export async function autoProspectPipeline(input: {
             claimToken,
             eventIds,
             emailSent,
+            emailScheduled,
         };
     } catch (error) {
         logger.error('Auto-prospect pipeline failed', { error });
         return { error: 'Auto-prospect pipeline failed. Check logs for details.' };
     }
+}
+
+/**
+ * Check if current time is within business hours (8AM-9PM) in a given timezone.
+ */
+function isBusinessHours(timezone: string): boolean {
+    try {
+        const now = new Date();
+        const timeStr = now.toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false });
+        const hour = parseInt(timeStr, 10);
+        return hour >= 8 && hour < 21; // 8AM to 9PM
+    } catch {
+        return true; // If timezone lookup fails, send immediately
+    }
+}
+
+/**
+ * Guess the IANA timezone from a location string.
+ */
+function guessTimezone(location?: string): string {
+    const loc = (location || '').toLowerCase();
+    if (loc.includes('egypt') || loc.includes('cairo') || loc.includes('مصر') || loc.includes('القاهرة')) {
+        return 'Africa/Cairo';
+    }
+    // Default to Istanbul for Turkey / unknown
+    return 'Europe/Istanbul';
 }
 
 // ─── Activity Logs ──────────────────────────────────────────────────────────
