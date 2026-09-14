@@ -10,7 +10,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useCountryName } from '@/hooks/useCountry';
 import TierBadge from '@/components/TierBadge';
 import type { SubscriptionTier } from '@/lib/constants/subscription';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 import { motion } from 'framer-motion';
 
 interface EventCardProps {
@@ -24,6 +24,7 @@ export default function EventCard({ event, isFavoriteInitial, index = 0 }: Event
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const t = useTranslations('Events');
+    const getCurrencySymbol = useCountryCurrency();
     const locale = useLocale();
     const countryName = useCountryName();
     const isRTL = locale === 'ar';

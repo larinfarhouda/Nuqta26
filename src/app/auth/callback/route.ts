@@ -1,3 +1,4 @@
+import { getRequestCountry } from '@/lib/request-country';
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { NotificationService } from '@/services/notification.service';
@@ -60,9 +61,10 @@ export async function GET(request: Request) {
                             id: user.id,
                             business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
                             category: 'other',
-                            subscription_tier: 'starter',
+                            subscription_tier: 'free',
+                            country: (await getRequestCountry()).country?.id || null,
                             status: 'approved',
-                            is_verified: true,
+                            is_verified: false,
                         } as any);
                     }
                 }

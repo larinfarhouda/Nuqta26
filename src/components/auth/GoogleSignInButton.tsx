@@ -1,6 +1,7 @@
 'use client';
 
 import Script from 'next/script';
+import { useCountryId } from '@/hooks/useCountry';
 import { createClient } from '@/utils/supabase/client';
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -38,6 +39,7 @@ interface GoogleSignInButtonProps {
     role?: 'user' | 'vendor';
     redirectUrl?: string;
     className?: string;
+    countryId?: string;
     children: React.ReactNode;
     onError?: (error: string) => void;
     onSuccess?: () => void;
@@ -51,7 +53,12 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     children,
     onError,
     onSuccess,
+    countryId,
 }: GoogleSignInButtonProps) {
+    const visitorCountry = useCountryId();
+    const selectedCountry = countryId || visitorCountry;
+    const countryRef = useRef(selectedCountry);
+    countryRef.current = selectedCountry;
     const supabase = createClient();
     const [isLoading, setIsLoading] = useState(false);
     const [gsiAvailable, setGsiAvailable] = useState(false);
@@ -68,6 +75,7 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
     const handleCredentialResponse = useCallback(async (response: any) => {
         setIsLoading(true);
         try {
+            if (roleRef.current === 'vendor' && !countryRef.current) throw new Error(locale === 'ar' ? 'اختر بلد فعالياتك أولاً' : 'Choose your event country first');
             const { data, error } = await supabase.auth.signInWithIdToken({
                 provider: 'google',
                 token: response.credential,
@@ -106,10 +114,10 @@ const GoogleSignInButton = memo(function GoogleSignInButton({
                         id: user.id,
                         business_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Business Name',
                         category: 'other',
-                        subscription_tier: 'starter',
-                        country: 'tr',
+                        subscription_tier: 'free',
+                        country: countryRef.current || null,
                         status: 'approved',
-                        is_verified: true,
+                        is_verified: false,
                     } as any);
                 }
             }

@@ -9,11 +9,12 @@ import { useTranslations, useLocale } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
 import { createClient } from '@/utils/supabase/client';
 import { getDemoEvents } from '@/lib/demoData';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 import InstagramImportDialog from './components/InstagramImportDialog';
 import type { InstagramImportResult } from '@/actions/vendor/instagram-import';
 
 export default function EventsTab({ vendorData, demoMode = false }: { vendorData?: any; demoMode?: boolean }) {
+    const getCurrencySymbol = useCountryCurrency();
     const [events, setEvents] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

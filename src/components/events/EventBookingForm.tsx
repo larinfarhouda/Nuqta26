@@ -1,4 +1,6 @@
 'use client';
+import { receiptUploadPath } from '@/lib/booking-receipts';
+import { submitPaymentProof } from '@/actions/user';
 
 import { useState, useEffect, useCallback } from 'react';
 import { createBooking } from '@/actions/public/events';
@@ -14,7 +16,7 @@ import { useTranslations } from 'next-intl';
 import { getEventStatus } from '@/utils/eventStatus';
 import { MobileLoginDialog } from '@/components/auth/MobileLoginDialog';
 import { Link } from '@/navigation';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 import { createClient } from '@/utils/supabase/client';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -78,6 +80,7 @@ const slideVariants = {
 
 export default function EventBookingForm({ event, tickets, isInSheet = false, onComplete }: EventBookingFormProps) {
     const t = useTranslations('Events');
+    const getCurrencySymbol = useCountryCurrency();
     const cs = getCurrencySymbol(event.country);
 
     // ─── State ──────────────────────────────────────────────────────────────
@@ -87,7 +90,7 @@ export default function EventBookingForm({ event, tickets, isInSheet = false, on
 
     const [selectedTicket, setSelectedTicket] = useState(tickets[0]?.id);
     const [quantity, setQuantity] = useState(1);
-    const [policyOpen, setPolicyOpen] = useState(false);
+    const [policyOpen, setPolicyOpen] = useState(true);
 
     const [discountCode, setDiscountCode] = useState('');
     const [appliedDiscount, setAppliedDiscount] = useState<{ id: string; amount: number; code: string } | null>(null);
@@ -259,7 +262,7 @@ export default function EventBookingForm({ event, tickets, isInSheet = false, on
         setUploading(true);
         setUploadProgress(0);
         const file = e.target.files[0];
-        const fileName = `receipts/${bookingId}-${Date.now()}.${file.name.split('.').pop()}`;
+
 
         // Show preview
         if (file.type.startsWith('image/')) {
@@ -275,18 +278,14 @@ export default function EventBookingForm({ event, tickets, isInSheet = false, on
 
         try {
             const supabase = createClient();
+            const fileName = receiptUploadPath(bookingId, file, crypto.randomUUID());
             const { error: uploadError } = await supabase.storage.from('booking-receipts').upload(fileName, file);
             if (uploadError) throw uploadError;
 
             setUploadProgress(90);
 
-            const { data: { publicUrl } } = supabase.storage.from('booking-receipts').getPublicUrl(fileName);
-            const { error: dbError } = await supabase
-                .from('bookings')
-                .update({ payment_proof_url: publicUrl, status: 'payment_submitted' })
-                .eq('id', bookingId);
-
-            if (dbError) throw dbError;
+            const result = await submitPaymentProof(bookingId, fileName);
+            if (result.error) throw new Error(result.error);
 
             setUploadProgress(100);
             clearInterval(progressInterval);
@@ -660,6 +659,11 @@ export default function EventBookingForm({ event, tickets, isInSheet = false, on
                             </div>
                         )}
 
+                        <div className="mt-4 text-xs text-gray-600 leading-relaxed space-y-2">
+                            <p>{t('booking_terms_notice')}</p>
+                            {!hasPolicy && totalPrice > 0 && <p>{t('missing_policy')}</p>}
+                            <p><Link href="/terms" target="_blank" className="underline">{t('terms_link')}</Link> · <Link href="/privacy" target="_blank" className="underline">{t('privacy_link')}</Link></p>
+                        </div>
                         {/* Policy */}
                         {hasPolicy && (
                             <div className="mt-4 rounded-xl border border-gray-100 overflow-hidden">

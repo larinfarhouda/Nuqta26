@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useCountry } from '@/hooks/useCountry';
 import { UseFormRegister, UseFormSetValue } from 'react-hook-form';
 
 export const COUNTRY_CODES = [
@@ -19,6 +20,7 @@ interface PhoneInputProps {
     register: UseFormRegister<any>;
     setValue: UseFormSetValue<any>;
     name: string;
+    countryId?: string;
     initialValue?: string | null;
     placeholder?: string;
     className?: string;
@@ -30,28 +32,26 @@ export default function PhoneInput({
     setValue,
     name,
     initialValue,
-    placeholder = '555 123 45 67',
+    countryId,
+    placeholder,
     className = '',
     error
 }: PhoneInputProps) {
-    const [countryCode, setCountryCode] = useState('+90'); // Default to Turkey
-    const [phoneNumber, setPhoneNumber] = useState('');
-
-    useEffect(() => {
-        if (initialValue) {
-            const found = COUNTRY_CODES.find(c => initialValue.startsWith(c.code));
-            if (found) {
-                setCountryCode(found.code);
-                setPhoneNumber(initialValue.slice(found.code.length).trim());
-            } else {
-                setPhoneNumber(initialValue);
-            }
-        }
-    }, [initialValue]);
+    const { country, countries } = useCountry();
+    const selected = countries.find(item => item.id === (countryId || country?.id));
+    const options = [...COUNTRY_CODES];
+    for (const item of countries) {
+        if (!options.some(option => option.code === item.phone_code)) options.push({ code: item.phone_code, country: item.id.toUpperCase(), label: item.name_en });
+    }
+    const initialPrefix = [...options].sort((a, b) => b.code.length - a.code.length)
+        .find(option => initialValue?.startsWith(option.code))?.code;
+    const [draft, setDraft] = useState<{ number?: string; prefix?: string }>({});
+    const phoneNumber = draft.number ?? (initialPrefix ? initialValue!.slice(initialPrefix.length).trim() : initialValue || '');
+    const countryCode = draft.prefix ?? initialPrefix ?? selected?.phone_code ?? '';
 
     // Update the actual form value when either parts change
     useEffect(() => {
-        setValue(name, `${countryCode}${phoneNumber.trim()}`, { shouldValidate: true });
+        setValue(name, phoneNumber.trim() ? `${countryCode}${phoneNumber.trim()}` : '', { shouldValidate: true });
     }, [countryCode, phoneNumber, name, setValue]);
 
     return (
@@ -59,10 +59,11 @@ export default function PhoneInput({
             <div className="flex gap-2" dir="ltr">
                 <select
                     value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
+                    onChange={(e) => setDraft(current => ({ ...current, prefix: e.target.value }))}
                     className="px-3 py-4 rounded-2xl border border-gray-200 bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-gray-900 w-28 text-sm"
                 >
-                    {COUNTRY_CODES.map((c) => (
+                    <option value="" disabled>+</option>
+                    {options.map((c) => (
                         <option key={c.code} value={c.code}>
                             {c.country} ({c.code})
                         </option>
@@ -71,8 +72,8 @@ export default function PhoneInput({
                 <input
                     type="tel"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder={placeholder}
+                    onChange={(e) => setDraft(current => ({ ...current, number: e.target.value }))}
+                    placeholder={placeholder || selected?.phone_placeholder || 'Phone number'}
                     className={`flex-1 p-4 bg-white/50 border ${error ? 'border-red-300 ring-4 ring-red-50' : 'border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10'} rounded-2xl outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 focus:bg-white`}
                 />
             </div>

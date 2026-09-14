@@ -1,11 +1,12 @@
 'use client';
+import { receiptViewUrl } from '@/lib/booking-receipts';
 
 import { useState, useTransition, useEffect } from 'react';
 import { Eye, Check, X, Loader2, Image as ImageIcon, Search } from 'lucide-react';
 import { getAdminBankTransfers, confirmBankPayment, rejectBankPayment } from '@/actions/admin';
 import type { BankTransferBooking, PaginatedResult } from '@/types/admin.types';
 import { useToast } from '@/components/ui/Toast';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 // UI Components
 import { AdminCard } from './ui/AdminCard';
@@ -20,6 +21,7 @@ export default function AdminBookingsClient({
     initialData: PaginatedResult<BankTransferBooking> | null;
 }) {
     const [data, setData] = useState(initialData);
+    const getCurrencySymbol = useCountryCurrency();
     const [page, setPage] = useState(1);
     const [isPending, startTransition] = useTransition();
     const [actionId, setActionId] = useState<string | null>(null);
@@ -190,7 +192,7 @@ export default function AdminBookingsClient({
                                     <td className="px-6 py-4">
                                         {b.payment_proof_url ? (
                                             <button
-                                                onClick={() => setProofUrl(b.payment_proof_url!)}
+                                                onClick={() => setProofUrl(receiptViewUrl(b.id, b.payment_proof_url!))}
                                                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#2CA58D]/10 text-[#2CA58D] hover:bg-[#2CA58D]/20 transition-colors text-xs font-bold"
                                             >
                                                 <ImageIcon size={14} /> View Proof

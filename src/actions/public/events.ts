@@ -5,7 +5,7 @@ import { ServiceFactory } from '@/services/service-factory';
 import { EventFilters } from '@/types/dto/event.dto';
 import { logger } from '@/lib/logger/logger';
 import { trackActivity } from '@/lib/track-activity';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { CountryRepository } from '@/repositories/country.repository';
 import { checkRateLimit, RateLimiters } from '@/lib/rate-limit/rate-limiter';
 import { CreateBookingSchema, validateInput } from '@/lib/validation/action-schemas';
 
@@ -268,7 +268,7 @@ export async function createBooking(
                     totalAmount,
                     ticketCount: quantity,
                     locale,
-                    currencySymbol: getCurrencySymbol(event.country),
+                    currencySymbol: (await new CountryRepository(supabase).findCountryById(event.country || ''))?.currency_symbol || '',
                 });
             }
 

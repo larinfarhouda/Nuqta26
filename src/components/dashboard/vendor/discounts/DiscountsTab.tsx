@@ -17,7 +17,7 @@ import {
 import { getVendorEvents } from '@/actions/vendor/events';
 import { DiscountCodeWithEvent, CreateDiscountCodeInput } from '@/types/dto/discount.dto';
 import { getDemoDiscounts, getDemoEvents } from '@/lib/demoData';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 interface Props {
     showAlert: (message: string, type: 'success' | 'error') => void;
@@ -26,6 +26,7 @@ interface Props {
 }
 
 export default function DiscountsTab({ showAlert, demoMode = false, vendorCountry }: Props) {
+    const getCurrencySymbol = useCountryCurrency();
     const t = useTranslations('Dashboard.vendor.discounts');
     const cs = getCurrencySymbol(vendorCountry);
 

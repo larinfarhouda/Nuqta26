@@ -1,9 +1,11 @@
+import CountryProvider from '@/components/layout/CountryProvider';
+import { getRequestCountry } from '@/lib/request-country';
 import type { Metadata, Viewport } from "next";
 import { Cairo, Geist } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 
-import Script from 'next/script';
+import AnalyticsConsent from '@/components/layout/AnalyticsConsent';
 import { generateSiteGraphSchema } from '@/lib/seo';
 import "../globals.css";
 
@@ -121,6 +123,7 @@ export default async function LocaleLayout({
     const { locale } = await params;
     setRequestLocale(locale);
     const messages = await getMessages();
+    const { countries, country } = await getRequestCountry();
     const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
     return (
@@ -157,34 +160,11 @@ export default async function LocaleLayout({
                 suppressHydrationWarning
             >
                 <NextIntlClientProvider messages={messages}>
-                    {children}
+                    <CountryProvider countries={countries} country={country}>{children}</CountryProvider>
+                    {process.env.NEXT_PUBLIC_GTM_ID && <AnalyticsConsent gtmId={process.env.NEXT_PUBLIC_GTM_ID} />}
                 </NextIntlClientProvider>
 
-                {process.env.NEXT_PUBLIC_GTM_ID && (
-                    <>
-                        <Script
-                            id="google-tag-manager"
-                            strategy="afterInteractive"
-                            dangerouslySetInnerHTML={{
-                                __html: `
-                                    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                                    })(window,document,'script','dataLayer','${process.env.NEXT_PUBLIC_GTM_ID}');
-                                `,
-                            }}
-                        />
-                        <noscript>
-                            <iframe
-                                src={`https://www.googletagmanager.com/ns.html?id=${process.env.NEXT_PUBLIC_GTM_ID}`}
-                                height="0"
-                                width="0"
-                                style={{ display: 'none', visibility: 'hidden' }}
-                            />
-                        </noscript>
-                    </>
-                )}
+
             </body>
         </html>
     );

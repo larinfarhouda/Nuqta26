@@ -4,17 +4,18 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, ArrowRight, Zap, Sparkles, Crown, TrendingUp, Calendar, Shield } from 'lucide-react';
 import { Link } from '@/navigation';
-import { useCountryId } from '@/hooks/useCountry';
-import { getCurrencySymbol } from '@/utils/country-helpers';
-import { COUNTRY_PRICING } from '@/lib/constants/subscription';
+import { useCountry } from '@/hooks/useCountry';
+import CountrySelector from '@/components/layout/CountrySelector';
+import { getCountryPrices } from '@/lib/country-selection';
 
 export default function VendorPricing() {
     const t = useTranslations('VendorLanding.Pricing');
     const [isAnnual, setIsAnnual] = useState(true);
 
-    const countryId = useCountryId();
-    const currency = getCurrencySymbol(countryId);
-    const prices = COUNTRY_PRICING[countryId] || COUNTRY_PRICING['tr'];
+    const { country } = useCountry();
+    if (!country) return <section id="pricing" className="p-8 flex flex-col items-center gap-4"><p>{t('choose_country')}</p><CountrySelector /></section>;
+    const currency = country.currency_symbol;
+    const prices = getCountryPrices(country);
 
     // Computed price strings
     const proMonthly = `${currency}${prices.pro.monthly}`;
@@ -27,6 +28,7 @@ export default function VendorPricing() {
     const bizAnnualTotal = `${currency}${prices.business.annual.toLocaleString()}/yr`;
     const bizSavings = `${currency}${(prices.business.monthly * 12 - prices.business.annual).toLocaleString()}`;
 
+    const annualSavingPercent = prices.pro.monthly > 0 ? Math.round((1 - prices.pro.annual / (prices.pro.monthly * 12)) * 100) : 0;
     const freePrice = `${currency}0`;
 
     const freeFeatures = t.raw('features_list') as string[];
@@ -77,7 +79,7 @@ export default function VendorPricing() {
                             <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                 isAnnual ? 'bg-green-400 text-green-900' : 'bg-green-100 text-green-700'
                             }`}>
-                                -17%
+                                {annualSavingPercent > 0 ? `-${annualSavingPercent}%` : ''}
                             </span>
                         </button>
                     </div>

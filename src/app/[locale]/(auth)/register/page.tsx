@@ -16,14 +16,15 @@ import { createClient as createSupabaseClient } from '@/utils/supabase/client';
 import GoogleSignInButton, { GoogleIcon } from '@/components/auth/GoogleSignInButton';
 import { getCountryFlag } from '@/utils/country-helpers';
 import Image from 'next/image';
+import { useCountryId } from '@/hooks/useCountry';
 
 // Schemas
 const createUserSchema = (t: any) => z.object({
     fullName: z.string().min(2, t('validation_full_name_required')),
     email: z.string().email(t('validation_email_invalid')),
     password: z.string().min(6, t('validation_password_min')),
-    age: z.string().min(1, t('validation_full_name_required')),
-    gender: z.enum(['Male', 'Female'], { message: t('validation_full_name_required') }),
+    age: z.string().optional(),
+    gender: z.union([z.literal(''), z.enum(['Male', 'Female'])]).optional(),
     country: z.string().min(1, 'Required'),
     city: z.string().min(1, 'Required'),
     phone: z.string().min(1, t('validation_full_name_required')),
@@ -46,6 +47,7 @@ export default function RegisterPage() {
     const searchParams = useSearchParams();
     const supabase = createClient();
 
+    const visitorCountry = useCountryId();
     const initialRole = searchParams.get('role') === 'vendor' ? 'vendor' : 'user';
     const redirectUrl = searchParams.get('redirect');
     const [role, setRole] = useState<'user' | 'vendor'>(initialRole);
@@ -56,7 +58,7 @@ export default function RegisterPage() {
     const [referralSource, setReferralSource] = useState<Record<string, string> | null>(null);
     const [countries, setCountries] = useState<any[]>([]);
     const [cities, setCities] = useState<any[]>([]);
-    const [selectedCountry, setSelectedCountry] = useState('tr');
+    const [selectedCountry, setSelectedCountry] = useState(visitorCountry);
     const [showPassword, setShowPassword] = useState(false);
     const [step, setStep] = useState(1); // Two-step flow for users
 
@@ -94,7 +96,7 @@ export default function RegisterPage() {
     const { register, handleSubmit, setValue, watch, formState: { errors }, reset, trigger } = useForm<UserFormData & VendorFormData>({
         resolver: zodResolver(role === 'user' ? userSchema : vendorSchema) as any,
         defaultValues: {
-            country: 'tr'
+            country: visitorCountry
         }
     });
 
@@ -287,7 +289,8 @@ export default function RegisterPage() {
                                     {/* Google Sign-In — step 1 only */}
                                     {step === 1 && (
                                         <>
-                                            <GoogleSignInButton
+                                            <p className="text-xs text-gray-600 leading-relaxed mb-3">{t('terms_notice')} <Link href="/terms" className="underline">{t('terms_link')}</Link> · <Link href="/privacy" className="underline">{t('privacy_link')}</Link></p>
+                                    <GoogleSignInButton countryId={selectedCountry}
                                                 locale={locale}
                                                 role={role}
                                                 redirectUrl={redirectUrl || undefined}
@@ -354,7 +357,8 @@ export default function RegisterPage() {
                                                                 }}
                                                                 className={inputClasses(false) + ' appearance-none'}
                                                             >
-                                                                {countries.map(c => (
+                                                                <option value="" disabled>{t('select_placeholder')}</option>
+                                                            {countries.map(c => (
                                                                     <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
                                                                 ))}
                                                             </select>
@@ -421,7 +425,7 @@ export default function RegisterPage() {
                                                             <Phone className="w-3.5 h-3.5" />
                                                             {t('phone_label')}
                                                         </label>
-                                                        <PhoneInput
+                                                        <PhoneInput countryId={selectedCountry}
                                                             register={register}
                                                             setValue={setValue}
                                                             name="phone"
@@ -434,7 +438,7 @@ export default function RegisterPage() {
                                                         <div className="space-y-1.5">
                                                             <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5 px-1">
                                                                 <Calendar className="w-3.5 h-3.5" />
-                                                                {t('age_label')}
+                                                                {t('age_label')} ({t('optional')})
                                                             </label>
                                                             <input
                                                                 {...register('age')}
@@ -449,7 +453,7 @@ export default function RegisterPage() {
                                                         <div className="space-y-1.5">
                                                             <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5 px-1">
                                                                 <UserCircle className="w-3.5 h-3.5" />
-                                                                {t('gender_label')}
+                                                                {t('gender_label')} ({t('optional')})
                                                             </label>
                                                             <select
                                                                 {...register('gender')}
@@ -479,6 +483,7 @@ export default function RegisterPage() {
                                                             }}
                                                             className={inputClasses(false) + ' appearance-none'}
                                                         >
+                                                            <option value="" disabled>{t('select_placeholder')}</option>
                                                             {countries.map(c => (
                                                                 <option key={c.id} value={c.id}>{getCountryFlag(c.id)} {locale === 'ar' ? c.name_ar : c.name_en}</option>
                                                             ))}

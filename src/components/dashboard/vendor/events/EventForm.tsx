@@ -12,7 +12,7 @@ import { createClient } from '@/utils/supabase/client';
 import { BulkDiscountInput } from '@/types/dto/discount.dto';
 import { useTranslations } from 'next-intl';
 import { createEventValidationSchema } from './validation';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 // Sub-components
 import ImageUploader from './components/ImageUploader';
@@ -35,6 +35,7 @@ interface Props {
 }
 
 export default function EventForm({ event, vendorData, initialData, onClose, onSuccess }: Props) {
+    const getCurrencySymbol = useCountryCurrency();
     const t = useTranslations('Dashboard.vendor.events.form.validation');
     const [submitting, setSubmitting] = useState(false);
     const errorBannerRef = useRef<HTMLDivElement>(null);

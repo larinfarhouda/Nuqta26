@@ -1,4 +1,5 @@
 'use client';
+import { receiptViewUrl } from '@/lib/booking-receipts';
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Users, Receipt, Calendar, MapPin, Phone, Mail, CheckCircle, XCircle, AlertCircle, TrendingUp, Star } from 'lucide-react';
@@ -8,9 +9,10 @@ import { updateBookingStatus } from '@/actions/vendor/bookings';
 import { useTranslations, useLocale } from 'next-intl';
 import { getDemoBookings } from '@/lib/demoData';
 import StarRating from '@/components/reviews/StarRating';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 export default function EventDetails({ event, onBack, demoMode = false }: { event: any, onBack: () => void, demoMode?: boolean }) {
+    const getCurrencySymbol = useCountryCurrency();
     const [bookings, setBookings] = useState<any[]>([]);
     const [reviews, setReviews] = useState<any[]>([]);
     const [eventRating, setEventRating] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
@@ -210,7 +212,7 @@ export default function EventDetails({ event, onBack, demoMode = false }: { even
                                                 {/* View Receipt Button */}
                                                 {booking.payment_proof_url && (
                                                     <a
-                                                        href={booking.payment_proof_url}
+                                                        href={receiptViewUrl(booking.id, booking.payment_proof_url)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center justify-center transition-colors"

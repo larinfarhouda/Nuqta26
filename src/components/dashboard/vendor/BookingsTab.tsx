@@ -1,4 +1,5 @@
 'use client';
+import { receiptViewUrl } from '@/lib/booking-receipts';
 
 import { useState, useEffect } from 'react';
 import {
@@ -12,9 +13,10 @@ import {
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { getDemoBookings } from '@/lib/demoData';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 export default function BookingsTab({ demoMode = false }: { demoMode?: boolean } = {}) {
+    const getCurrencySymbol = useCountryCurrency();
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
@@ -151,7 +153,7 @@ export default function BookingsTab({ demoMode = false }: { demoMode?: boolean }
                                 <div className="flex items-center gap-3 lg:border-r lg:pr-6 lg:mr-2">
                                     {booking.payment_proof_url && (
                                         <button
-                                            onClick={() => setSelectedReceipt(booking.payment_proof_url)}
+                                            onClick={() => setSelectedReceipt(receiptViewUrl(booking.id, booking.payment_proof_url))}
                                             className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
                                         >
                                             <Eye className="w-3.5 h-3.5" /> {t('view_receipt')}

@@ -12,8 +12,8 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
 import HomeFAQ from '@/components/home/HomeFAQ';
-import { cookies } from 'next/headers';
-import { COUNTRY_COOKIE_NAME, getCountryCode } from '@/utils/country-helpers';
+import { getRequestCountry } from '@/lib/request-country';
+import { getCountryCode } from '@/utils/country-helpers';
 
 type Props = {
     params: Promise<{ locale: string }>;
@@ -94,15 +94,16 @@ export default async function HomePage(props: { params: Promise<{ locale: string
     const lat = typeof searchParams.lat === 'string' ? Number(searchParams.lat) : undefined;
     const lng = typeof searchParams.lng === 'string' ? Number(searchParams.lng) : undefined;
     const radius = typeof searchParams.radius === 'string' ? Number(searchParams.radius) : undefined;
-    const cookieStore = await cookies();
-    const country = typeof searchParams.country === 'string'
+    const { country: selectedCountry, countries } = await getRequestCountry();
+    const country = typeof searchParams.country === 'string' && countries.some(item => item.id === searchParams.country && item.is_active)
         ? searchParams.country
-        : cookieStore.get(COUNTRY_COOKIE_NAME)?.value || undefined;
+        : selectedCountry?.id;
 
     // Run independent queries in parallel
     const [allEvents, { data: districtsData }, { data: { user: authUser } }, { count: vendorCount }, { count: totalEventCount }] = await Promise.all([
         getPublicEvents({
             search,
+            country,
             location,
             date: date as 'today' | 'tomorrow' | 'weekend' | 'week' | undefined,
             category,

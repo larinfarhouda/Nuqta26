@@ -1,29 +1,23 @@
 'use client';
 
+import { createContext, useContext, useCallback } from 'react';
 import { useLocale } from 'next-intl';
-import { getCountryName, COUNTRY_COOKIE_NAME, DEFAULT_COUNTRY } from '@/utils/country-helpers';
+import type { Country } from '@/repositories/country.repository';
 
-/**
- * Read the country cookie on the client side.
- */
-function getClientCountryId(): string {
-    if (typeof document === 'undefined') return DEFAULT_COUNTRY;
-    const match = document.cookie.match(new RegExp(`(?:^|; )${COUNTRY_COOKIE_NAME}=([^;]*)`));
-    return match?.[1] || DEFAULT_COUNTRY;
-}
-
-/**
- * Hook that returns the visitor's country name in the current locale.
- * Reads the __nuqta_country cookie set by middleware.
- */
-export function useCountryName(): string {
+export const CountryContext = createContext<{ countries: Country[]; country: Country | null }>({ countries: [], country: null });
+export function useCountry() { return useContext(CountryContext); }
+export function useCountryId() { return useCountry().country?.id || ''; }
+export function useCountryName() {
     const locale = useLocale();
-    return getCountryName(getClientCountryId(), locale);
+    const { country } = useCountry();
+    return country ? (locale === 'ar' ? country.name_ar : country.name_en) : (locale === 'ar' ? 'منطقتك' : 'your area');
+}
+export function useCurrencySymbol(countryId?: string | null) {
+    const { countries } = useCountry();
+    return countries.find(country => country.id === countryId)?.currency_symbol || '';
 }
 
-/**
- * Hook that returns the visitor's country ID from the cookie.
- */
-export function useCountryId(): string {
-    return getClientCountryId();
+export function useCountryCurrency() {
+    const { countries } = useCountry();
+    return useCallback((countryId?: string | null) => countries.find(country => country.id === countryId)?.currency_symbol || '', [countries]);
 }

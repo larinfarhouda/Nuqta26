@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 import BookingSheet from '@/components/events/BookingSheet';
 
 interface MobileBookingBarProps {
@@ -16,6 +16,7 @@ interface MobileBookingBarProps {
 
 export default function MobileBookingBar({ price, country, event, tickets, onReserve }: MobileBookingBarProps) {
     const t = useTranslations('Events');
+    const getCurrencySymbol = useCountryCurrency();
     const [sheetOpen, setSheetOpen] = useState(false);
 
     const handleReserve = () => {

@@ -7,14 +7,6 @@ const intlMiddleware = createMiddleware(routing);
 const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 const COOKIE_NAME = '__nuqta_ref';
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
-const COUNTRY_COOKIE = '__nuqta_country';
-
-// Map of ISO country codes to our internal country IDs
-const COUNTRY_MAP: Record<string, string> = {
-    TR: 'tr',
-    EG: 'eg',
-};
-
 // Common scraper/script user agents that consume CPU without being real visitors
 const BLOCKED_USER_AGENTS = [
     'python-requests',
@@ -137,36 +129,8 @@ export default function middleware(request: NextRequest) {
         }
     }
 
-    // --- Country Detection ---
-    // Only set if not already set (visitor can override via UI later)
-    if (!request.cookies.get(COUNTRY_COOKIE)) {
-        // Vercel provides this header on deployed environments
-        const vercelCountry = request.headers.get('x-vercel-ip-country');
-        const detectedCountry = vercelCountry ? COUNTRY_MAP[vercelCountry] : undefined;
-
-        if (detectedCountry) {
-            response.cookies.set(COUNTRY_COOKIE, detectedCountry, {
-                path: '/',
-                maxAge: 365 * 24 * 60 * 60, // 1 year
-                sameSite: 'lax',
-                httpOnly: false, // Needs to be readable by client JS
-            });
-        }
-    }
-
-    // --- Edge Caching for Public Pages ---
-    // If the visitor is NOT logged in, cache public pages at Vercel's edge
-    // to avoid re-running the serverless function for every bot request.
-    const pathname = request.nextUrl.pathname;
-    const isPublicPage = !pathname.includes('/dashboard') && !pathname.includes('/admin');
-    const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('sb-') && c.name.includes('auth-token'));
-
-    if (isPublicPage && !hasAuthCookie) {
-        response.headers.set(
-            'Cache-Control',
-            's-maxage=60, stale-while-revalidate=300'
-        );
-    }
+    // HTML depends on cookies and IP country. Never share it across visitors.
+    response.headers.set('Cache-Control', 'private, no-store');
 
     return response;
 }

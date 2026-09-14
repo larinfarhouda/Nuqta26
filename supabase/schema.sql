@@ -325,7 +325,7 @@ alter table activity_logs enable row level security;
 -- 3. STORAGE BUCKETS
 -- -----------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
-values ('booking-receipts', 'booking-receipts', true)
+values ('booking-receipts', 'booking-receipts', false)
 on conflict (id) do nothing;
 
 

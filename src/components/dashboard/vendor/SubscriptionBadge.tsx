@@ -4,15 +4,14 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import {
     SUBSCRIPTION_TIERS,
-    getSubscriptionPrice,
     getEventLimit,
-    getAnnualSavings,
     normalizeTier,
     type SubscriptionTier,
     type BillingPeriod
 } from '@/lib/constants/subscription';
 import { Crown, Sparkles, Check, TrendingUp, Calendar } from 'lucide-react';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { getCountryPrices } from '@/lib/country-selection';
+import { useCountry, useCountryCurrency } from '@/hooks/useCountry';
 
 interface SubscriptionBadgeProps {
     vendorId: string;
@@ -22,6 +21,10 @@ interface SubscriptionBadgeProps {
 }
 
 export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, demoMode = false, vendorCountry }: SubscriptionBadgeProps) {
+    const getCurrencySymbol = useCountryCurrency();
+    const { countries } = useCountry();
+    const country = countries.find(item => item.id === vendorCountry);
+    const prices = country ? getCountryPrices(country) : null;
     const cs = getCurrencySymbol(vendorCountry);
     const supabase = createClient();
     const [tier, setTier] = useState<SubscriptionTier>(demoMode ? 'business' : 'free');
@@ -59,10 +62,10 @@ export default function SubscriptionBadge({ vendorId, activeEventsCount = 0, dem
     }
 
     const tierConfig = SUBSCRIPTION_TIERS[tier];
-    const price = getSubscriptionPrice(tier, billingPeriod);
+    const price = prices?.[tier][billingPeriod] ?? 0;
     const limit = getEventLimit(tier);
     const limitReached = activeEventsCount >= limit;
-    const annualSavings = getAnnualSavings(tier);
+    const annualSavings = prices ? prices[tier].monthly * 12 - prices[tier].annual : 0;
 
     // Tier-specific styling - Using brand colors
     const tierStyles = {

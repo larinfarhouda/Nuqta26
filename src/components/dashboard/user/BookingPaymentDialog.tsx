@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { Loader2, CheckCircle, Info, ChevronRight, TrendingUp, X, Upload, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { receiptUploadPath } from '@/lib/booking-receipts';
 import { submitPaymentProof } from '@/actions/user';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 export default function BookingPaymentDialog({ booking }: { booking: any }) {
     const t = useTranslations('Events');
+    const getCurrencySymbol = useCountryCurrency();
     const [isOpen, setIsOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
@@ -30,19 +32,17 @@ export default function BookingPaymentDialog({ booking }: { booking: any }) {
         if (!e.target.files?.length || !booking.id) return;
         setUploading(true);
         const file = e.target.files[0];
-        const fileName = `receipts/${booking.id}-${Date.now()}.${file.name.split('.').pop()}`;
+
 
         try {
+            const fileName = receiptUploadPath(booking.id, file, crypto.randomUUID());
             const { createClient } = await import('@/utils/supabase/client');
             const supabase = createClient();
 
             const { error: uploadError } = await supabase.storage.from('booking-receipts').upload(fileName, file);
             if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage.from('booking-receipts').getPublicUrl(fileName);
-
-            // Call server action to update booking and send email
-            const result = await submitPaymentProof(booking.id, publicUrl);
+            const result = await submitPaymentProof(booking.id, fileName);
 
             if (result.error) throw new Error(result.error);
 

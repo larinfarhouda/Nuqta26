@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { X, Crown, TrendingUp, Check, Calendar } from 'lucide-react';
-import { SUBSCRIPTION_TIERS, getSubscriptionPrice, getEffectiveMonthlyPrice, getAnnualSavings, type SubscriptionTier, type BillingPeriod } from '@/lib/constants/subscription';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { SUBSCRIPTION_TIERS, type SubscriptionTier, type BillingPeriod } from '@/lib/constants/subscription';
+import { getCountryPrices } from '@/lib/country-selection';
+import { useCountry, useCountryCurrency } from '@/hooks/useCountry';
 
 interface UpgradeModalProps {
     isOpen: boolean;
@@ -15,17 +16,21 @@ interface UpgradeModalProps {
 }
 
 export default function UpgradeModal({ isOpen, onClose, currentTier, reason = 'event_limit', vendorCountry, lockedFeature }: UpgradeModalProps) {
-    if (!isOpen) return null;
+    const getCurrencySymbol = useCountryCurrency();
+    const { countries } = useCountry();
+    const country = countries.find(item => item.id === vendorCountry);
+    const prices = country ? getCountryPrices(country) : null;
     const cs = getCurrencySymbol(vendorCountry);
     const [period, setPeriod] = useState<BillingPeriod>('monthly');
+    if (!isOpen || !prices) return null;
 
     const currentTierConfig = SUBSCRIPTION_TIERS[currentTier];
     const suggestedTier: SubscriptionTier = currentTier === 'free' ? 'pro' : 'business';
     const suggestedTierConfig = SUBSCRIPTION_TIERS[suggestedTier];
-    const monthlyPrice = getSubscriptionPrice(suggestedTier, 'monthly');
-    const effectiveMonthly = getEffectiveMonthlyPrice(suggestedTier, period);
-    const totalPrice = getSubscriptionPrice(suggestedTier, period);
-    const savings = getAnnualSavings(suggestedTier);
+    const monthlyPrice = prices[suggestedTier].monthly;
+    const effectiveMonthly = period === 'annual' ? prices[suggestedTier].annual / 12 : prices[suggestedTier].monthly;
+    const totalPrice = prices[suggestedTier][period];
+    const savings = prices[suggestedTier].monthly * 12 - prices[suggestedTier].annual;
 
     const reasonMessages = {
         event_limit: {

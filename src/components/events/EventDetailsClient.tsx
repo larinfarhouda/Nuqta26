@@ -21,7 +21,7 @@ import ReviewForm from '@/components/reviews/ReviewForm';
 import ReviewList from '@/components/reviews/ReviewList';
 import { checkCanReviewEvent, getUserReviewForEvent } from '@/actions/public/reviews';
 import { useCountryName } from '@/hooks/useCountry';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 
 type EventDetailsClientProps = {
     event: any;
@@ -34,6 +34,7 @@ type EventDetailsClientProps = {
 
 export default function EventDetailsClient({ event, user, interestData }: EventDetailsClientProps) {
     const t = useTranslations('Events');
+    const getCurrencySymbol = useCountryCurrency();
     const countryName = useCountryName();
     const tReviews = useTranslations('Reviews');
     const locale = useLocale();

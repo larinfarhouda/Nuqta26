@@ -41,7 +41,8 @@ export default function Footer() {
                             { label: tNav('for_vendors'), href: '/for-vendors' },
                             { label: t('footer.about'), href: '/about' },
                             { label: t('footer.contact'), href: '/contact' },
-                            { label: t('footer.privacy'), href: '/privacy' }
+                            { label: t('footer.privacy'), href: '/privacy' },
+                            { label: t('footer.terms'), href: '/terms' }
                         ].map((link, idx) => (
                             <Link
                                 key={idx}

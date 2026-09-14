@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { useTranslations, useLocale } from 'next-intl';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountryCurrency } from '@/hooks/useCountry';
 import { createPortal } from 'react-dom';
 
 interface ShareEventModalProps {
@@ -20,6 +20,8 @@ interface ShareEventModalProps {
 }
 
 export default function ShareEventModal({ event, isOpen, onClose, isPostPublish = false }: ShareEventModalProps) {
+    const getCurrencySymbol = useCountryCurrency();
+    const currencySymbol = getCurrencySymbol(event?.country);
     const t = useTranslations('Dashboard.vendor.share');
     const locale = useLocale();
     const cardRef = useRef<HTMLDivElement>(null);
@@ -50,13 +52,13 @@ export default function ShareEventModal({ event, isOpen, onClose, isPostPublish 
     const handleCopyCaption = useCallback(async (language: 'ar' | 'en') => {
         if (!event) return;
         const eventDate = new Date(event.date);
-        const captionAr = buildCaptionAr(event, eventDate, locale);
-        const captionEn = buildCaptionEn(event, eventDate, locale);
+        const captionAr = buildCaptionAr(event, eventDate, locale, currencySymbol);
+        const captionEn = buildCaptionEn(event, eventDate, locale, currencySymbol);
         const text = language === 'ar' ? captionAr : captionEn;
         await navigator.clipboard.writeText(text);
         setCopiedCaption(language);
         setTimeout(() => setCopiedCaption(null), 2000);
-    }, [event, locale]);
+    }, [event, locale, currencySymbol]);
 
     const handleCopyLink = useCallback(async () => {
         if (!event) return;
@@ -70,11 +72,11 @@ export default function ShareEventModal({ event, isOpen, onClose, isPostPublish 
         if (!event) return;
         const eventDate = new Date(event.date);
         const caption = locale === 'ar'
-            ? buildCaptionAr(event, eventDate, locale)
-            : buildCaptionEn(event, eventDate, locale);
+            ? buildCaptionAr(event, eventDate, locale, currencySymbol)
+            : buildCaptionEn(event, eventDate, locale, currencySymbol);
         const text = encodeURIComponent(caption);
         window.open(`https://wa.me/?text=${text}`, '_blank');
-    }, [event, locale]);
+    }, [event, locale, currencySymbol]);
 
     const handleFacebookShare = useCallback(() => {
         if (!event) return;
@@ -101,13 +103,12 @@ export default function ShareEventModal({ event, isOpen, onClose, isPostPublish 
     });
 
     const eventUrl = `https://nuqta.ist/ar/events/${event.slug || event.id}`;
-    const currencySymbol = getCurrencySymbol(event.country);
     const minPrice = Array.isArray(event.tickets)
         ? Math.min(...event.tickets.map((t: any) => t.price || 0))
         : 0;
 
-    const captionAr = buildCaptionAr(event, eventDate, locale);
-    const captionEn = buildCaptionEn(event, eventDate, locale);
+    const captionAr = buildCaptionAr(event, eventDate, locale, currencySymbol);
+    const captionEn = buildCaptionEn(event, eventDate, locale, currencySymbol);
 
     return createPortal(
         <AnimatePresence>
@@ -359,14 +360,13 @@ export default function ShareEventModal({ event, isOpen, onClose, isPostPublish 
 }
 
 // Helper functions for caption building (outside component to avoid hook issues)
-function buildCaptionAr(event: any, eventDate: Date, locale: string): string {
+function buildCaptionAr(event: any, eventDate: Date, locale: string, currencySymbol: string): string {
     const formattedDateAr = eventDate.toLocaleDateString('ar', {
         weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
     });
     const formattedTimeAr = eventDate.toLocaleTimeString('ar', {
         hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC'
     });
-    const currencySymbol = getCurrencySymbol(event.country);
     const minPrice = Array.isArray(event.tickets)
         ? Math.min(...event.tickets.map((t: any) => t.price || 0))
         : 0;
@@ -382,14 +382,13 @@ ${minPrice > 0 ? `🎟️ ${minPrice} ${currencySymbol}` : '🎟️ مجاني'}
 ${eventUrl}`;
 }
 
-function buildCaptionEn(event: any, eventDate: Date, locale: string): string {
+function buildCaptionEn(event: any, eventDate: Date, locale: string, currencySymbol: string): string {
     const formattedDateEn = eventDate.toLocaleDateString('en', {
         weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
     });
     const formattedTimeEn = eventDate.toLocaleTimeString('en', {
         hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC'
     });
-    const currencySymbol = getCurrencySymbol(event.country);
     const minPrice = Array.isArray(event.tickets)
         ? Math.min(...event.tickets.map((t: any) => t.price || 0))
         : 0;

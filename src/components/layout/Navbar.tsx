@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/navigation';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import CountrySelector from './CountrySelector';
 import LogoutButton from '../auth/LogoutButton';
 
 export default function Navbar({ user, role }: { user?: any; role?: string }) {
@@ -41,7 +42,8 @@ export default function Navbar({ user, role }: { user?: any; role?: string }) {
                 </div>
             </Link>
 
-            <div className="flex gap-6 items-center">
+            <div className="flex gap-3 md:gap-6 items-center">
+                <CountrySelector />
                 {/* Desktop Buttons */}
                 <div className="hidden md:flex gap-4 items-center">
                     {user ? (

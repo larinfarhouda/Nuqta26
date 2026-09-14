@@ -1,4 +1,5 @@
 'use server';
+import { receiptStoragePath } from '@/lib/booking-receipts';
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
@@ -193,66 +194,21 @@ export async function submitPaymentProof(bookingId: string, paymentProofUrl: str
 
         if (!user) return { error: 'Unauthorized' };
 
-        // Update booking with payment proof
-        const { error: updateError } = await supabase
-            .from('bookings')
-            .update({
-                payment_proof_url: paymentProofUrl,
-                status: 'payment_submitted'
-            })
-            .eq('id', bookingId)
-            .eq('user_id', user.id); // Ensure user owns this booking
-
-        if (updateError) {
-            logger.error('Failed to update booking with payment proof', { error: updateError, bookingId });
-            return { error: 'Failed to submit payment proof' };
-        }
-
-        // Get booking details for email
-        const { data: booking } = await supabase
-            .from('bookings')
-            .select(`
-                *,
-                events!inner(title, date, vendor_id)
-            `)
-            .eq('id', bookingId)
-            .single();
-
-        if (!booking) {
-            return { error: 'Booking not found' };
-        }
-
-        // Send confirmation email to customer
-        try {
-            const factory = new ServiceFactory(supabase);
-            const notificationService = factory.getNotificationService();
-
-            // Get user profile for customer name
-            const { data: userProfile } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', user.id)
-                .single();
-
-            const customerName = userProfile?.full_name || 'Customer';
-            const customerEmail = user.email || '';
-
-            if (customerEmail) {
-                await notificationService.sendBookingConfirmation({
-                    customerEmail,
-                    customerName,
-                    eventTitle: (booking.events as any).title,
-                    eventDate: (booking.events as any).date,
-                    bookingId: booking.id,
-                    totalAmount: booking.total_amount || 0,
-                    ticketCount: 1, // You may need to calculate this from booking_items
-                    locale: 'ar', // Default to Arabic
-                });
-            }
-        } catch (emailError) {
-            // Don't fail the payment submission if email fails
-            logger.error('Failed to send payment confirmation email', { emailError, bookingId });
-        }
+        const path = receiptStoragePath(paymentProofUrl, bookingId, process.env.NEXT_PUBLIC_SUPABASE_URL!);
+        if (!path) return { error: 'Invalid receipt' };
+        const { data: existing } = await supabase.from('bookings').select('id, status')
+            .eq('id', bookingId).eq('user_id', user.id).single();
+        if (!existing || !['pending_payment', 'payment_submitted'].includes(existing.status || '')) return { error: 'Booking cannot accept a receipt' };
+        // Storage RLS checks ownership; also require the uploaded object to exist.
+        const { error: fileError } = await supabase.storage.from('booking-receipts').createSignedUrl(path, 60);
+        if (fileError) return { error: 'Receipt upload not found' };
+        const { data: updated, error: updateError } = await supabase.from('bookings')
+            .update({ payment_proof_url: path, status: 'payment_submitted' })
+            .eq('id', bookingId).eq('user_id', user.id)
+            .in('status', ['pending_payment', 'payment_submitted']).select('id').maybeSingle();
+        if (updateError || !updated) return { error: 'Failed to submit payment proof' };
+        // A receipt submission is not a confirmed booking. The organizer's
+        // confirmation flow sends the confirmation after verifying payment.
 
         revalidatePath('/dashboard/user');
         logger.info('Payment proof submitted', { userId: user.id, bookingId });

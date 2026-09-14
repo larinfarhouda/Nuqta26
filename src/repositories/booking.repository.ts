@@ -52,7 +52,7 @@ export class BookingRepository extends BaseRepository {
                 const [eventData, profileData] = await Promise.all([
                     this.client
                         .from('events')
-                        .select('title, event_type')
+                        .select('title, event_type, country')
                         .eq('id', booking.event_id)
                         .single(),
                     this.client

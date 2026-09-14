@@ -4,8 +4,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight, Users, Zap, Clock, CheckCircle2, Calendar, TrendingUp, Star } from 'lucide-react';
 import { Link } from '@/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { useCountryId } from '@/hooks/useCountry';
-import { getCurrencySymbol } from '@/utils/country-helpers';
+import { useCountry } from '@/hooks/useCountry';
 
 function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: string }) {
     const [display, setDisplay] = useState(target);
@@ -53,8 +52,8 @@ function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: str
 export default function VendorHero() {
     const t = useTranslations('VendorLanding.Hero');
     const [isLoaded, setIsLoaded] = useState(false);
-    const countryId = useCountryId();
-    const currency = getCurrencySymbol(countryId);
+    const { country } = useCountry();
+    const currency = country?.currency_symbol || '';
 
     useEffect(() => {
         setIsLoaded(true);
@@ -96,7 +95,7 @@ export default function VendorHero() {
                                 <div className="w-5 h-5 rounded-full bg-emerald-400 ring-2 ring-[#fffdfa]" />
                                 <div className="w-5 h-5 rounded-full bg-teal-300 ring-2 ring-[#fffdfa]" />
                             </div>
-                            <span>300+ organizers already automated</span>
+                            <span>{t('trust_label')}</span>
                         </div>
 
                         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] xl:text-6xl font-black text-gray-900 leading-[1.08] tracking-tight mb-6">
@@ -161,12 +160,12 @@ export default function VendorHero() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-white">Event Dashboard</p>
-                                            <p className="text-[10px] text-white/40">Live overview</p>
+                                            <p className="text-[10px] text-white/40">{t('example_label')}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
-                                        <span className="text-[10px] text-green-400 font-bold">LIVE</span>
+                                        <span className="text-[10px] text-green-400 font-bold">{t('example_label')}</span>
                                     </div>
                                 </div>
 

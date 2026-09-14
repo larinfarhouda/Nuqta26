@@ -1,4 +1,4 @@
-import { Country } from '@/repositories/country.repository';
+import type { Country } from '@/repositories/country.repository';
 
 /**
  * Format a price with the country's currency symbol.
@@ -53,11 +53,7 @@ export function getCountryCode(countryId: string | null | undefined): string {
  * Get a country's flag emoji from its 2-letter code.
  */
 export function getCountryFlag(countryId: string): string {
-    const flags: Record<string, string> = {
-        tr: '🇹🇷',
-        eg: '🇪🇬',
-    };
-    return flags[countryId] || '🌍';
+    return /^[a-z]{2}$/i.test(countryId) ? String.fromCodePoint(...countryId.toUpperCase().split('').map(c => c.charCodeAt(0) + 127397)) : '🌍';
 }
 
 /**
@@ -79,7 +75,7 @@ const COUNTRY_NAME_EN: Record<string, string> = {
 };
 
 export function getCountryNameEn(countryId: string | null | undefined): string {
-    return COUNTRY_NAME_EN[countryId || 'tr'] || 'Turkey';
+    return countryId ? (COUNTRY_NAME_EN[countryId] || new Intl.DisplayNames(['en'], { type: 'region' }).of(countryId.toUpperCase()) || countryId) : 'your area';
 }
 
 /**
@@ -91,7 +87,7 @@ const COUNTRY_NAME_AR: Record<string, string> = {
 };
 
 export function getCountryNameAr(countryId: string | null | undefined): string {
-    return COUNTRY_NAME_AR[countryId || 'tr'] || 'تركيا';
+    return countryId ? (COUNTRY_NAME_AR[countryId] || new Intl.DisplayNames(['ar'], { type: 'region' }).of(countryId.toUpperCase()) || countryId) : 'منطقتك';
 }
 
 /**
